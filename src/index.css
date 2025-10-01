@@ -1,0 +1,141 @@
+@import "tailwindcss";
+
+.synchronized-tables-outer {
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+.synchronized-tables-container {
+  display: flex;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.synchronized-table-scroll {
+  overflow-x: auto;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.sticky-thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: #f0f7ff !important;
+  z-index: 2 !important;
+  /* border-bottom: 1px solid #000 !important; */
+}
+
+.synchronized-tables-container table {
+  margin-bottom: 0;
+}
+
+.vertical-scroll-wrapper {
+  max-height: 400px; /* Or any desired height */
+  overflow-y: auto;
+}
+
+
+/* ProjectPlanTable specific styles */
+.project-plan-table-container {
+  @apply w-full border border-gray-300 rounded-lg bg-white overflow-hidden;
+}
+
+.project-plan-table-scroll {
+  @apply overflow-auto;
+  max-height: 280px;
+  min-height: 280px;
+}
+
+.project-plan-table {
+  @apply w-full table-fixed text-xs text-left border-collapse;
+}
+
+.project-plan-table th {
+  @apply p-1 border border-gray-300 font-normal text-center bg-gray-100 sticky top-0 z-10;
+}
+
+.project-plan-table td {
+  @apply p-1 border border-gray-300 font-normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Column width constraints */
+.project-plan-table th:nth-child(1),
+.project-plan-table td:nth-child(1) {
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+}
+
+.project-plan-table th:nth-child(2),
+.project-plan-table td:nth-child(2) {
+  width: 120px;
+  min-width: 100px;
+  max-width: 150px;
+}
+
+.project-plan-table th:nth-child(3),
+.project-plan-table td:nth-child(3) {
+  width: 150px;
+  min-width: 120px;
+  max-width: 180px;
+}
+
+/* Status column styling */
+.project-plan-table td.status-submitted {
+  @apply bg-yellow-100 text-black font-bold whitespace-nowrap text-center;
+}
+
+.project-plan-table td.status-progress {
+  @apply bg-red-100 text-black font-bold whitespace-nowrap text-center;
+}
+
+.project-plan-table td.status-approved {
+  @apply bg-green-100 text-black font-bold whitespace-nowrap text-center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+  .project-plan-table {
+    @apply text-xs;
+  }
+  
+  .project-plan-table th,
+  .project-plan-table td {
+    @apply p-0.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .project-plan-table th:nth-child(2),
+  .project-plan-table td:nth-child(2) {
+    width: 100px;
+    min-width: 80px;
+    max-width: 120px;
+  }
+  
+  .project-plan-table th:nth-child(3),
+  .project-plan-table td:nth-child(3) {
+    width: 120px;
+    min-width: 100px;
+    max-width: 140px;
+  }
+}
+
+.date-input-clean::-webkit-datetime-edit-text,
+.date-input-clean::-webkit-datetime-edit-month-field,
+.date-input-clean::-webkit-datetime-edit-day-field,
+.date-input-clean::-webkit-datetime-edit-year-field {
+  opacity: 0;
+}
+
+.date-input-clean:focus::-webkit-datetime-edit-text,
+.date-input-clean:focus::-webkit-datetime-edit-month-field,
+.date-input-clean:focus::-webkit-datetime-edit-day-field,
+.date-input-clean:focus::-webkit-datetime-edit-year-field {
+  opacity: 1;
+}
