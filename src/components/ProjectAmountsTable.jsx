@@ -98,10 +98,14 @@ const ProjectAmountsTable = ({
   const projectId = initialData.projId;
   const closedPeriod = initialData.closedPeriod;
   const isBudPlan = planType && planType.toUpperCase() === "BUD";
-  const isFieldEditable =
-    planType &&
-    (planType.toUpperCase() === "BUD" || planType.toUpperCase() === "EAC");
+  // const isFieldEditable =
+  //   planType &&
+  //   (planType.toUpperCase() === "BUD" || planType.toUpperCase() === "EAC");
+  const isFieldEditable = planType && planType.toUpperCase() === "BUD";
 
+  // const verticalScrollRef = useRef(null);
+  // const vfirstTableRef = useRef(null);
+  // const vlastTableRef = useRef(null);
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
   const scrollingLock = useRef(false);
@@ -160,7 +164,24 @@ const ProjectAmountsTable = ({
   const handleSecondScroll = () => {
     syncScroll(secondTableRef, firstTableRef);
   };
- 
+  // Vertical sync only
+  // useEffect(() => {
+  //   const container = verticalScrollRef.current;
+  //   const firstScroll = vfirstTableRef.current;
+  //   const lastScroll = vlastTableRef.current;
+
+  //   if (!container || !firstScroll || !lastScroll) return;
+
+  //   const onScroll = () => {
+  //     const scrollTop = container.scrollTop;
+  //     firstScroll.scrollTop = scrollTop;
+  //     lastScroll.scrollTop = scrollTop;
+  //   };
+
+  //   container.addEventListener("scroll", onScroll);
+  //   return () => container.removeEventListener("scroll", onScroll);
+  // }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!startDate || !endDate || !planId) {
@@ -267,6 +288,201 @@ const ProjectAmountsTable = ({
     }
   }, [showNewForm, isEditable]);
 
+  // useEffect(() => {
+  //   const fetchEmployees = async () => {
+  //     if (!projectId) {
+  //       console.warn("projectId is undefined, skipping employee fetch");
+  //       setEmployeeSuggestions([]);
+  //       return;
+  //     }
+  //     if (!showNewForm) {
+  //       console.log("New entry form is not open, skipping employee fetch");
+  //       setEmployeeSuggestions([]);
+  //       return;
+  //     }
+  //     console.log(`Fetching employees for projectId: ${projectId}`);
+  //     try {
+  //       const endpoint =
+  //         newEntry.idType === "Vendor" || newEntry.idType === "Vendor Employee"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${projectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${projectId}`;
+  //       const response = await axios.get(endpoint);
+  //       console.log("Employee suggestions response:", response.data);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (newEntry.idType === "Vendor") {
+  //               return {
+  //                 emplId: emp.vendId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName || "",
+  //               };
+  //             } else if (newEntry.idType === "Vendor Employee") {
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 orgId: emp.orgId,
+  //               };
+  //             }
+  //           })
+  //         : [];
+  //       setEmployeeSuggestions(suggestions);
+  //       console.log("Updated employeeSuggestions:", suggestions);
+  //     } catch (err) {
+  //       console.error("Error fetching employees:", err);
+  //       setEmployeeSuggestions([]);
+  //       toast.error(
+  //         `Failed to fetch ${
+  //           newEntry.idType === "Vendor" ||
+  //           newEntry.idType === "Vendor Employee"
+  //             ? "vendor "
+  //             : ""
+  //         }employee suggestions${
+  //           projectId
+  //             ? " for project ID " + projectId
+  //             : ". Project ID is missing."
+  //         }`,
+  //         {
+  //           toastId: "employee-fetch-error",
+  //           autoClose: 3000,
+  //         }
+  //       );
+  //     }
+  //   };
+
+  //   const fetchNonLaborAccounts = async () => {
+  //     if (!projectId) {
+  //       console.warn(
+  //         "projectId is undefined, skipping non-labor accounts fetch"
+  //       );
+  //       setNonLaborAccounts([]);
+  //       return;
+  //     }
+  //     if (!showNewForm) {
+  //       console.log(
+  //         "New entry form is not open, skipping non-labor accounts fetch"
+  //       );
+  //       setNonLaborAccounts([]);
+  //       return;
+  //     }
+  //     console.log(`Fetching non-labor accounts for projectId: ${projectId}`);
+  //     try {
+  //       const response = await axios.get(
+  //         `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
+  //       );
+  //       console.log("Non-labor accounts response:", response.data);
+  //       const data = Array.isArray(response.data)
+  //         ? response.data[0]
+  //         : response.data;
+  //       const accounts = Array.isArray(data.nonLaborAccounts)
+  //         ? data.nonLaborAccounts.map((account) => ({ id: account }))
+  //         : [];
+  //       setNonLaborAccounts(accounts);
+  //       console.log("Updated nonLaborAccounts:", accounts);
+  //     } catch (err) {
+  //       console.error("Error fetching non-labor accounts:", err);
+  //       setNonLaborAccounts([]);
+  //       toast.error(
+  //         `Failed to fetch non-labor accounts${
+  //           projectId
+  //             ? " for project ID " + projectId
+  //             : ". Project ID is missing."
+  //         }`,
+  //         {
+  //           toastId: "non-labor-accounts-error",
+  //           autoClose: 3000,
+  //         }
+  //       );
+  //     }
+  //   };
+
+  //   if (showNewForm) {
+  //     fetchEmployees();
+  //     fetchNonLaborAccounts();
+  //   } else {
+  //     setEmployeeSuggestions([]);
+  //     setNonLaborAccounts([]);
+  //   }
+  // }, [projectId, showNewForm, newEntry.idType]);
+
+  // const handleIdChange = (value) => {
+  //   console.log("handleIdChange called with value:", value);
+
+  //   // **FIRST CHECK: Duplicate ID check (highest priority)**
+  //   if (value.trim() !== "") {
+  //     const isDuplicateId = employees.some(
+  //       (emp) => emp.emple.emplId === value
+  //     );
+
+  //     if (isDuplicateId) {
+  //       toast.error("ID is already present in table so can't save.", {
+  //         toastId: "duplicate-id-error",
+  //         autoClose: 3000,
+  //       });
+  //       // Still update the input but show the error
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         id: value,
+  //         firstName: "",
+  //         lastName: "",
+  //         acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
+  //         orgId: "",
+  //       }));
+  //       return; // Exit early to prevent other validations
+  //     }
+  //   }
+
+  //   // **SECOND CHECK: Invalid Employee ID validation (only if not duplicate)**
+  //   if (newEntry.idType !== "Other" && value.length >= 3) {
+  //     // Check if any employee ID starts with typed value
+  //     const partialMatch = employeeSuggestions.some((emp) =>
+  //       emp.emplId.startsWith(value)
+  //     );
+
+  //     if (!partialMatch) {
+  //       toast.error("Invalid Employee ID, please select a valid one!", {
+  //         toastId: "invalid-employee-id",
+  //         autoClose: 3000,
+  //       });
+  //       // Still update the input but show the error
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         id: value,
+  //         firstName: "",
+  //         lastName: "",
+  //         acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
+  //         orgId: "",
+  //       }));
+  //       return; // Exit early
+  //     }
+  //   }
+
+  //   // **NORMAL PROCESSING: If no errors, proceed with employee selection**
+  //   const selectedEmployee = employeeSuggestions.find(
+  //     (emp) => emp.emplId === value
+  //   );
+  //   console.log("Selected employee:", selectedEmployee);
+
+  //   setNewEntry((prev) => ({
+  //     ...prev,
+  //     id: value,
+  //     firstName: selectedEmployee ? selectedEmployee.firstName || "" : "",
+  //     lastName: selectedEmployee ? selectedEmployee.lastName || "" : "",
+  //     acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
+  //     orgId: selectedEmployee?.orgId ? String(selectedEmployee.orgId) : "",
+  //   }));
+  //   console.log("Selected employee orgId:", selectedEmployee?.orgId);
+  // };
+
   useEffect(() => {
     const formOpen = showNewForm || isEditable;
     const fetchEmployees = async () => {
@@ -340,7 +556,51 @@ const ProjectAmountsTable = ({
       }
     };
 
-  
+    // const fetchNonLaborAccounts = async () => {
+    //   if (!projectId) {
+    //     console.warn(
+    //       "projectId is undefined, skipping non-labor accounts fetch"
+    //     );
+    //     setNonLaborAccounts([]);
+    //     return;
+    //   }
+    //   if (!showNewForm) {
+    //     console.log(
+    //       "New entry form is not open, skipping non-labor accounts fetch"
+    //     );
+    //     setNonLaborAccounts([]);
+    //     return;
+    //   }
+    //   console.log(`Fetching non-labor accounts for projectId: ${projectId}`);
+    //   try {
+    //     const response = await axios.get(
+    //       `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
+    //     );
+    //     console.log("Non-labor accounts response:", response.data);
+    //     const data = Array.isArray(response.data)
+    //       ? response.data[0]
+    //       : response.data;
+    //     const accounts = Array.isArray(data.nonLaborAccounts)
+    //       ? data.nonLaborAccounts.map((account) => ({ id: account }))
+    //       : [];
+    //     setNonLaborAccounts(accounts);
+    //     console.log("Updated nonLaborAccounts:", accounts);
+    //   } catch (err) {
+    //     console.error("Error fetching non-labor accounts:", err);
+    //     setNonLaborAccounts([]);
+    //     toast.error(
+    //       `Failed to fetch non-labor accounts${
+    //         projectId
+    //           ? " for project ID " + projectId
+    //           : ". Project ID is missing."
+    //       }`,
+    //       {
+    //         toastId: "non-labor-accounts-error",
+    //         autoClose: 3000,
+    //       }
+    //     );
+    //   }
+    // };
     const fetchNonLaborAccounts = async () => {
       if (!projectId || !formOpen) {
         setEmployeeNonLaborAccounts([]);
@@ -536,7 +796,151 @@ const ProjectAmountsTable = ({
     }));
   };
 
-  
+  // const handleRowFieldBlur = async (rowIdx, emp) => {
+  //   if (!isBudPlan || !isEditable) return;
+  //   if (!emp || !emp.emple) {
+  //     toast.error("Employee data is missing for update.");
+  //     return;
+  //   }
+
+  //   const edited = editedRowData[rowIdx] || {};
+  //   if (
+  //     edited.acctId === undefined &&
+  //     edited.orgId === undefined &&
+  //     edited.isRev === undefined &&
+  //     edited.isBrd === undefined
+  //   )
+  //     return;
+
+  //   const payload = {
+  //     dctId: emp.emple.dctId || 0,
+  //     plId: emp.emple.plId || 0,
+  //     accId: edited.acctId !== undefined ? edited.acctId : emp.emple.accId,
+  //     orgId: edited.orgId !== undefined ? edited.orgId : emp.emple.orgId,
+  //     type: emp.emple.type || "",
+  //     category: emp.emple.category || "",
+  //     amountType: emp.emple.amountType || "",
+  //     id: emp.emple.emplId || "",
+  //     isRev: edited.isRev !== undefined ? edited.isRev : emp.emple.isRev,
+  //     isBrd: edited.isBrd !== undefined ? edited.isBrd : emp.emple.isBrd,
+  //     createdBy: emp.emple.createdBy || "System",
+  //     lastModifiedBy: "System",
+  //   };
+
+  //   try {
+  //     await axios.put(
+  //       "${backendUrl}/DirectCost/UpdateDirectCost",
+  //       { ...payload, acctId: payload.accId },
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+  //     setEditedRowData((prev) => {
+  //       const newData = { ...prev };
+  //       delete newData[rowIdx];
+  //       return newData;
+  //     });
+  //     setEmployees((prev) => {
+  //       const updated = [...prev];
+  //       updated[rowIdx] = {
+  //         ...updated[rowIdx],
+  //         emple: {
+  //           ...updated[rowIdx].emple,
+  //           ...payload,
+  //         },
+  //       };
+  //       return updated;
+  //     });
+  //     toast.success("Employee updated successfully!", {
+  //       toastId: `employee-update-${rowIdx}`,
+  //       autoClose: 2000,
+  //     });
+  //   } catch (err) {
+  //     toast.error(
+  //       "Failed to update row: " + (err.response?.data?.message || err.message)
+  //     );
+  //   }
+  // };
+
+  // const handleRowFieldBlur = async (rowIdx, emp) => {
+  //   if (!isBudPlan || !isEditable) return;
+  //   if (!emp || !emp.emple) {
+  //     toast.error("Employee data is missing for update.");
+  //     return;
+  //   }
+
+  //   const edited = editedRowData[rowIdx] || {};
+  //   if (
+  //     edited.acctId === undefined &&
+  //     edited.orgId === undefined &&
+  //     edited.isRev === undefined &&
+  //     edited.isBrd === undefined
+  //   )
+  //     return;
+
+  //   const payload = {
+  //     dctId: emp.emple.dctId || 0,
+  //     plId: emp.emple.plId || 0,
+  //     accId: edited.acctId !== undefined ? edited.acctId : emp.emple.accId,
+  //     orgId: edited.orgId !== undefined ? edited.orgId : emp.emple.orgId,
+  //     type: emp.emple.type || "",
+  //     category: emp.emple.category || "",
+  //     amountType: emp.emple.amountType || "",
+  //     id: emp.emple.emplId || "",
+  //     isRev: edited.isRev !== undefined ? edited.isRev : emp.emple.isRev,
+  //     isBrd: edited.isBrd !== undefined ? edited.isBrd : emp.emple.isBrd,
+  //     createdBy: emp.emple.createdBy || "System",
+  //     lastModifiedBy: "System",
+  //   };
+
+  //   // ✅ Add validation BEFORE saving
+  //   const validAccounts =
+  //     emp.idType === "Vendor" || emp.idType === "Vendor Employee"
+  //       ? subContractorNonLaborAccounts.map((a) => a.id || a.accountId || "")
+  //       : employeeNonLaborAccounts.map((a) => a.id || a.accountId || "");
+
+  //   if (payload.accId && !validAccounts.includes(payload.accId)) {
+  //     toast.error("Please select a valid account from suggestions");
+  //     return; // 🚫 stop here, don't call API or show success
+  //   }
+  //   // ✅ Validate orgId against organizationOptions
+  //   const validOrgs = organizationOptions.map((org) => org.value);
+  //   if (payload.orgId && !validOrgs.includes(payload.orgId)) {
+  //     toast.error("Please select a valid organization from suggestions");
+  //     return; // 🚫 block update
+  //   }
+
+  //   try {
+  //     await axios.put(
+  //       "${backendUrl}/DirectCost/UpdateDirectCost",
+  //       { ...payload, acctId: payload.accId },
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+  //     setEditedRowData((prev) => {
+  //       const newData = { ...prev };
+  //       delete newData[rowIdx];
+  //       return newData;
+  //     });
+  //     setEmployees((prev) => {
+  //       const updated = [...prev];
+  //       updated[rowIdx] = {
+  //         ...updated[rowIdx],
+  //         emple: {
+  //           ...updated[rowIdx].emple,
+  //           ...payload,
+  //         },
+  //       };
+  //       return updated;
+  //     });
+  //     toast.success("Employee updated successfully!", {
+  //       toastId: `employee-update-${rowIdx}`,
+  //       autoClose: 2000,
+  //     });
+  //   } catch (err) {
+  //     toast.error(
+  //       "Failed to update row: " + (err.response?.data?.message || err.message)
+  //     );
+  //   }
+  // };
+
   const handleRowFieldBlur = async (rowIdx, emp) => {
     if (!isFieldEditable || !isEditable) return;
     if (!emp || !emp.emple) {
