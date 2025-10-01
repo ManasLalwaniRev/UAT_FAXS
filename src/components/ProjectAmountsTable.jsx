@@ -98,10 +98,11 @@ const ProjectAmountsTable = ({
   const projectId = initialData.projId;
   const closedPeriod = initialData.closedPeriod;
   const isBudPlan = planType && planType.toUpperCase() === "BUD";
-  // const isFieldEditable =
-  //   planType &&
-  //   (planType.toUpperCase() === "BUD" || planType.toUpperCase() === "EAC");
-  const isFieldEditable = planType && planType.toUpperCase() === "BUD";
+  const isFieldEditable =
+    planType &&
+    (planType.toUpperCase() === "BUD" || planType.toUpperCase() === "EAC");
+  const isEAC = planType && planType.toUpperCase() === "EAC";
+  // const isFieldEditable = planType && planType.toUpperCase() === "BUD";
 
   // const verticalScrollRef = useRef(null);
   // const vfirstTableRef = useRef(null);
@@ -3503,95 +3504,9 @@ const ProjectAmountsTable = ({
                         onClick={() => handleRowClick(actualEmpIdx)}
                       >
                         {EMPLOYEE_COLUMNS.map((col) => {
-                          if (isFieldEditable && isEditable) {
+                          if (isBudPlan && isEditable) {
                             if (col.key === "acctId") {
                               return (
-                                // <td
-                                //   key={`${uniqueRowKey}-acctId`}
-                                //   className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]"
-                                // >
-                                //   {" "}
-                                //   {/* Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px] */}
-                                //   <input
-                                //     type="text"
-                                //     value={
-                                //       editedRowData[actualEmpIdx]?.acctId !==
-                                //       undefined
-                                //         ? editedRowData[actualEmpIdx].acctId
-                                //         : row.acctId
-                                //     }
-                                //     onChange={(e) => {
-                                //       // if (/^[0-9-]*$/.test(e.target.value)) {
-                                //       handleRowFieldChange(
-                                //         actualEmpIdx,
-                                //         "acctId",
-                                //         e.target.value
-                                //       );
-                                //       // }
-                                //     }}
-                                //     onBlur={() =>
-                                //       handleRowFieldBlur(actualEmpIdx, emp)
-                                //     }
-                                //     // onBlur={(e) => {
-                                //     //   const val = e.target.value;
-
-                                //     //   // build valid account list
-                                //     //   const validAccounts =
-                                //     //     emp.idType === "Vendor" ||
-                                //     //     emp.idType === "Vendor Employee"
-                                //     //       ? subContractorNonLaborAccounts.map(
-                                //     //           (a) => a.id || a.accountId || ""
-                                //     //         )
-                                //     //       : employeeNonLaborAccounts.map(
-                                //     //           (a) => a.id || a.accountId || ""
-                                //     //         );
-
-                                //     //   if (
-                                //     //     !validAccounts.includes(val) &&
-                                //     //     val !== ""
-                                //     //   ) {
-                                //     //     toast.error(
-                                //     //       "Please select a valid account from suggestions"
-                                //     //     );
-                                //     //     handleRowFieldChange(
-                                //     //       actualEmpIdx,
-                                //     //       "acctId",
-                                //     //       ""
-                                //     //     ); // reset to blank
-                                //     //   }
-
-                                //     //   handleRowFieldBlur(actualEmpIdx, emp);
-                                //     // }}
-                                //     list={`account-list-${actualEmpIdx}`}
-                                //     className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                                //   />
-                                //   <datalist
-                                //     id={`account-list-${actualEmpIdx}`}
-                                //   >
-                                //     {(emp.idType === "Vendor" ||
-                                //     emp.idType === "Vendor Employee"
-                                //       ? subContractorNonLaborAccounts
-                                //       : employeeNonLaborAccounts
-                                //     ).map((account, index) => {
-                                //       const valueText =
-                                //         account.id || account.accountId || ""; // safe fallback
-                                //       const displayText =
-                                //         account.name ||
-                                //         account.acctName ||
-                                //         account.accountId ||
-                                //         valueText;
-
-                                //       return (
-                                //         <option
-                                //           key={`${valueText}-${index}`}
-                                //           value={valueText}
-                                //         >
-                                //           {displayText}
-                                //         </option>
-                                //       );
-                                //     })}
-                                //   </datalist>
-                                // </td>
                                 <td
                                   key={`${uniqueRowKey}-acctId`}
                                   className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]"
@@ -3615,37 +3530,6 @@ const ProjectAmountsTable = ({
                                         );
                                       }
                                     }}
-                                    // onBlur={(e) => {
-                                    //   const val = e.target.value.trim();
-
-                                    //   // Build valid account list
-                                    //   const validAccounts =
-                                    //     emp.idType === "Vendor" ||
-                                    //     emp.idType === "Vendor Employee"
-                                    //       ? subContractorNonLaborAccounts.map(
-                                    //           (a) => a.id || a.accountId || ""
-                                    //         )
-                                    //       : employeeNonLaborAccounts.map(
-                                    //           (a) => a.id || a.accountId || ""
-                                    //         );
-
-                                    //   if (
-                                    //     val !== "" &&
-                                    //     !validAccounts.includes(val)
-                                    //   ) {
-                                    //     toast.error(
-                                    //       "Please select a valid account from suggestions"
-                                    //     );
-                                    //     handleRowFieldChange(
-                                    //       actualEmpIdx,
-                                    //       "acctId",
-                                    //       ""
-                                    //     ); // reset to blank
-                                    //   }
-
-                                    //   handleRowFieldBlur(actualEmpIdx, emp);
-                                    // }}
-
                                     onBlur={(e) => {
                                       const val = e.target.value.trim();
 
@@ -3678,6 +3562,8 @@ const ProjectAmountsTable = ({
                                       // ✅ only call when valid
                                       handleRowFieldBlur(actualEmpIdx, emp);
                                     }}
+                                    // disabled={isEAC}
+                                    // readOnly={isEAC}
                                     list={`account-list-${actualEmpIdx}`}
                                     className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
                                   />
@@ -3794,6 +3680,8 @@ const ProjectAmountsTable = ({
                                       // ✅ only save when valid
                                       handleRowFieldBlur(actualEmpIdx, emp);
                                     }}
+                                    disabled={isEAC}
+                                    readOnly={isEAC}
                                     list={`organization-list-${actualEmpIdx}`}
                                     className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
                                   />
@@ -3838,6 +3726,8 @@ const ProjectAmountsTable = ({
                                     onBlur={() =>
                                       handleRowFieldBlur(actualEmpIdx, emp)
                                     }
+                                    disabled={isEAC}
+                                    readOnly={isEAC}
                                     className="w-4 h-4"
                                   />
                                 </td>
@@ -3869,6 +3759,8 @@ const ProjectAmountsTable = ({
                                     onBlur={() =>
                                       handleRowFieldBlur(actualEmpIdx, emp)
                                     }
+                                    disabled={isEAC}
+                                    readOnly={isEAC}
                                     className="w-4 h-4"
                                   />
                                 </td>
