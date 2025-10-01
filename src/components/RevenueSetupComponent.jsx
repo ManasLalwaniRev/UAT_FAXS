@@ -50,7 +50,7 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
 
   //   // Parse the value as float
   //   const numValue = parseFloat(value);
-    
+
   //   // Check if it's a valid number and within 0-100 range
   //   if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
   //     setter(value);
@@ -65,31 +65,31 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
   //   // If invalid number or negative, don't update the state (ignore the input)
   // };
 
-   const handleFeeRateChange = (value, setter) => {
+  const handleFeeRateChange = (value, setter) => {
     // Allow empty string
     if (value === "") {
       setter("");
       return;
     }
- 
+
     // 🚫 Block negatives, plus signs, or stray characters like "-"
     if (/[^\d.]/.test(value)) {
       return; // reject if contains anything except digits or dot
     }
- 
+
     // 🚫 Prevent multiple dots
     if ((value.match(/\./g) || []).length > 1) {
       return;
     }
- 
+
     // 🚫 Prevent leading zeros like "00" unless it's "0.something"
     if (/^0\d/.test(value)) {
       return;
     }
- 
+
     // Now safe to parse
     const numValue = parseFloat(value);
- 
+
     if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
       setter(value); // ✅ valid
     } else if (!isNaN(numValue) && numValue > 100) {
@@ -99,7 +99,6 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
       });
     }
   };
- 
 
   useEffect(() => {
     setRevenueAccountState(revenueAccount || "");
@@ -107,15 +106,16 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
     axios
       .get(`${backendUrl}/RevFormula`)
       .then((response) => {
-        console.log("RevFormula API response:", response.data);
+        // console.log("RevFormula API response:", response.data);
         setFormulaOptions(response.data);
         // if (response.data.length > 0) {
         //   setRevenueFormula(response.data[0].formulaCd);
         //   setRevenueType(response.data[0].formulaCd); // Modified: Set revenueType to keep in sync
         // }
       })
-      .catch((error) =>
-        console.error("Error fetching revenue formulas:", error)
+      .catch(
+        (error) => {}
+        // console.error("Error fetching revenue formulas:", error)
       );
 
     if (selectedPlan?.projId && selectedPlan?.version && selectedPlan?.plType) {
@@ -125,7 +125,7 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
         )
         .then((response) => {
           const data = response.data;
-          console.log("ProjBgtRevSetup GET response:", data);
+          // console.log("ProjBgtRevSetup GET response:", data);
           setSetupId(data.id || 0);
           setRevenueFormula(data.revType || ""); // Modified: Set revenueFormula from revType
           setRevenueType(data.revType || ""); // Modified: Also set revenueType to keep in sync
@@ -149,8 +149,9 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
           setOverrideRevAdjustmentsFl(data.useBillBurdenRates || false);
           setUseFixedRevenueFl(data.overrideRevAmtFl || false);
         })
-        .catch((error) =>
-          console.error("Error fetching project budget revenue setup:", error)
+        .catch(
+          (error) => {}
+          // console.error("Error fetching project budget revenue setup:", error)
         );
     }
   }, [selectedPlan, revenueAccount]);
@@ -189,19 +190,16 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
     };
 
     axios
-      .post(
-        `${backendUrl}/ProjBgtRevSetup/upsert`,
-        payload
-      )
+      .post(`${backendUrl}/ProjBgtRevSetup/upsert`, payload)
       .then((response) => {
-        console.log("Save successful:", response.data);
+        // console.log("Save successful:", response.data);
         toast.success("Data saved successfully!", {
           toastId: "revenue-setup-save-success",
           autoClose: 3000,
         });
       })
       .catch((error) => {
-        console.error("Error saving data:", error);
+        // console.error("Error saving data:", error);
         toast.error(
           "Failed to save data: " +
             (error.response?.data?.message || error.message),
@@ -267,30 +265,30 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
               onChange={(e) => {
                 // remove non-digits (ignore commas, decimals, etc.)
                 const rawDigits = e.target.value.replace(/\D/g, "");
- 
+
                 if (rawDigits === "") {
                   setAtRiskValue("");
                   return;
                 }
- 
+
                 // interpret as cents
                 const cents = parseInt(rawDigits, 10);
- 
+
                 // divide by 100 to get dollars
                 const dollars = cents / 100;
- 
+
                 // format in US currency style with 2 decimals
                 const formatted = dollars.toLocaleString("en-US", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 });
- 
+
                 setAtRiskValue(formatted);
               }}
               disabled={!overrideFundingCeilingFl}
             />
           </div>
- 
+
           {/* <div className="flex-1">
             <label className="text-sm font-normal mr-2">At Risk Value</label>
             <input
@@ -313,7 +311,7 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
               disabled={!overrideFundingCeilingFl}
             />
           </div> */}
- 
+
           {/* <div className="flex-1">
             <label className="text-sm font-normal mr-2">At Risk Value</label>
             <input
@@ -387,7 +385,9 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
                   className="w-full p-1 border rounded text-sm font-normal"
                   style={{ appearance: "none" }}
                   value={labFeeRt}
-                  onChange={(e) => handleFeeRateChange(e.target.value, setLabFeeRt)}
+                  onChange={(e) =>
+                    handleFeeRateChange(e.target.value, setLabFeeRt)
+                  }
                 />
               </td>
               <td className="border p-2">
@@ -442,7 +442,9 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
                   className="w-full p-1 border rounded text-sm font-normal"
                   style={{ appearance: "none" }}
                   value={nonLabFeeRt}
-                  onChange={(e) => handleFeeRateChange(e.target.value, setNonLabFeeRt)}
+                  onChange={(e) =>
+                    handleFeeRateChange(e.target.value, setNonLabFeeRt)
+                  }
                 />
               </td>
               <td className="border p-2">
@@ -468,4 +470,3 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
 };
 
 export default RevenueSetupComponent;
-

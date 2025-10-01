@@ -150,7 +150,7 @@ const uniqueData = filteredData.map((item, index) => {
       setEditBillRate(newEditBillRate);
       setEditProjectPlcFields(newEditProjectPlcFields);
     } catch (error) {
-      console.error("Error fetching billing rates:", error);
+      // console.error("Error fetching billing rates:", error);
       toast.error(
         `Failed to fetch billing rates: ${
           error.response?.data?.message || error.message
@@ -187,7 +187,7 @@ const uniqueData = filteredData.map((item, index) => {
         }))
       );
     } catch (error) {
-      console.error("Error fetching employees:", error);
+      // console.error("Error fetching employees:", error);
       setEmployees([]);
     } finally {
       // setLoading(false);
@@ -250,7 +250,7 @@ const uniqueData = filteredData.map((item, index) => {
         }));
       setPlcs(filteredPlcs);
     } catch (error) {
-      console.error("Error fetching PLCs:", error);
+      // console.error("Error fetching PLCs:", error);
       setPlcs([]);
     }
   }, [plcSearch]);
@@ -370,7 +370,7 @@ const uniqueData = filteredData.map((item, index) => {
       setEditEmployeeBillRate(newEditEmployeeBillRate);
       setEditEmployeeFields(newEditEmployeeFields);
     } catch (error) {
-      console.error("Error fetching employee billing rates:", error);
+      // console.error("Error fetching employee billing rates:", error);
       toast.error(
         `Failed to fetch employee billing rates: ${
           error.response?.data?.message || error.message
@@ -719,7 +719,7 @@ const uniqueData = filteredData.map((item, index) => {
       setEditVendorBillRate(newEditVendorBillRate);
       setEditVendorFields(newEditVendorFields);
     } catch (error) {
-      console.error("Error fetching vendor billing rates:", error);
+      // console.error("Error fetching vendor billing rates:", error);
       toast.error(
         `Failed to fetch vendor billing rates: ${
           error.response?.data?.message || error.message
@@ -861,7 +861,7 @@ const uniqueData = filteredData.map((item, index) => {
     setEditingProjectPlcRowId(null);
     toast.success("Billing rate updated successfully!");
   } catch (error) {
-    console.error("Error updating billing rate:", error);
+    // console.error("Error updating billing rate:", error);
     toast.error(`Failed to update billing rate: ${error.response?.data?.message || error.message}`);
   } finally {
     setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
@@ -901,7 +901,7 @@ const uniqueData = filteredData.map((item, index) => {
       setVendorEmployees(response.data);
     } catch (error) {
       setVendorEmployees([]);
-      console.error("Error fetching vendor employees:", error);
+      // console.error("Error fetching vendor employees:", error);
     }
   }, [selectedProjectId]);
 
@@ -931,7 +931,7 @@ const uniqueData = filteredData.map((item, index) => {
       });
       toast.success("Billing rate deleted successfully!");
     } catch (error) {
-      console.error("Error deleting billing rate:", error);
+      // console.error("Error deleting billing rate:", error);
       toast.error(
         `Failed to delete billing rate: ${
           error.response?.data?.message || error.message
@@ -1066,10 +1066,10 @@ const uniqueData = filteredData.map((item, index) => {
       setEditProjectPlcFields(newEditProjectPlcFields);
       toast.success("New billing rate added successfully!");
     } catch (error) {
-      console.error(
-        "Error adding billing rate:",
-        error.response ? error.response.data : error.message
-      );
+      // console.error(
+      //   "Error adding billing rate:",
+      //   error.response ? error.response.data : error.message
+      // );
       toast.error(
         `Failed to add billing rate: ${
           error.response?.data?.message || error.message
@@ -1298,9 +1298,9 @@ const uniqueData = filteredData.map((item, index) => {
       !newEmployeeRate.startDate ||
       !newEmployeeRate.billRate
     ) {
-      console.error(
-        "Please fill all required fields (Employee, PLC, Bill Rate, Start Date)"
-      );
+      // console.error(
+      //   "Please fill all required fields (Employee, PLC, Bill Rate, Start Date)"
+      // );
       return;
     }
     setLoading(true);
@@ -1363,10 +1363,10 @@ const uniqueData = filteredData.map((item, index) => {
       setEditEmployeeBillRate(newEditEmployeeBillRate);
       setEditEmployeeFields(newEditEmployeeFields);
     } catch (error) {
-      console.error(
-        "Error adding employee billing rate:",
-        error.response ? error.response.data : error.message
-      );
+      // console.error(
+      //   "Error adding employee billing rate:",
+      //   error.response ? error.response.data : error.message
+      // );
     } finally {
       setLoading(false);
     }
@@ -1481,7 +1481,7 @@ const uniqueData = filteredData.map((item, index) => {
   
   const handleUpdateEmployee = async (id) => {
   if (!id) {
-    console.error("Invalid ID for update");
+    // console.error("Invalid ID for update");
     return;
   }
   
@@ -1544,7 +1544,7 @@ const uniqueData = filteredData.map((item, index) => {
     setEditingEmployeeRowId(null);
     toast.success("Employee billing rate updated successfully!");
   } catch (error) {
-    console.error("Error updating employee billing rate:", error);
+    // console.error("Error updating employee billing rate:", error);
     toast.error(`Failed to update employee billing rate: ${error.response?.data?.message || error.message}`);
   } finally {
     setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
@@ -1560,7 +1560,7 @@ const uniqueData = filteredData.map((item, index) => {
       return;
     }
     if (!id) {
-      console.error("Invalid ID for deletion");
+      // console.error("Invalid ID for deletion");
       return;
     }
     setLoading(true);
@@ -1580,7 +1580,7 @@ const uniqueData = filteredData.map((item, index) => {
       setEditingEmployeeRowId(null);
       toast.success("Employee billing rate deleted successfully!");
     } catch (error) {
-      console.error("Error deleting employee billing rate:", error);
+      // console.error("Error deleting employee billing rate:", error);
       toast.error(
         `Failed to delete employee billing rate: ${
           error.response?.data?.message || error.message
@@ -2161,9 +2161,9 @@ const uniqueData = filteredData.map((item, index) => {
       !newVendorRate.startDate ||
       !newVendorRate.billRate
     ) {
-      console.error(
-        "Please fill all required fields (Vendor ID, Vendor Name, PLC, Bill Rate, Start Date)"
-      );
+      // console.error(
+      //   "Please fill all required fields (Vendor ID, Vendor Name, PLC, Bill Rate, Start Date)"
+      // );
       return;
     }
     setLoading(true);
@@ -2252,10 +2252,10 @@ const uniqueData = filteredData.map((item, index) => {
       setEditVendorBillRate(newEditVendorBillRate);
       setEditVendorFields(newEditVendorFields);
     } catch (error) {
-      console.error(
-        "Error adding vendor billing rate:",
-        error.response ? error.response.data : error.message
-      );
+      // console.error(
+      //   "Error adding vendor billing rate:",
+      //   error.response ? error.response.data : error.message
+      // );
     } finally {
       setLoading(false);
     }
@@ -2357,7 +2357,7 @@ const uniqueData = filteredData.map((item, index) => {
     setEditingVendorRowId(null);
     toast.success("Vendor billing rate updated successfully!");
   } catch (error) {
-    console.error("Error updating vendor billing rate:", error);
+    // console.error("Error updating vendor billing rate:", error);
     toast.error(`Failed to update vendor billing rate: ${error.response?.data?.message || error.message}`);
   } finally {
     setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
@@ -2499,7 +2499,7 @@ const uniqueData = filteredData.map((item, index) => {
       setEditingVendorRowId(null);
       toast.success("Vendor billing rate deleted successfully!");
     } catch (error) {
-      console.error("Error deleting vendor billing rate:", error);
+      // console.error("Error deleting vendor billing rate:", error);
       toast.error(
         `Failed to delete vendor billing rate: ${
           error.response?.data?.message || error.message

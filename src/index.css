@@ -31,11 +31,72 @@
   margin-bottom: 0;
 }
 
-.vertical-scroll-wrapper {
-  max-height: 400px; /* Or any desired height */
-  overflow-y: auto;
+/* Only horizontal scrollbar is styled; vertical remains hidden */
+.hide-scrollbar::-webkit-scrollbar {
+  width: 12px;
+  height: 12px; /* Controls horizontal scrollbar thickness */
 }
 
+/* Hide vertical scrollbar */
+.hide-scrollbar::-webkit-scrollbar:vertical {
+  width: 0 !important;
+  background: transparent !important;
+}
+.hide-scrollbar::-webkit-scrollbar-thumb:vertical {
+  background: transparent !important;
+}
+
+/* White background for track */
+.hide-scrollbar::-webkit-scrollbar-track:horizontal {
+  background: #fff !important;
+  border-radius: 6px !important;
+}
+
+/* Thumb: gray, round */
+.hide-scrollbar::-webkit-scrollbar-thumb:horizontal {
+  background: #878787ff !important;
+  border-radius: 6px !important;
+  min-width: 24px !important;
+  border: 2px solid #fff !important;
+}
+.hide-scrollbar::-webkit-scrollbar-thumb:horizontal:hover {
+  background: #555 !important; /* Change this color as desired */
+}
+
+/* Arrow buttons: only at start and end, with one arrow each, flush with track */
+.hide-scrollbar::-webkit-scrollbar-button:horizontal:start {
+  /* width: 16px;
+  height: 10px; */
+  background: #fff
+    url("data:image/svg+xml,%3Csvg width='8' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='7,2 2,6 7,10' fill='%238c8c8c'/%3E%3C/svg%3E")
+    no-repeat center center !important;
+  background-size: 12px 16px !important;
+  border-radius: 6px 0 0 6px !important;
+  border-right: none !important;
+}
+
+.hide-scrollbar::-webkit-scrollbar-button:horizontal:end {
+  /* width: 16px;
+  height: 10px; */
+  background: #fff
+    url("data:image/svg+xml,%3Csvg width='8' height='12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='1,2 6,6 1,10' fill='%238c8c8c'/%3E%3C/svg%3E")
+    no-repeat center center !important;
+  background-size: 12px 16px !important;
+  border-radius: 0px 6px 6px 0px !important;
+  border-left: none !important;
+}
+
+/* Hide double/extra buttons (middle area and verticals) */
+.hide-scrollbar::-webkit-scrollbar-button:horizontal:decrement:single,
+.hide-scrollbar::-webkit-scrollbar-button:horizontal:increment:single,
+.hide-scrollbar::-webkit-scrollbar-button:vertical {
+  display: none !important;
+}
+
+/* Corner */
+.hide-scrollbar::-webkit-scrollbar-corner {
+  background: #fff;
+}
 
 /* ProjectPlanTable specific styles */
 .project-plan-table-container {
@@ -103,7 +164,7 @@
   .project-plan-table {
     @apply text-xs;
   }
-  
+
   .project-plan-table th,
   .project-plan-table td {
     @apply p-0.5;
@@ -117,7 +178,7 @@
     min-width: 80px;
     max-width: 120px;
   }
-  
+
   .project-plan-table th:nth-child(3),
   .project-plan-table td:nth-child(3) {
     width: 120px;

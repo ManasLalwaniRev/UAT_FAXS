@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { backendUrl } from "./config";
+import EmployeeSchedule from "./EmployeeSchedule";
 
 const Warning = ({ planId, projectId, templateId, planType }) => {
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showEmployeeSchedule, setShowEmployeeSchedule] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
   const fetchWarnings = async () => {
     if (!planId) {
@@ -19,16 +22,26 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
       const response = await axios.get(
         `${backendUrl}/Project/GetWarningsByPlId/${planId}`
       );
-      
+
       setWarnings(response.data || []);
       setError(null);
     } catch (err) {
-      setError('Failed to fetch warnings');
-      console.error('Error fetching warnings:', err);
+      setError("Failed to fetch warnings");
+      // console.error("Error fetching warnings:", err);
       setWarnings([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEmployeeRowClick = (employeeId) => {
+    setSelectedEmployeeId(employeeId);
+    setShowEmployeeSchedule(true);
+  };
+
+  const handleCloseEmployeeSchedule = () => {
+    setShowEmployeeSchedule(false);
+    setSelectedEmployeeId(null);
   };
 
   useEffect(() => {
@@ -37,8 +50,12 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center py-4">
-        <div className="text-gray-600 text-sm">Loading warnings...</div>
+      // <div className="flex justify-center items-center py-4">
+      //   <div className="text-gray-600 text-sm">Loading warnings...</div>
+      // </div>
+      <div className="p-4 font-inter flex justify-center items-center">
+        <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-600"></div>
+        <span className="ml-2 text-xs text-gray-600">Loading Warnings...</span>
       </div>
     );
   }
@@ -61,7 +78,7 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
         <div className="overflow-x-auto">
           <table className="min-w-full border-collapse border border-gray-300">
             <thead>
-              <tr className=" text-black">
+              <tr className="text-black">
                 <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
                   Warning
                 </th>
@@ -81,27 +98,48 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
             </thead>
             <tbody>
               {warnings.map((warning, index) => (
-                <tr key={index}>
+                <tr
+                  key={index}
+                  className={`${
+                    index === 1
+                      ? "hover:bg-blue-50 cursor-pointer bg-blue-25"
+                      : "hover:bg-gray-50"
+                  }`}
+                  onClick={
+                    index === 1
+                      ? () => handleEmployeeRowClick(warning.emplId)
+                      : undefined
+                  }
+                  title={index === 1 ? "Click to view employee schedule" : ""}
+                >
                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.warning || ''}
+                    {warning.warning || ""}
                   </td>
                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.projId || ''}
+                    {warning.projId || ""}
                   </td>
                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.emplId || ''}
+                    {warning.emplId || ""}
                   </td>
                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.year || ''}
+                    {warning.year || ""}
                   </td>
                   <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.month === 0 ? 'All Year' : warning.month || ''}
+                    {warning.month === 0 ? "All Year" : warning.month || ""}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Employee Schedule Modal */}
+      {showEmployeeSchedule && (
+        <EmployeeSchedule
+          employeeId={selectedEmployeeId}
+          onClose={handleCloseEmployeeSchedule}
+        />
       )}
     </div>
   );

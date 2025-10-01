@@ -59,7 +59,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
       // setAcctId(revenueAccount || (newData.length > 0 ? newData[0].acctId || '' : ''));
     } catch (error) {
       toast.error("Failed to fetch revenue data.");
-      console.error("Fetch error:", error);
+      // console.error("Fetch error:", error);
       setPeriods([]);
     } finally {
       setLoading(false);
@@ -84,7 +84,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
               updatedPeriod.period = (date.getMonth() + 1).toString(); // Month is 0-based, so add 1
             }
           } catch (e) {
-            console.error("Date parsing error:", e);
+            // console.error("Date parsing error:", e);
           }
         }
         return updatedPeriod;
@@ -117,7 +117,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
         }
       } catch (error) {
         // Optionally show a toast or just log
-        console.error("Failed to fetch revenue setup data", error);
+        // console.error("Failed to fetch revenue setup data", error);
       }
     };
     fetchSetupData();
@@ -134,21 +134,19 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
       overrideSystemAdjustment: overrideAdjustments,
       revAmt: parseFloat(period.revAmt) || 0,
       // revAdj: period.revAdj || "",
-      revAdj: parseFloat((period.revAdj || "").toString().replace(/,/g, "")) || 0,
+      revAdj:
+        parseFloat((period.revAdj || "").toString().replace(/,/g, "")) || 0,
       fiscalYear: period.fiscalYear || "",
     };
 
     try {
-      console.log("Updating revAdj with payload:", payload);
-      await axios.post(
-        `${backendUrl}/ProjRevWrkPd/upsert`,
-        payload
-      );
+      // console.log("Updating revAdj with payload:", payload);
+      await axios.post(`${backendUrl}/ProjRevWrkPd/upsert`, payload);
       toast.success("Revenue adjustment updated successfully!");
       fetchRevenueData();
     } catch (error) {
       toast.error("Failed to update revenue adjustment.");
-      console.error("Upsert error:", error);
+      // console.error("Upsert error:", error);
     }
   };
 
@@ -165,10 +163,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
     if (field === "useBillBurdenRates") setOverrideAdjustments(value);
 
     try {
-      await axios.post(
-        `${backendUrl}/ProjBgtRevSetup/upsert`,
-        updatedSetup
-      );
+      await axios.post(`${backendUrl}/ProjBgtRevSetup/upsert`, updatedSetup);
       toast.success("Revenue setup updated successfully!");
     } catch (error) {
       toast.error("Failed to update revenue setup.");
@@ -435,31 +430,30 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                               handleInputChange(index, "revAdj", "");
                               return;
                             }
- 
+
                             // ✅ allow integers & decimals (like 4.5, 1234.56)
                             if (!/^\d*\.?\d*$/.test(raw)) return;
- 
+
                             // split integer and decimal part
                             const [intPart, decimalPart] = raw.split(".");
- 
+
                             // format integer part with commas
                             const formattedInt = intPart
                               ? Number(intPart).toLocaleString("en-US")
                               : "";
- 
+
                             // rebuild with decimal part if exists
                             const formatted =
                               decimalPart !== undefined
                                 ? `${formattedInt}.${decimalPart}`
                                 : formattedInt;
- 
+
                             handleInputChange(index, "revAdj", formatted);
                           }}
                           onBlur={() => !isNewRow && handleRevAdjBlur(index)}
                           disabled={isRevAdjDisabled}
                         />
                       </td>
- 
 
                       <td className="border p-2">
                         <input
@@ -527,4 +521,3 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
 };
 
 export default RevenueCeilingComponent;
-

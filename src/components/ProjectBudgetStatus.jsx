@@ -13,9 +13,8 @@ import RevenueSetupComponent from "./RevenueSetupComponent";
 import RevenueCeilingComponent from "./RevenueCeilingComponent";
 import { formatDate } from "./utils";
 import FinancialDashboard from "./FinancialDashboard";
-import Warning from "./Warning"; 
+import Warning from "./Warning";
 import { backendUrl } from "./config";
-
 
 const ProjectBudgetStatus = () => {
   const [projects, setProjects] = useState([]);
@@ -48,7 +47,6 @@ const ProjectBudgetStatus = () => {
   const dashboardRefs = useRef({});
   const warningRefs = useRef({});
 
-
   const EXTERNAL_API_BASE_URL = backendUrl;
   const CALCULATE_COST_ENDPOINT = "/Forecast/CalculateCost";
 
@@ -69,7 +67,7 @@ const ProjectBudgetStatus = () => {
       funding: fundingRefs,
       plc: hoursRefs,
       dashboard: dashboardRefs,
-      warning: warningRefs
+      warning: warningRefs,
     };
 
     const refObj = refMap[activeTab];
@@ -107,10 +105,9 @@ const ProjectBudgetStatus = () => {
           templateId: selectedPlan.templateId.toString(),
           type: selectedPlan.plType,
         });
-        
-         const externalApiUrl = `${EXTERNAL_API_BASE_URL}${CALCULATE_COST_ENDPOINT}?${params.toString()}`;
-        // const externalApiUrl = `${backendUrl}/Forecast/CalculateCost?${params.toString()}`;
 
+        const externalApiUrl = `${EXTERNAL_API_BASE_URL}${CALCULATE_COST_ENDPOINT}?${params.toString()}`;
+        // const externalApiUrl = `${backendUrl}/Forecast/CalculateCost?${params.toString()}`;
 
         const response = await fetch(externalApiUrl, {
           method: "GET",
@@ -484,13 +481,13 @@ const ProjectBudgetStatus = () => {
 
             {/* Flex container to keep buttons on the left of ProjectPlanTable */}
             <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex flex-row lg:flex-col gap-2 text-blue-600 text-xs sm:text-sm cursor-pointer w-full lg:w-fit lg:min-w-[150px] flex-wrap">
+              <div className="flex flex-row lg:flex-col gap-2 text-blue-600 text-xs sm:text-sm w-full lg:w-fit lg:min-w-[150px] flex-wrap mt-4">
                 <span
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer
                     ${
                       activeTab === "dashboard"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("dashboard")}
                 >
@@ -501,7 +498,7 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "hours"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("hours")}
                 >
@@ -512,7 +509,7 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "amounts"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("amounts")}
                 >
@@ -523,7 +520,7 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "revenueAnalysis"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("revenueAnalysis")}
                 >
@@ -534,7 +531,7 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "analysisByPeriod"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("analysisByPeriod")}
                 >
@@ -544,7 +541,7 @@ const ProjectBudgetStatus = () => {
                   className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer ${
                     activeTab === "plc"
                       ? "bg-blue-600 text-white shadow-sm"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                   }`}
                   onClick={() => handleTabClick("plc")}
                 >
@@ -555,7 +552,7 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "revenueSetup"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("revenueSetup")}
                 >
@@ -566,7 +563,7 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "revenueCeiling"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("revenueCeiling")}
                 >
@@ -577,38 +574,39 @@ const ProjectBudgetStatus = () => {
                     ${
                       activeTab === "funding"
                         ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
                     }`}
                   onClick={() => handleTabClick("funding")}
                 >
                   Funding
                 </span>
                 <span
-  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer
     ${
       activeTab === "warning"
         ? "bg-blue-600 text-white shadow-sm"
-        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+        : "bg-gray-200 text-gray-800 hover:bg-gray-300"
     }`}
-  onClick={() => handleTabClick("warning")}
->
-  Warning
-</span>
+                  onClick={() => handleTabClick("warning")}
+                >
+                  Warning
+                </span>
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
                 <div className="w-full overflow-hidden">
-                <ProjectPlanTable
-                  projectId={searchTerm}
-                  onPlanSelect={handlePlanSelect}
-                  selectedPlan={selectedPlan}
-                  fiscalYear={fiscalYear}
-                  setFiscalYear={setFiscalYear}
-                  fiscalYearOptions={fiscalYearOptions}
-                />
+                  <ProjectPlanTable
+                    projectId={searchTerm}
+                    onPlanSelect={handlePlanSelect}
+                    selectedPlan={selectedPlan}
+                    fiscalYear={fiscalYear}
+                    setFiscalYear={setFiscalYear}
+                    fiscalYearOptions={fiscalYearOptions}
+                  />
                 </div>
               </div>
             </div>
 
+            {/* Dashboard Tab */}
             {activeTab === "dashboard" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -662,6 +660,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Hours Tab */}
             {activeTab === "hours" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16 overflow-x-auto"
@@ -729,6 +728,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Amounts Tab */}
             {activeTab === "amounts" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -794,6 +794,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Revenue Analysis Tab */}
             {activeTab === "revenueAnalysis" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -855,6 +856,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Analysis By Period Tab */}
             {activeTab === "analysisByPeriod" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -953,6 +955,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )} */}
 
+            {/* PLC Tab */}
             {activeTab === "plc" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -1033,6 +1036,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* RevenueSetup Tab */}
             {activeTab === "revenueSetup" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -1098,6 +1102,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Revenue Ceiling Tab */}
             {activeTab === "revenueCeiling" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -1163,6 +1168,7 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Funding Tab */}
             {activeTab === "funding" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
@@ -1223,68 +1229,68 @@ const ProjectBudgetStatus = () => {
               </div>
             )}
 
+            {/* Warning Tab */}
             {activeTab === "warning" && selectedPlan && (
-  <div
-    className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-    ref={(el) => (warningRefs.current[searchTerm] = el)}
-  >
-    <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-      <button
-        className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-        onClick={handleCloseTab}
-        title="Close project details"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-      <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-        <span>
-          <span className="font-semibold">Project ID: </span>
-          {selectedPlan.projId}
-        </span>
-        <span>
-          <span className="font-semibold">Type: </span>
-          {selectedPlan.plType || "N/A"}
-        </span>
-        <span>
-          <span className="font-semibold">Version: </span>
-          {selectedPlan.version || "N/A"}
-        </span>
-        <span>
-          <span className="font-semibold">Status: </span>
-          {selectedPlan.status || "N/A"}
-        </span>
-        <span>
-          <span className="font-semibold">
-            Period of Performance:{" "}
-          </span>
-          Start Date:{" "}
-          {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-          Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-        </span>
-      </div>
-    </div>
-    <Warning 
-      planId={selectedPlan.plId}
-      projectId={selectedPlan.projId}
-      templateId={selectedPlan.templateId}
-      planType={selectedPlan.plType}
-    />
-  </div>
-)}
-
+              <div
+                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                ref={(el) => (warningRefs.current[searchTerm] = el)}
+              >
+                <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <button
+                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                    onClick={handleCloseTab}
+                    title="Close project details"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                  <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                    <span>
+                      <span className="font-semibold">Project ID: </span>
+                      {selectedPlan.projId}
+                    </span>
+                    <span>
+                      <span className="font-semibold">Type: </span>
+                      {selectedPlan.plType || "N/A"}
+                    </span>
+                    <span>
+                      <span className="font-semibold">Version: </span>
+                      {selectedPlan.version || "N/A"}
+                    </span>
+                    <span>
+                      <span className="font-semibold">Status: </span>
+                      {selectedPlan.status || "N/A"}
+                    </span>
+                    <span>
+                      <span className="font-semibold">
+                        Period of Performance:{" "}
+                      </span>
+                      Start Date:{" "}
+                      {formatDate(selectedPlan.projStartDt) || "N/A"} | End
+                      Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                    </span>
+                  </div>
+                </div>
+                <Warning
+                  planId={selectedPlan.plId}
+                  projectId={selectedPlan.projId}
+                  templateId={selectedPlan.templateId}
+                  planType={selectedPlan.plType}
+                />
+              </div>
+            )}
           </div>
         )
       )}
@@ -1293,4 +1299,3 @@ const ProjectBudgetStatus = () => {
 };
 
 export default ProjectBudgetStatus;
-

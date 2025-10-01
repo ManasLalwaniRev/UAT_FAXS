@@ -91,9 +91,9 @@ const MaintainFiscalYearPeriods = () => {
   }, []);
 
   const handleSaveSettings = useCallback(() => {
-    console.log("Saving Fiscal Year Periods:");
-    console.log("Accounting Periods Data:", accountingPeriodsData);
-    console.log("Budgeting Periods Data:", budgetingPeriodsData);
+    // console.log("Saving Fiscal Year Periods:");
+    // console.log("Accounting Periods Data:", accountingPeriodsData);
+    // console.log("Budgeting Periods Data:", budgetingPeriodsData);
     alert('Fiscal Year Period settings saved (console logged)!');
     // In a real application, you would send this data to your backend API.
   }, [accountingPeriodsData, budgetingPeriodsData]);

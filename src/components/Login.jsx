@@ -47,9 +47,9 @@
 
 // export default Login;
 
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { backendUrl } from "./config";
+import { loginBackendUrl } from "./config";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -71,12 +71,12 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("https://timesheet-latest.onrender.com/api/User/login", {
+      const response = await fetch(`${loginBackendUrl}/api/User/login`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
 
       if (response.ok) {
@@ -94,7 +94,12 @@ const Login = () => {
           // Response is JSON
           try {
             const errData = await response.json();
-            errorMessage = errData.message || errData.error || errData.Message || errData.Error || errorMessage;
+            errorMessage =
+              errData.message ||
+              errData.error ||
+              errData.Message ||
+              errData.Error ||
+              errorMessage;
           } catch (jsonError) {
             errorMessage = "Login failed. Please check your credentials.";
           }
@@ -126,7 +131,9 @@ const Login = () => {
   return (
     <div className="flex items-center justify-center min-h-screen bg-blue-100">
       <div className="bg-white p-6 rounded shadow-md w-80">
-        <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">Login</h2>
+        <h2 className="text-2xl font-bold mb-4 text-center text-blue-600">
+          Login
+        </h2>
         {error && (
           <div className="mb-3 text-red-600 text-center text-sm bg-red-50 p-2 rounded">
             {error}
@@ -151,8 +158,8 @@ const Login = () => {
         <button
           onClick={handleLogin}
           className={`w-full py-2 rounded font-medium text-white transition-colors ${
-            loading 
-              ? "bg-gray-400 cursor-not-allowed" 
+            loading
+              ? "bg-gray-400 cursor-not-allowed"
               : "bg-blue-600 hover:bg-blue-700 cursor-pointer"
           }`}
           disabled={loading}
