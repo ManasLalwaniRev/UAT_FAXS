@@ -1,5 +1,53 @@
 @import "tailwindcss";
 
+@layer components {
+  .bg-gradient {
+    @apply bg-gradient-to-b from-gray-900 to-blue-900;
+  }
+  .border-overall {
+    @apply border-gray-400 rounded-lg shadow-2xl ring-2 ring-gray-300 border-2;
+  }
+  /* menu button */
+  .btn {
+    @apply px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer;
+  }
+
+  .btn-active {
+    @apply bg-blue-600 text-white shadow-sm;
+  }
+
+  .btn-inactive {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300;
+  }
+
+  /* action buttons */
+  .btn1 {
+    @apply px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 transition-colors duration-200;
+  }
+
+  /* Enabled button variants */
+  .btn-blue {
+    @apply bg-blue-600 text-white hover:bg-blue-700 cursor-pointer;
+  }
+
+  .btn-orange {
+    @apply bg-orange-600 text-white hover:bg-orange-700 cursor-pointer;
+  }
+
+  .btn-red {
+    @apply bg-red-600 text-white hover:bg-red-700 cursor-pointer;
+  }
+
+  .btn-green {
+    @apply bg-green-600 text-white hover:bg-green-700 cursor-pointer;
+  }
+
+  /* Disabled button */
+  .btn-disabled {
+    @apply bg-gray-300 text-gray-500 cursor-not-allowed;
+  }
+}
+
 .synchronized-tables-outer {
   width: 100%;
   overflow: hidden;

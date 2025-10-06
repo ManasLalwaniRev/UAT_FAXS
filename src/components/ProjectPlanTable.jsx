@@ -1045,6 +1045,7 @@ const ProjectPlanTable = ({
           <div className="flex gap-0.5 flex-wrap items-center ">
             {plans.length > 0 && (
               <>
+                {/* Create Budget */}
                 <button
                   onClick={() => {
                     setIsActionLoading(true);
@@ -1059,19 +1060,19 @@ const ProjectPlanTable = ({
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     !selectedPlan ||
                     !getButtonAvailability(selectedPlan, "Create Budget") ||
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      ? "btn-disabled"
+                      : "btn-blue"
                   }`}
                   title="Create Budget"
                 >
                   New Budget
                 </button>
-
+                {/* Create Blank budget */}
                 <button
                   onClick={() => {
                     setIsActionLoading(true);
@@ -1089,7 +1090,7 @@ const ProjectPlanTable = ({
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     !selectedPlan ||
                     !getButtonAvailability(
                       selectedPlan,
@@ -1097,14 +1098,14 @@ const ProjectPlanTable = ({
                     ) ||
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      ? "btn-disabled"
+                      : "btn-blue"
                   }`}
                   title="Create Blank Budget"
                 >
                   New Blank Budget
                 </button>
-
+                {/* Create EAC */}
                 <button
                   onClick={() => {
                     setIsActionLoading(true);
@@ -1119,13 +1120,13 @@ const ProjectPlanTable = ({
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     !selectedPlan ||
                     !getButtonAvailability(selectedPlan, "Create EAC") ||
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      ? "btn-disabled"
+                      : "btn-blue"
                   }`}
                   title="Create EAC"
                 >
@@ -1142,13 +1143,14 @@ const ProjectPlanTable = ({
                         "Create NB BUD"
                       );
                     }}
-                    className="px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                    className="btn1 btn-blue"
                     title="Create BUD"
                   >
                     CREATE NB BUD
                   </button>
                 )}
 
+                {/* Delete */}
                 <button
                   onClick={() => {
                     setIsActionLoading(true);
@@ -1164,31 +1166,32 @@ const ProjectPlanTable = ({
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     !selectedPlan ||
                     selectedPlan.isApproved ||
                     !getButtonAvailability(selectedPlan, "Delete") ||
                     !getMasterAndRelatedProjects(plans, selectedPlan?.projId)
                       .sameLevelBud
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-red-600 text-white hover:bg-red-700 cursor-pointer"
+                      ? "btn-disabled"
+                      : "btn-red"
                   }`}
                   title="Delete Selected Plan"
                 >
                   Delete
                 </button>
 
+                {/* Submit */}
                 <button
                   onClick={() => handleTopButtonToggle("isCompleted")}
                   disabled={
                     getTopButtonDisabled("isCompleted") || isActionLoading
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     getTopButtonDisabled("isCompleted") || isActionLoading
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "btn-disabled"
                       : selectedPlan?.status === "Submitted"
-                      ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      ? "btn-orange"
+                      : "btn-blue"
                   }`}
                   title={
                     selectedPlan?.status === "Submitted" ? "Unsubmit" : "Submit"
@@ -1201,18 +1204,19 @@ const ProjectPlanTable = ({
                     : "Submit"}
                 </button>
 
+                {/* Approve */}
                 <button
                   onClick={() => handleTopButtonToggle("isApproved")}
                   disabled={
                     getTopButtonDisabled("isApproved") || isActionLoading
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     getTopButtonDisabled("isApproved") || isActionLoading
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "btn-disabled"
                       : selectedPlan?.status === "Approved" ||
                         selectedPlan?.finalVersion
-                      ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      ? "btn-orange"
+                      : "btn-blue"
                   }`}
                   title={
                     selectedPlan?.status === "Approved"
@@ -1228,17 +1232,18 @@ const ProjectPlanTable = ({
                     : "Approve"}
                 </button>
 
+                {/* Conclude */}
                 <button
                   onClick={() => handleTopButtonToggle("finalVersion")}
                   disabled={
                     getTopButtonDisabled("finalVersion") || isActionLoading
                   }
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
+                  className={`btn1 ${
                     getTopButtonDisabled("finalVersion") || isActionLoading
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      ? "btn-disabled"
                       : selectedPlan?.finalVersion
-                      ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      ? "btn-orange"
+                      : "btn-blue"
                   }`}
                   title={selectedPlan?.finalVersion ? "Unconclude" : "Conclude"}
                 >
@@ -1249,30 +1254,25 @@ const ProjectPlanTable = ({
                     : "Conclude"}
                 </button>
 
+                {/* Calculate */}
                 <button
                   onClick={() => {
                     setIsActionLoading(true);
                     handleCalc();
                   }}
                   disabled={getCalcButtonDisabled()}
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
-                    getCalcButtonDisabled()
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                  className={`btn1 ${
+                    getCalcButtonDisabled() ? "btn-disabled" : "btn-blue"
                   }`}
                   title="Calculate"
                 >
                   Calc
                 </button>
 
+                {/* filter BUD/EAC */}
                 <button
                   onClick={() => setBudEacFilter(!budEacFilter)}
-                  className={`px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0 ${
-                    budEacFilter
-                      ? "bg-orange-600 text-white hover:bg-orange-700 cursor-pointer"
-                      : "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
-                  }`}
-                  // "bg-gray-300 text-gray-500 cursor-pointer"
+                  className={`btn1 ${budEacFilter ? "btn-orange" : "btn-blue"}`}
                   title={
                     budEacFilter ? "Show All Plans" : "Filter BUD/EAC Plans"
                   }
@@ -1280,9 +1280,10 @@ const ProjectPlanTable = ({
                   {budEacFilter ? "Show All" : "BUD/EAC"}
                 </button>
 
+                {/* New Business */}
                 <button
                   onClick={() => setShowNewBusinessPopup(true)}
-                  className="bg-green-600 text-white hover:bg-green-700 cursor-pointer px-1 py-1 rounded text-xs flex items-center whitespace-nowrap flex-shrink-0"
+                  className="btn1 btn-green"
                   title="New Business"
                 >
                   New Business

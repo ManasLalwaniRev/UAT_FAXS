@@ -84,7 +84,11 @@ const Login = () => {
         if (data.token) {
           localStorage.setItem("authToken", data.token);
         }
-        navigate("/dashboard");
+        if (data.role) {
+          localStorage.setItem("currentUser", JSON.stringify(data.role));
+          console.log("User role after login:", data.role);
+        }
+        navigate("/dashboard/project-budget-status");
       } else {
         // Check the Content-Type to determine how to parse the response
         const contentType = response.headers.get("content-type");

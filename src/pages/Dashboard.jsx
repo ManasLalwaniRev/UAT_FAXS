@@ -64,18 +64,39 @@ const Dashboard = () => {
                 </div>
               }
             />
-            <Route path="/project-budget-status" element={<ProjectBudgetStatus />} />
+            <Route
+              path="/project-budget-status"
+              element={<ProjectBudgetStatus />}
+            />
             <Route path="/new-business" element={<NewBusiness />} />
             <Route path="/pool-rate" element={<PoolRate />} />
-            <Route path="/pool-configuration" element={<PoolConfigurationTable />} />
-            <Route path="/template-pool-mapping" element={<TemplatePoolMapping />} />
+            <Route
+              path="/pool-configuration"
+              element={<PoolConfigurationTable />}
+            />
+            <Route
+              path="/template-pool-mapping"
+              element={<TemplatePoolMapping />}
+            />
             <Route path="/template" element={<Template />} />
-            <Route path="/ceiling-configuration" element={<CeilingConfiguration />} />
-            <Route path="/global-configuration" element={<GlobalConfiguration />} />
-            <Route path="/prospective-id-setup" element={<ProspectiveIdSetup />} />
+            <Route
+              path="/ceiling-configuration"
+              element={<CeilingConfiguration />}
+            />
+            <Route
+              path="/global-configuration"
+              element={<GlobalConfiguration />}
+            />
+            <Route
+              path="/prospective-id-setup"
+              element={<ProspectiveIdSetup />}
+            />
             <Route path="/display-settings" element={<DisplaySettings />} />
             <Route path="/annual-holidays" element={<AnnualHolidays />} />
-            <Route path="/maintain-fiscal-year-periods" element={<MaintainFiscalYearPeriods />} />
+            <Route
+              path="/maintain-fiscal-year-periods"
+              element={<MaintainFiscalYearPeriods />}
+            />
           </Routes>
         </div>
       </div>

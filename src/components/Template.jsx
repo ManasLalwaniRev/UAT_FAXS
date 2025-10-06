@@ -51,7 +51,6 @@ const Template = ({ updatedBy = "User" }) => {
     setIsSubmitting(true);
     setError(null);
 
-    
     const tempId = Date.now();
     const optimisticTemplate = {
       id: tempId,
@@ -65,7 +64,9 @@ const Template = ({ updatedBy = "User" }) => {
 
     try {
       const response = await fetch(
-        `${backendUrl}/Orgnization/AddTemplate?updatedBy=${encodeURIComponent(updatedBy)}`,
+        `${backendUrl}/Orgnization/AddTemplate?updatedBy=${encodeURIComponent(
+          updatedBy
+        )}`,
         {
           method: "POST",
           headers: {
@@ -94,13 +95,14 @@ const Template = ({ updatedBy = "User" }) => {
   };
 
   const handleDeleteTemplate = async (template) => {
-    
     const templateId = template.id;
     setTemplates((prev) => prev.filter((t) => t.id !== templateId));
 
     try {
       const response = await fetch(
-        `${backendUrl}/Orgnization/DeleteTemplate?updatedBy=${encodeURIComponent(updatedBy)}`,
+        `${backendUrl}/Orgnization/DeleteTemplate?updatedBy=${encodeURIComponent(
+          updatedBy
+        )}`,
         {
           method: "POST",
           headers: {
@@ -118,10 +120,8 @@ const Template = ({ updatedBy = "User" }) => {
         throw new Error("Failed to delete template");
       }
 
-      
       await fetchTemplates();
     } catch (err) {
-      
       setTemplates((prev) => [...prev, template].sort((a, b) => a.id - b.id));
       setError(err.message);
     }
@@ -137,28 +137,31 @@ const Template = ({ updatedBy = "User" }) => {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
-      
       <div className="flex justify-between items-center gap-2 mb-4">
-        <h2 className="w-full  bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">Templates</h2>
+        <h2 className="w-full  bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+          Burden Setup
+        </h2>
         <button
           onClick={() => setIsFormOpen(!isFormOpen)}
           className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 -mt-3 rounded-md hover:bg-blue-700 transition ease-in-out duration-200"
           disabled={isSubmitting}
         >
           <Plus className="w-5 h-5" />
-          <span>Template</span>
+          <span>Burden</span>
         </button>
       </div>
 
       {/* Form to Add New Template */}
       {isFormOpen && (
         <div className="mb-6 p-4 border border-gray-300 rounded-lg">
-          <h3 className="text-lg font-medium text-gray-800 mb-4">Add New Template</h3>
+          <h3 className="text-lg font-medium text-gray-800 mb-4">
+            Add New Template
+          </h3>
           <form onSubmit={handleAddTemplate}>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Template_Code
+                  Burden Code
                 </label>
                 <input
                   type="text"
@@ -166,7 +169,7 @@ const Template = ({ updatedBy = "User" }) => {
                   value={newTemplate.templateCode}
                   onChange={handleInputChange}
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter template code"
+                  placeholder="Enter burden code"
                   disabled={isSubmitting}
                 />
               </div>
@@ -239,7 +242,7 @@ const Template = ({ updatedBy = "User" }) => {
           <thead>
             <tr className="bg-gray-200">
               <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Template_Code
+                Burden_Code
               </th>
               <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
                 Description
