@@ -49,7 +49,7 @@
 
 import React, { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { loginBackendUrl } from "./config";
+import { backendUrl } from "./config";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -71,7 +71,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${loginBackendUrl}/api/User/login`, {
+      const response = await fetch(`${backendUrl}/api/User/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
