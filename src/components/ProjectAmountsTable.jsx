@@ -3073,7 +3073,7 @@ const ProjectAmountsTable = ({
               overflowX: "auto",
             }}
           >
-            <table className="table-fixed text-xs text-left min-w-max border border-gray-300 rounded-lg">
+            <table className="table-fixed text-xs text-left min-w-full border border-gray-300 rounded-lg">
               <thead className="sticky-thead">
                 <tr
                   style={{

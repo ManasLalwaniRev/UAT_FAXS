@@ -413,13 +413,13 @@ const ProjectBudgetStatus = () => {
           No project found with that ID.
         </div>
       ) : (
-        filteredProjects.length > 0 && (
+        filteredProjects.length >= 0 && (
           <div
             key={searchTerm}
             className="space-y-4 sm:p-4 border-overall  p-2  bg-white mb-8"
           >
             {selectedPlan && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+              <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-1">
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                   <div>
                     <span className="font-semibold text-green-800">
@@ -427,14 +427,14 @@ const ProjectBudgetStatus = () => {
                     </span>{" "}
                     <span className="text-gray-700">{selectedPlan.projId}</span>
                   </div>
-                  <div>
+                  {/* <div>
                     <span className="font-semibold text-green-800">
                       Project Name:
                     </span>{" "}
                     <span className="text-gray-700">
                       {selectedPlan.projName}
                     </span>
-                  </div>
+                  </div> */}
                   <div>
                     <span className="font-semibold text-green-800">
                       Start Date:
@@ -451,12 +451,12 @@ const ProjectBudgetStatus = () => {
                       {formatDate(selectedPlan.projEndDt)}
                     </span>
                   </div>
-                  <div>
+                  {/* <div>
                     <span className="font-semibold text-green-800">
                       Organization:
                     </span>{" "}
                     <span className="text-gray-700">{selectedPlan.orgId}</span>
-                  </div>
+                  </div> */}
                   <div>
                     <span className="font-semibold text-green-800">
                       Funded Fee:

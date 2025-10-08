@@ -119,6 +119,9 @@ const ProjectHoursDetails = ({
   const debounceTimeout = useRef(null);
 
   const scrollingLock = useRef(false);
+  const [editingPerHourRateIdx, setEditingPerHourRateIdx] =
+    React.useState(null);
+  const [isEditingNewEntry, setIsEditingNewEntry] = React.useState(false);
 
   // const [maxKbdSuffix, setMaxKbdSuffix] = useState(0);
 
@@ -2613,7 +2616,7 @@ const ProjectHoursDetails = ({
         </div>
       )}
 
-      <div className="w-full flex justify-between mb-4 gap-2">
+      <div className="w-full flex justify-between mb-1 gap-2">
         <div className="flex-grow"></div>
         <div className="flex gap-2 ">
           {hasHiddenRows && (
@@ -2862,7 +2865,7 @@ const ProjectHoursDetails = ({
               overflowX: "auto",
             }}
           >
-            <table className="table-fixed text-xs text-left min-w-max border border-gray-300 rounded-lg">
+            <table className="table-fixed text-xs text-left min-w-full border border-gray-300 rounded-lg">
               <thead className="sticky-thead">
                 <tr
                   style={{
@@ -3268,7 +3271,7 @@ const ProjectHoursDetails = ({
                         placeholder="Enter Status"
                       />
                     </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
+                    {/* <td className="border border-gray-300 px-1.5 py-0.5">
                       <input
                         type="text"
                         name="perHourRate"
@@ -3303,7 +3306,31 @@ const ProjectHoursDetails = ({
                         }`}
                         disabled={!isFieldEditable}
                       />
+                    </td> */}
+                    <td className="border border-gray-300 px-1.5 py-0.5">
+                      <input
+                        type="password"
+                        name="perHourRate"
+                        value={isEditingNewEntry ? newEntry.perHourRate : ""}
+                        placeholder={isEditingNewEntry ? "" : "**"}
+                        onFocus={() => setIsEditingNewEntry(true)}
+                        onBlur={() => setIsEditingNewEntry(false)}
+                        onChange={(e) =>
+                          isFieldEditable &&
+                          setNewEntry({
+                            ...newEntry,
+                            perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
+                          })
+                        }
+                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                          !isFieldEditable
+                            ? "bg-gray-100 cursor-not-allowed"
+                            : ""
+                        }`}
+                        disabled={!isFieldEditable}
+                      />
                     </td>
+
                     <td className="border border-gray-300 px-1.5 py-0.5">
                       {Object.values(newEntryPeriodHours)
                         .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
@@ -3716,7 +3743,7 @@ const ProjectHoursDetails = ({
                         <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                           {row.status}
                         </td>
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
+                        {/* <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                           {isBudPlan && isEditable ? (
                             <input
                               type="text"
@@ -3740,7 +3767,44 @@ const ProjectHoursDetails = ({
                           ) : (
                             row.perHourRate
                           )}
+                        </td> */}
+                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
+                          {isBudPlan && isEditable ? (
+                            <input
+                              type="password"
+                              value={
+                                editingPerHourRateIdx === actualEmpIdx
+                                  ? editedData.perHourRate !== undefined
+                                    ? editedData.perHourRate
+                                    : row.perHourRate
+                                  : ""
+                              }
+                              placeholder={
+                                editingPerHourRateIdx === actualEmpIdx
+                                  ? ""
+                                  : "**"
+                              }
+                              onFocus={() =>
+                                setEditingPerHourRateIdx(actualEmpIdx)
+                              }
+                              onBlur={() => {
+                                setEditingPerHourRateIdx(null);
+                                handleEmployeeDataBlur(actualEmpIdx, emp);
+                              }}
+                              onChange={(e) =>
+                                handleEmployeeDataChange(
+                                  actualEmpIdx,
+                                  "perHourRate",
+                                  e.target.value.replace(/[^0-9.]/g, "")
+                                )
+                              }
+                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                            />
+                          ) : (
+                            "**"
+                          )}
                         </td>
+
                         <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                           {row.total}
                         </td>

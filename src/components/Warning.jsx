@@ -75,10 +75,13 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
           No warnings found for this project.
         </div>
       ) : (
-        <div className="overflow-x-auto">
+        <div
+          className="overflow-x-auto overflow-y-auto"
+          style={{ maxHeight: "300px" }}
+        >
           <table className="min-w-full border-collapse border border-gray-300">
             <thead>
-              <tr className="text-black">
+              <tr className="text-black sticky top-0 bg-gray-200">
                 <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
                   Warning
                 </th>

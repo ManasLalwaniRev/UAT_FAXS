@@ -41,7 +41,9 @@ const Dashboard = () => {
       </style>
 
       <div className="flex">
-        <NavigationSidebar />
+        <div className="sticky top-0 h-screen">
+          <NavigationSidebar />
+        </div>
         <div className="flex-1 p-4 sm:p-6 bg-gray-100 min-h-screen overflow-auto">
           <Routes>
             <Route
