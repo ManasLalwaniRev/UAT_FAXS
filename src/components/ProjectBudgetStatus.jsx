@@ -594,7 +594,7 @@ const ProjectBudgetStatus = () => {
                 </span>
               </div>
               <div className="flex-1 min-w-0 overflow-hidden">
-                <div className="w-full overflow-hidden">
+                {/* <div className="w-full overflow-hidden">
                   <ProjectPlanTable
                     projectId={searchTerm}
                     onPlanSelect={handlePlanSelect}
@@ -603,6 +603,220 @@ const ProjectBudgetStatus = () => {
                     setFiscalYear={setFiscalYear}
                     fiscalYearOptions={fiscalYearOptions}
                   />
+                </div> */}
+                {/* <div className="w-full overflow-hidden">
+  {!searched ? (
+    <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+      <div className="text-center">
+        <p className="text-lg font-medium mb-2">Search to get project details</p>
+        <p className="text-sm">Enter a Project ID and click Search to view project information</p>
+      </div>
+    </div>
+  ) : (
+    <ProjectPlanTable
+      projectId={searchTerm}
+      onPlanSelect={handlePlanSelect}
+      selectedPlan={selectedPlan}
+      fiscalYear={fiscalYear}
+      setFiscalYear={setFiscalYear}
+      fiscalYearOptions={fiscalYearOptions}
+    />
+  )}
+</div> */}
+
+                <div className="w-full overflow-hidden">
+                  {!searched && searchTerm.trim() === "" ? (
+                    <div className="w-full border border-black rounded-lg bg-white overflow-hidden">
+                      {/* Top buttons section - same as ProjectPlanTable */}
+                      <div className="flex justify-between items-center gap-1 mt-6 p-2">
+                        <div className="flex gap-0.5 flex-wrap items-center">
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="New Budget"
+                          >
+                            New Budget
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="New Blank Budget"
+                          >
+                            New Blank Budget
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="New EAC"
+                          >
+                            New EAC
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="Delete Selected Plan"
+                          >
+                            Delete
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="Submit"
+                          >
+                            Submit
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="Approve"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="Conclude"
+                          >
+                            Conclude
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="Calculate"
+                          >
+                            Calc
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="Filter BUD/EAC Plans"
+                          >
+                            BUD/EAC
+                          </button>
+                          <button
+                            disabled
+                            className="btn1 btn-disabled"
+                            title="New Business"
+                          >
+                            New Business
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            disabled
+                            className="bg-gray-400 text-white px-1 py-1 rounded flex items-center text-xs cursor-not-allowed whitespace-nowrap"
+                            title="Import Plan"
+                          >
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              className="h-3 w-3 mr-0.5"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                              />
+                            </svg>
+                            Import
+                          </button>
+                          <div className="flex items-center gap-1">
+                            <label className="font-semibold text-xs whitespace-nowrap">
+                              Fiscal Year:
+                            </label>
+                            <select
+                              disabled
+                              className="border border-gray-300 rounded px-1 py-1 text-xs focus:outline-none bg-gray-100 cursor-not-allowed"
+                            >
+                              <option>All</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Table with headers only */}
+                      <div
+                        className="w-full overflow-auto"
+                        style={{
+                          maxHeight: "320px",
+                          minHeight: "300px",
+                          border: "1px solid #e5e7eb",
+                          borderRadius: "0.5rem",
+                          background: "#fff",
+                        }}
+                      >
+                        <table className="w-full table-auto text-xs text-left border-collapse">
+                          <thead className="bg-gray-100 text-gray-800 sticky top-0 z-10">
+                            <tr>
+                              <th className="p-2 border font-normal">Export</th>
+                              <th className="p-1 border font-normal text-center">
+                                Project ID
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Project Name
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                BUD/EAC
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Revision
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Version Type
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Origin
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Submitted
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Approved
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Conclude
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Status
+                              </th>
+                              <th className="p-1 border font-normal text-center">
+                                Closed Period
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr>
+                              <td
+                                colSpan="12"
+                                className="p-8 text-center text-gray-500"
+                              >
+                                <div className="flex flex-col items-center justify-center">
+                                  <p className="text-lg font-medium mb-2">
+                                    Enter a Project ID to view project details
+                                  </p>
+                                  {/* <p className="text-sm">
+                                    Empty search to get all project details
+                                  </p> */}
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  ) : (
+                    <ProjectPlanTable
+                      projectId={searchTerm}
+                      onPlanSelect={handlePlanSelect}
+                      selectedPlan={selectedPlan}
+                      fiscalYear={fiscalYear}
+                      setFiscalYear={setFiscalYear}
+                      fiscalYearOptions={fiscalYearOptions}
+                    />
+                  )}
                 </div>
               </div>
             </div>
