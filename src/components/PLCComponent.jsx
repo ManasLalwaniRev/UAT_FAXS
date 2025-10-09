@@ -69,9 +69,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     //   setLoading(true);
     setLoadingPLC(true);
     try {
-      const response = await axios.get(
-        `${backendUrl}/api/ProjectPlcRates`
-      );
+      const response = await axios.get(`${backendUrl}/api/ProjectPlcRates`);
       const filteredData = response.data.filter((item) =>
         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
       );
@@ -92,36 +90,34 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       //   return { ...item, id };
       // });
 
-    //   // ✅ ALWAYS generate unique IDs, store original for API calls
-    // const uniqueData = filteredData.map((item, index) => {
-    //   // const uniqueId = `plc-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
-    //   const uniqueId = `plc-${Date.now()}-${Math.random()}-${index}-${uuidv4()}`;
-    //   return { 
-    //     ...item, 
-    //     id: uniqueId,
-    //     originalId: item.id // Store original for API calls
-    //   };
-    // });
+      //   // ✅ ALWAYS generate unique IDs, store original for API calls
+      // const uniqueData = filteredData.map((item, index) => {
+      //   // const uniqueId = `plc-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
+      //   const uniqueId = `plc-${Date.now()}-${Math.random()}-${index}-${uuidv4()}`;
+      //   return {
+      //     ...item,
+      //     id: uniqueId,
+      //     originalId: item.id // Store original for API calls
+      //   };
+      // });
 
-//     const uniqueData = filteredData.map((item, index) => {
-//   const uniqueId = `plc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}-${uuidv4()}`;
-//   return { 
-//     ...item, 
-//     id: uniqueId,
-//     originalId: item.id // Store original for API calls
-//   };
-// });
+      //     const uniqueData = filteredData.map((item, index) => {
+      //   const uniqueId = `plc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}-${uuidv4()}`;
+      //   return {
+      //     ...item,
+      //     id: uniqueId,
+      //     originalId: item.id // Store original for API calls
+      //   };
+      // });
 
-const uniqueData = filteredData.map((item, index) => {
-    const uniqueId = `plc-${uuidv4()}-${index}`;
-    return { 
-      ...item, 
-      id: uniqueId,
-      originalId: item.id
-    };
-  });
-
-
+      const uniqueData = filteredData.map((item, index) => {
+        const uniqueId = `plc-${uuidv4()}-${index}`;
+        return {
+          ...item,
+          id: uniqueId,
+          originalId: item.id,
+        };
+      });
 
       setBillingRatesSchedule(
         uniqueData.map((item) => ({
@@ -273,9 +269,7 @@ const uniqueData = filteredData.map((item, index) => {
 
     setLoading(true);
     try {
-      const response = await axios.get(
-        `${backendUrl}/ProjEmplRt`
-      );
+      const response = await axios.get(`${backendUrl}/ProjEmplRt`);
       const filteredData = response.data.filter(
         (item) =>
           item.projId
@@ -301,34 +295,33 @@ const uniqueData = filteredData.map((item, index) => {
       // });
 
       // ✅ Always generate unique IDs
-    // const uniqueData = filteredData.map((item, index) => {
-    //   // const uniqueId = `emp-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
-    //   const uniqueId = `emp-${Date.now()}-${Math.random()}-${index}-${uuidv4()}`;
-    //   return { 
-    //     ...item, 
-    //     id: uniqueId,
-    //     originalId: item.projEmplRtKey || item.id // Keep original for API calls
-    //   };
-    // });
+      // const uniqueData = filteredData.map((item, index) => {
+      //   // const uniqueId = `emp-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
+      //   const uniqueId = `emp-${Date.now()}-${Math.random()}-${index}-${uuidv4()}`;
+      //   return {
+      //     ...item,
+      //     id: uniqueId,
+      //     originalId: item.projEmplRtKey || item.id // Keep original for API calls
+      //   };
+      // });
 
-//     const uniqueData = filteredData.map((item, index) => {
-//   const uniqueId = `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}-${uuidv4()}`;
-//   return { 
-//     ...item, 
-//     id: uniqueId,
-//     originalId: item.projEmplRtKey || item.id
-//   };
-// });
+      //     const uniqueData = filteredData.map((item, index) => {
+      //   const uniqueId = `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}-${uuidv4()}`;
+      //   return {
+      //     ...item,
+      //     id: uniqueId,
+      //     originalId: item.projEmplRtKey || item.id
+      //   };
+      // });
 
-const uniqueData = filteredData.map((item, index) => {
-    const uniqueId = `emp-${uuidv4()}-${index}`;
-    return { 
-      ...item, 
-      id: uniqueId,
-      originalId: item.projEmplRtKey || item.id
-    };
-  });
-
+      const uniqueData = filteredData.map((item, index) => {
+        const uniqueId = `emp-${uuidv4()}-${index}`;
+        return {
+          ...item,
+          id: uniqueId,
+          originalId: item.projEmplRtKey || item.id,
+        };
+      });
 
       setEmployeeBillingRates(
         uniqueData.map((item) => ({
@@ -620,9 +613,7 @@ const uniqueData = filteredData.map((item, index) => {
     //   setLoading(true);
     setLoadingVendor(true);
     try {
-      const response = await axios.get(
-        `${backendUrl}/ProjVendRt`
-      );
+      const response = await axios.get(`${backendUrl}/ProjVendRt`);
       const filteredData = response.data.filter((item) =>
         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
       );
@@ -644,40 +635,40 @@ const uniqueData = filteredData.map((item, index) => {
       //   return { ...item, id };
       // });
 
-    //   // ✅ Generate truly unique IDs
-    // const uniqueData = filteredData.map((item, index) => {
-    //   const uniqueId = item.projVendRtKey || item.id || `vendor-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
-    //   return { ...item, id: uniqueId };
-    // });
+      //   // ✅ Generate truly unique IDs
+      // const uniqueData = filteredData.map((item, index) => {
+      //   const uniqueId = item.projVendRtKey || item.id || `vendor-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
+      //   return { ...item, id: uniqueId };
+      // });
 
-    // ✅ ALWAYS generate unique IDs
-    // const uniqueData = filteredData.map((item, index) => {
-    //   // const uniqueId = `vendor-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
-    //   const uniqueId = `vendor-${Date.now()}-${Math.random()}-${index}-${uuidv4()}`;
-    //   return { 
-    //     ...item, 
-    //     id: uniqueId,
-    //     originalId: item.projVendRtKey || item.id // Store original for API calls
-    //   };
-    // });
+      // ✅ ALWAYS generate unique IDs
+      // const uniqueData = filteredData.map((item, index) => {
+      //   // const uniqueId = `vendor-${Date.now()}-${index}-${uuidv4().substring(0, 8)}`;
+      //   const uniqueId = `vendor-${Date.now()}-${Math.random()}-${index}-${uuidv4()}`;
+      //   return {
+      //     ...item,
+      //     id: uniqueId,
+      //     originalId: item.projVendRtKey || item.id // Store original for API calls
+      //   };
+      // });
 
-//     const uniqueData = filteredData.map((item, index) => {
-//   const uniqueId = `vendor-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}-${uuidv4()}`;
-//   return { 
-//     ...item, 
-//     id: uniqueId,
-//     originalId: item.projVendRtKey || item.id
-//   };
-// });
+      //     const uniqueData = filteredData.map((item, index) => {
+      //   const uniqueId = `vendor-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-${index}-${uuidv4()}`;
+      //   return {
+      //     ...item,
+      //     id: uniqueId,
+      //     originalId: item.projVendRtKey || item.id
+      //   };
+      // });
 
-const uniqueData = filteredData.map((item, index) => {
-    const uniqueId = `vendor-${uuidv4()}-${index}`;
-    return { 
-      ...item, 
-      id: uniqueId,
-      originalId: item.projVendRtKey || item.id
-    };
-  });
+      const uniqueData = filteredData.map((item, index) => {
+        const uniqueId = `vendor-${uuidv4()}-${index}`;
+        return {
+          ...item,
+          id: uniqueId,
+          originalId: item.projVendRtKey || item.id,
+        };
+      });
 
       setVendorBillingRates(
         uniqueData.map((item) => ({
@@ -803,71 +794,74 @@ const uniqueData = filteredData.map((item, index) => {
   // };
 
   const handleUpdate = async (id) => {
-  setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
-  
-  const currentItem = billingRatesSchedule.find((item) => item.id === id);
-  const originalId = currentItem?.originalId || id; // ✅ Use original ID for API
-  
-  const updatedData = {
-    plc: currentItem?.plc,
-    billRate: editBillRate[id],
-    rateType: editProjectPlcFields[id]?.rateType,
-    startDate: editProjectPlcFields[id]?.startDate,
-    endDate: editProjectPlcFields[id]?.endDate,
+    setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
+
+    const currentItem = billingRatesSchedule.find((item) => item.id === id);
+    const originalId = currentItem?.originalId || id; // ✅ Use original ID for API
+
+    const updatedData = {
+      plc: currentItem?.plc,
+      billRate: editBillRate[id],
+      rateType: editProjectPlcFields[id]?.rateType,
+      startDate: editProjectPlcFields[id]?.startDate,
+      endDate: editProjectPlcFields[id]?.endDate,
+    };
+
+    if (
+      updatedData.startDate &&
+      updatedData.endDate &&
+      new Date(updatedData.startDate) > new Date(updatedData.endDate)
+    ) {
+      toast.error("End Date cannot be before Start Date.");
+      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+      return;
+    }
+
+    try {
+      await axios.put(
+        `${backendUrl}/api/ProjectPlcRates/${originalId}`, // ✅ Use original ID
+        {
+          id: originalId, // ✅ Use original ID
+          projId: selectedProjectId,
+          laborCategoryCode: updatedData.plc,
+          costRate: parseFloat(updatedData.billRate) * 0.65,
+          billingRate: parseFloat(updatedData.billRate),
+          effectiveDate: updatedData.startDate,
+          endDate: updatedData.endDate || null,
+          sBillRtTypeCd: updatedData.rateType,
+          isActive: true,
+          modifiedBy: "admin",
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        }
+      );
+
+      setBillingRatesSchedule((prev) =>
+        prev.map((rate) =>
+          rate.id === id
+            ? {
+                ...rate,
+                billRate: parseFloat(updatedData.billRate),
+                rateType: updatedData.rateType,
+                startDate: updatedData.startDate,
+                endDate: updatedData.endDate || null,
+              }
+            : rate
+        )
+      );
+      setEditingProjectPlcRowId(null);
+      toast.success("Billing rate updated successfully!");
+    } catch (error) {
+      // console.error("Error updating billing rate:", error);
+      toast.error(
+        `Failed to update billing rate: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+    }
   };
-
-  if (
-    updatedData.startDate &&
-    updatedData.endDate &&
-    new Date(updatedData.startDate) > new Date(updatedData.endDate)
-  ) {
-    toast.error("End Date cannot be before Start Date.");
-    setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-    return;
-  }
-
-  try {
-    await axios.put(
-      `${backendUrl}/api/ProjectPlcRates/${originalId}`, // ✅ Use original ID
-      {
-        id: originalId, // ✅ Use original ID
-        projId: selectedProjectId,
-        laborCategoryCode: updatedData.plc,
-        costRate: parseFloat(updatedData.billRate) * 0.65,
-        billingRate: parseFloat(updatedData.billRate),
-        effectiveDate: updatedData.startDate,
-        endDate: updatedData.endDate || null,
-        sBillRtTypeCd: updatedData.rateType,
-        isActive: true,
-        modifiedBy: "admin",
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      }
-    );
-    
-    setBillingRatesSchedule((prev) =>
-      prev.map((rate) =>
-        rate.id === id
-          ? {
-              ...rate,
-              billRate: parseFloat(updatedData.billRate),
-              rateType: updatedData.rateType,
-              startDate: updatedData.startDate,
-              endDate: updatedData.endDate || null,
-            }
-          : rate
-      )
-    );
-    setEditingProjectPlcRowId(null);
-    toast.success("Billing rate updated successfully!");
-  } catch (error) {
-    // console.error("Error updating billing rate:", error);
-    toast.error(`Failed to update billing rate: ${error.response?.data?.message || error.message}`);
-  } finally {
-    setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-  }
-};
-
 
   // useEffect(() => {
   //   if (!selectedProjectId) {
@@ -915,9 +909,7 @@ const uniqueData = filteredData.map((item, index) => {
     }
     setLoading(true);
     try {
-      await axios.delete(
-        `${backendUrl}/api/ProjectPlcRates/${id}`
-      );
+      await axios.delete(`${backendUrl}/api/ProjectPlcRates/${id}`);
       setBillingRatesSchedule((prev) => prev.filter((rate) => rate.id !== id));
       setEditBillRate((prev) => {
         const newEditBillRate = { ...prev };
@@ -1017,23 +1009,20 @@ const uniqueData = filteredData.map((item, index) => {
 
     setLoading(true);
     try {
-      await axios.post(
-        `${backendUrl}/api/ProjectPlcRates`,
-        {
-          id: 0,
-          projId: selectedProjectId,
-          laborCategoryCode: newRate.plc,
-          costRate: parseFloat(newRate.billRate) * 0.65,
-          billingRate: parseFloat(newRate.billRate),
-          effectiveDate: newRate.startDate,
-          endDate: newRate.endDate || null,
-          sBillRtTypeCd: newRate.rateType,
-          isActive: true,
-          modifiedBy: "admin",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
-      );
+      await axios.post(`${backendUrl}/api/ProjectPlcRates`, {
+        id: 0,
+        projId: selectedProjectId,
+        laborCategoryCode: newRate.plc,
+        costRate: parseFloat(newRate.billRate) * 0.65,
+        billingRate: parseFloat(newRate.billRate),
+        effectiveDate: newRate.startDate,
+        endDate: newRate.endDate || null,
+        sBillRtTypeCd: newRate.rateType,
+        isActive: true,
+        modifiedBy: "admin",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
       setNewRate(null);
       const fetchResponse = await axios.get(
         `${backendUrl}/api/ProjectPlcRates`
@@ -1089,21 +1078,21 @@ const uniqueData = filteredData.map((item, index) => {
   //   }
   //   setNewRate((prev) => ({ ...prev, [field]: value }));
   // };
-  
+
   // const handleNewRateChange = (field, value) => {
   //   if (field === "billRate") {
   //     // Allow only numbers, commas, and decimals
   //     if (!/^[0-9,]*\.?[0-9]*$/.test(value)) {
   //       return; // ignore invalid input
   //     }
- 
+
   //     // Remove commas before saving as number string
   //     const cleanValue = value.replace(/,/g, "");
- 
+
   //     setNewRate((prev) => ({ ...prev, [field]: cleanValue }));
   //     return;
   //   }
- 
+
   //   setNewRate((prev) => ({ ...prev, [field]: value }));
   // };
 
@@ -1113,15 +1102,14 @@ const uniqueData = filteredData.map((item, index) => {
       if (!/^\d{0,3}(?:,?\d{3})*(?:\.\d*)?$/.test(value) && value !== "") {
         return; // ignore invalid input
       }
- 
+
       // Keep value as-is (don't parse here, so user can type 4.5 naturally)
       setNewRate((prev) => ({ ...prev, [field]: value }));
       return;
     }
- 
+
     setNewRate((prev) => ({ ...prev, [field]: value }));
   };
-
 
   // const handleBillRateChange = (id, value) => {
   //   setEditBillRate((prev) => ({
@@ -1129,19 +1117,18 @@ const uniqueData = filteredData.map((item, index) => {
   //     [id]: value === "" ? "" : parseFloat(value) || 0,
   //   }));
   // };
-  
+
   const handleBillRateChange = (id, value) => {
     // Allow only digits, commas, and one decimal
     if (!/^\d{0,3}(?:,?\d{3})*(?:\.\d*)?$/.test(value) && value !== "") {
       return; // ignore invalid input
     }
- 
+
     setEditBillRate((prev) => ({
       ...prev,
       [id]: value,
     }));
   };
-
 
   const handleProjectPlcFieldChange = (id, field, value) => {
     setEditProjectPlcFields((prev) => ({
@@ -1320,9 +1307,7 @@ const uniqueData = filteredData.map((item, index) => {
         modifiedBy: "admin",
       });
       setNewEmployeeRate(null);
-      const fetchResponse = await axios.get(
-        `${backendUrl}/ProjEmplRt`
-      );
+      const fetchResponse = await axios.get(`${backendUrl}/ProjEmplRt`);
       const filteredData = fetchResponse.data.filter(
         (item) =>
           item.projId
@@ -1382,27 +1367,27 @@ const uniqueData = filteredData.map((item, index) => {
   //     [id]: value === "" ? "" : parseFloat(value) || 0,
   //   }));
   // };
-  
-   const handleEmployeeBillRateChange = (id, value) => {
+
+  const handleEmployeeBillRateChange = (id, value) => {
     // ✅ allow only numbers, commas, and decimals while typing
     if (!/^[0-9,]*\.?[0-9]*$/.test(value) && value !== "") {
       return; // ❌ ignore invalid input
     }
- 
+
     // Remove commas for validation/storage
     const cleanValue = value.replace(/,/g, "");
- 
+
     if (cleanValue !== "" && (isNaN(cleanValue) || Number(cleanValue) <= 0)) {
       toast.error("Bill Rate must be a valid number greater than 0.");
       return;
     }
- 
+
     setEditEmployeeBillRate((prev) => ({
       ...prev,
       [id]: cleanValue, // store clean number string
     }));
   };
- 
+
   // const handleUpdateEmployee = async (id) => {
   //   if (!id) {
   //     console.error("Invalid ID for update");
@@ -1478,78 +1463,86 @@ const uniqueData = filteredData.map((item, index) => {
   //     setLoading(false);
   //   }
   // };
-  
+
   const handleUpdateEmployee = async (id) => {
-  if (!id) {
-    // console.error("Invalid ID for update");
-    return;
-  }
-  
-  setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
-  
-  const updatedData = employeeBillingRates.find((item) => item.id === id);
-  const originalId = updatedData?.originalId || id; // ✅ Use original ID
-  const fields = editEmployeeFields[id] || {};
+    if (!id) {
+      // console.error("Invalid ID for update");
+      return;
+    }
 
-  if (
-    fields.startDate &&
-    fields.endDate &&
-    new Date(fields.startDate) > new Date(fields.endDate)
-  ) {
-    toast.error("End Date cannot be before Start Date.");
-    setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-    return;
-  }
+    setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
 
-  try {
-    await axios.put(`${backendUrl}/ProjEmplRt/${originalId}`, { // ✅ Use original ID
-      projEmplRtKey: originalId, // ✅ Use original ID
-      projId: selectedProjectId,
-      emplId: fields.empId || updatedData.empId,
-      employeeName: fields.employeeName || updatedData.employeeName,
-      billLabCatCd: fields.plc || updatedData.plc,
-      billRtAmt: parseFloat(editEmployeeBillRate[id] ?? updatedData.billRate),
-      startDt: fields.startDate || updatedData.startDate,
-      endDt: fields.endDate || updatedData.endDate || null,
-      sBillRtTypeCd: fields.rateType || updatedData.rateType,
-      type: fields.lookupType || updatedData.lookupType,
-      isActive: true,
-      modifiedBy: "admin",
-    });
-    
-    // Update local state with the saved changes
-    setEmployeeBillingRates((prev) =>
-      prev.map((rate) =>
-        rate.id === id
-          ? {
-              ...rate,
-              lookupType: fields.lookupType || updatedData.lookupType,
-              empId: fields.empId || updatedData.empId,
-              employeeName: fields.employeeName || updatedData.employeeName,
-              plc: fields.plc || updatedData.plc,
-              plcDescription:
-                plcs.find(
-                  (plc) => plc.laborCategoryCode === (fields.plc || updatedData.plc)
-                )?.description ||
-                fields.plcDescription ||
-                updatedData.plcDescription,
-              billRate: parseFloat(editEmployeeBillRate[id] ?? updatedData.billRate),
-              rateType: fields.rateType || updatedData.rateType,
-              startDate: fields.startDate || updatedData.startDate,
-              endDate: fields.endDate || updatedData.endDate || null,
-            }
-          : rate
-      )
-    );
-    setEditingEmployeeRowId(null);
-    toast.success("Employee billing rate updated successfully!");
-  } catch (error) {
-    // console.error("Error updating employee billing rate:", error);
-    toast.error(`Failed to update employee billing rate: ${error.response?.data?.message || error.message}`);
-  } finally {
-    setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-  }
-};
+    const updatedData = employeeBillingRates.find((item) => item.id === id);
+    const originalId = updatedData?.originalId || id; // ✅ Use original ID
+    const fields = editEmployeeFields[id] || {};
+
+    if (
+      fields.startDate &&
+      fields.endDate &&
+      new Date(fields.startDate) > new Date(fields.endDate)
+    ) {
+      toast.error("End Date cannot be before Start Date.");
+      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+      return;
+    }
+
+    try {
+      await axios.put(`${backendUrl}/ProjEmplRt/${originalId}`, {
+        // ✅ Use original ID
+        projEmplRtKey: originalId, // ✅ Use original ID
+        projId: selectedProjectId,
+        emplId: fields.empId || updatedData.empId,
+        employeeName: fields.employeeName || updatedData.employeeName,
+        billLabCatCd: fields.plc || updatedData.plc,
+        billRtAmt: parseFloat(editEmployeeBillRate[id] ?? updatedData.billRate),
+        startDt: fields.startDate || updatedData.startDate,
+        endDt: fields.endDate || updatedData.endDate || null,
+        sBillRtTypeCd: fields.rateType || updatedData.rateType,
+        type: fields.lookupType || updatedData.lookupType,
+        isActive: true,
+        modifiedBy: "admin",
+      });
+
+      // Update local state with the saved changes
+      setEmployeeBillingRates((prev) =>
+        prev.map((rate) =>
+          rate.id === id
+            ? {
+                ...rate,
+                lookupType: fields.lookupType || updatedData.lookupType,
+                empId: fields.empId || updatedData.empId,
+                employeeName: fields.employeeName || updatedData.employeeName,
+                plc: fields.plc || updatedData.plc,
+                plcDescription:
+                  plcs.find(
+                    (plc) =>
+                      plc.laborCategoryCode === (fields.plc || updatedData.plc)
+                  )?.description ||
+                  fields.plcDescription ||
+                  updatedData.plcDescription,
+                billRate: parseFloat(
+                  editEmployeeBillRate[id] ?? updatedData.billRate
+                ),
+                rateType: fields.rateType || updatedData.rateType,
+                startDate: fields.startDate || updatedData.startDate,
+                endDate: fields.endDate || updatedData.endDate || null,
+              }
+            : rate
+        )
+      );
+      setEditingEmployeeRowId(null);
+      toast.success("Employee billing rate updated successfully!");
+    } catch (error) {
+      // console.error("Error updating employee billing rate:", error);
+      toast.error(
+        `Failed to update employee billing rate: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+    }
+  };
 
   const handleDeleteEmployee = async (id) => {
     if (
@@ -1728,7 +1721,7 @@ const uniqueData = filteredData.map((item, index) => {
         const cleanValue = value.replace(/,/g, "");
         return { ...prev, [field]: cleanValue };
       }
- 
+
       const updated = {
         ...prev,
         [field]: value,
@@ -1739,7 +1732,7 @@ const uniqueData = filteredData.map((item, index) => {
           ? { plcDescription: selectedPlc.description }
           : {}),
       };
- 
+
       // ✅ Date validations
       if (updated.startDate && updated.endDate) {
         if (new Date(updated.startDate) > new Date(updated.endDate)) {
@@ -1747,7 +1740,7 @@ const uniqueData = filteredData.map((item, index) => {
           return prev;
         }
       }
- 
+
       if (updated.startDate) {
         if (
           new Date(updated.startDate) < new Date(selectedPlan.projStartDt) ||
@@ -1757,7 +1750,7 @@ const uniqueData = filteredData.map((item, index) => {
           return prev;
         }
       }
- 
+
       if (updated.endDate) {
         if (
           new Date(updated.endDate) < new Date(selectedPlan.projStartDt) ||
@@ -1767,10 +1760,10 @@ const uniqueData = filteredData.map((item, index) => {
           return prev;
         }
       }
- 
+
       return updated; // ✅ valid update
     };
- 
+
     if (id) {
       // Editing existing row
       const selectedEmp =
@@ -1779,7 +1772,7 @@ const uniqueData = filteredData.map((item, index) => {
         field === "plc"
           ? plcs.find((plc) => plc.laborCategoryCode === value)
           : null;
- 
+
       setEditEmployeeFields((prev) => ({
         ...prev,
         [id]: updateState(prev[id] || {}, selectedEmp, selectedPlc),
@@ -1792,7 +1785,7 @@ const uniqueData = filteredData.map((item, index) => {
         field === "plc"
           ? plcs.find((plc) => plc.laborCategoryCode === value)
           : null;
- 
+
       setNewEmployeeRate((prev) => updateState(prev, selectedEmp, selectedPlc));
     }
   };
@@ -2187,9 +2180,7 @@ const uniqueData = filteredData.map((item, index) => {
         timeStamp: new Date().toISOString(),
       });
       setNewVendorRate(null);
-      const fetchResponse = await axios.get(
-        `${backendUrl}/ProjVendRt`
-      );
+      const fetchResponse = await axios.get(`${backendUrl}/ProjVendRt`);
       const filteredData = fetchResponse.data.filter((item) =>
         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
       );
@@ -2267,22 +2258,22 @@ const uniqueData = filteredData.map((item, index) => {
   //     [id]: value === "" ? "" : parseFloat(value) || 0,
   //   }));
   // };
-  
+
   const handleVendorBillRateChange = (id, value) => {
     // ✅ Allow only digits, commas, and decimals
     if (!/^[0-9,]*\.?[0-9]*$/.test(value) && value !== "") {
       return; // ignore invalid characters
     }
- 
+
     // ✅ Clean commas
     const clean = value.replace(/,/g, "");
- 
+
     // ✅ Reject 0 or negative values
     if (clean !== "" && parseFloat(clean) <= 0) {
       toast.error("Bill Rate must be greater than 0.");
       return;
     }
- 
+
     setEditVendorBillRate((prev) => ({
       ...prev,
       [id]: clean, // keep numeric string (so "2.5" stays "2.5")
@@ -2290,81 +2281,86 @@ const uniqueData = filteredData.map((item, index) => {
   };
 
   const handleUpdateVendor = async (id) => {
-  setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
-  
-  const row = vendorBillingRates.find((r) => r.id === id);
-  const originalId = row?.originalId || row?.projVendRtKey || id; // ✅ Use original ID
-  const fields = editVendorFields[id] || {};
+    setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
 
-  if (
-    fields.startDate &&
-    fields.endDate &&
-    new Date(fields.startDate) > new Date(fields.endDate)
-  ) {
-    toast.error("End Date cannot be before Start Date.");
-    setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-    return;
-  }
+    const row = vendorBillingRates.find((r) => r.id === id);
+    const originalId = row?.originalId || row?.projVendRtKey || id; // ✅ Use original ID
+    const fields = editVendorFields[id] || {};
 
-  try {
-    await axios.put(
-      `${backendUrl}/ProjVendRt/${originalId}`, // ✅ Use original ID
-      {
-        projVendRtKey: originalId, // ✅ Use original ID
-        projId: selectedProjectId,
-        vendId: fields.vendorId || row.vendorId,
-        vendEmplId: fields.vendorEmployee || row.vendorEmployee,
-        billLabCatCd: fields.plc || row.plc,
-        billDiscRt: 0,
-        companyId: "1",
-        billRtAmt: parseFloat(editVendorBillRate[id] ?? row.billRate),
-        startDt: new Date(fields.startDate || row.startDate).toISOString(),
-        endDt: fields.endDate
-          ? new Date(fields.endDate).toISOString()
-          : row.endDate
-          ? new Date(row.endDate).toISOString()
-          : null,
-        sBillRtTypeCd: fields.rateType || row.rateType,
-        type: fields.lookupType || row.lookupType,
-        modifiedBy: "admin",
-        timeStamp: new Date().toISOString(),
-      }
-    );
-    
-    setVendorBillingRates((prev) =>
-      prev.map((rate) =>
-        rate.id === id
-          ? {
-              ...rate,
-              lookupType: fields.lookupType || rate.lookupType,
-              vendorId: fields.vendorId || rate.vendorId,
-              vendorName: fields.vendorName || rate.vendorName,
-              vendorEmployee: fields.vendorEmployee || rate.vendorEmployee,
-              vendorEmployeeName: fields.vendorEmployeeName || rate.vendorEmployeeName,
-              plc: fields.plc || rate.plc,
-              plcDescription:
-                plcs.find((plc) => plc.laborCategoryCode === (fields.plc || rate.plc))?.description ||
-                fields.plcDescription ||
-                rate.plcDescription,
-              billRate: parseFloat(editVendorBillRate[id] ?? rate.billRate),
-              rateType: fields.rateType || rate.rateType,
-              startDate: fields.startDate || rate.startDate,
-              endDate: fields.endDate || rate.endDate || null,
-            }
-          : rate
-      )
-    );
-    setEditingVendorRowId(null);
-    toast.success("Vendor billing rate updated successfully!");
-  } catch (error) {
-    // console.error("Error updating vendor billing rate:", error);
-    toast.error(`Failed to update vendor billing rate: ${error.response?.data?.message || error.message}`);
-  } finally {
-    setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-  }
-};
+    if (
+      fields.startDate &&
+      fields.endDate &&
+      new Date(fields.startDate) > new Date(fields.endDate)
+    ) {
+      toast.error("End Date cannot be before Start Date.");
+      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+      return;
+    }
 
+    try {
+      await axios.put(
+        `${backendUrl}/ProjVendRt/${originalId}`, // ✅ Use original ID
+        {
+          projVendRtKey: originalId, // ✅ Use original ID
+          projId: selectedProjectId,
+          vendId: fields.vendorId || row.vendorId,
+          vendEmplId: fields.vendorEmployee || row.vendorEmployee,
+          billLabCatCd: fields.plc || row.plc,
+          billDiscRt: 0,
+          companyId: "1",
+          billRtAmt: parseFloat(editVendorBillRate[id] ?? row.billRate),
+          startDt: new Date(fields.startDate || row.startDate).toISOString(),
+          endDt: fields.endDate
+            ? new Date(fields.endDate).toISOString()
+            : row.endDate
+            ? new Date(row.endDate).toISOString()
+            : null,
+          sBillRtTypeCd: fields.rateType || row.rateType,
+          type: fields.lookupType || row.lookupType,
+          modifiedBy: "admin",
+          timeStamp: new Date().toISOString(),
+        }
+      );
 
+      setVendorBillingRates((prev) =>
+        prev.map((rate) =>
+          rate.id === id
+            ? {
+                ...rate,
+                lookupType: fields.lookupType || rate.lookupType,
+                vendorId: fields.vendorId || rate.vendorId,
+                vendorName: fields.vendorName || rate.vendorName,
+                vendorEmployee: fields.vendorEmployee || rate.vendorEmployee,
+                vendorEmployeeName:
+                  fields.vendorEmployeeName || rate.vendorEmployeeName,
+                plc: fields.plc || rate.plc,
+                plcDescription:
+                  plcs.find(
+                    (plc) => plc.laborCategoryCode === (fields.plc || rate.plc)
+                  )?.description ||
+                  fields.plcDescription ||
+                  rate.plcDescription,
+                billRate: parseFloat(editVendorBillRate[id] ?? rate.billRate),
+                rateType: fields.rateType || rate.rateType,
+                startDate: fields.startDate || rate.startDate,
+                endDate: fields.endDate || rate.endDate || null,
+              }
+            : rate
+        )
+      );
+      setEditingVendorRowId(null);
+      toast.success("Vendor billing rate updated successfully!");
+    } catch (error) {
+      // console.error("Error updating vendor billing rate:", error);
+      toast.error(
+        `Failed to update vendor billing rate: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+    }
+  };
 
   // const handleUpdateVendor = async (id) => {
   //   // setLoading(true);
@@ -2482,9 +2478,7 @@ const uniqueData = filteredData.map((item, index) => {
     const deleteId = rate?.projVendRtKey || id; // Use projVendRtKey if available
     setLoadingAction((prev) => ({ ...prev, [id]: true }));
     try {
-      await axios.delete(
-        `${backendUrl}/ProjVendRt/${deleteId}`
-      );
+      await axios.delete(`${backendUrl}/ProjVendRt/${deleteId}`);
       setVendorBillingRates((prev) => prev.filter((rate) => rate.id !== id));
       setEditVendorBillRate((prev) => {
         const newEditVendorBillRate = { ...prev };
@@ -2553,7 +2547,7 @@ const uniqueData = filteredData.map((item, index) => {
   const handleNewVendorRateChange = (field, value) => {
     setNewVendorRate((prev) => {
       let updated = { ...prev, [field]: value };
- 
+
       // ✅ Bill Rate validation
       if (field === "billRate") {
         // Allow only digits, commas, and ONE decimal
@@ -2561,19 +2555,19 @@ const uniqueData = filteredData.map((item, index) => {
           toast.error("Bill Rate must contain only numbers and decimal.");
           return prev;
         }
- 
+
         // Remove commas for clean numeric value
         const clean = value.replace(/,/g, "");
- 
+
         // Prevent 0 or negative
         if (clean !== "" && parseFloat(clean) <= 0) {
           toast.error("Bill Rate must be greater than 0.");
           return prev;
         }
- 
+
         updated = { ...prev, [field]: clean }; // store clean value
       }
- 
+
       // ✅ Date validations
       if (updated.startDate && updated.endDate) {
         if (new Date(updated.startDate) > new Date(updated.endDate)) {
@@ -2581,7 +2575,7 @@ const uniqueData = filteredData.map((item, index) => {
           return prev;
         }
       }
- 
+
       if (updated.startDate) {
         if (
           new Date(updated.startDate) < new Date(selectedPlan.projStartDt) ||
@@ -2591,7 +2585,7 @@ const uniqueData = filteredData.map((item, index) => {
           return prev;
         }
       }
- 
+
       if (updated.endDate) {
         if (
           new Date(updated.endDate) < new Date(selectedPlan.projStartDt) ||
@@ -2601,7 +2595,7 @@ const uniqueData = filteredData.map((item, index) => {
           return prev;
         }
       }
- 
+
       return updated; // ✅ valid update
     });
   };
@@ -4239,11 +4233,10 @@ const uniqueData = filteredData.map((item, index) => {
                     <datalist
                       id="plc-list"
                       style={dropdownStyles.noBorderDropdown}
-
                     >
                       {plcs.map((plc, index) => (
                         <option
-                           key={`${plc.laborCategoryCode}-${index}`} // ✅ Make key unique
+                          key={`${plc.laborCategoryCode}-${index}`} // ✅ Make key unique
                           // key={plc.laborCategoryCode}
                           value={plc.laborCategoryCode}
                           style={dropdownStyles.noBorderDropdown}
@@ -4316,7 +4309,7 @@ const uniqueData = filteredData.map((item, index) => {
                       className="w-full p-1 border rounded text-xs"
                     />
                   </td>
- 
+
                   <td className="border p-2 sm:w-1/5">
                     <select
                       value={newRate.rateType}
@@ -4616,7 +4609,9 @@ const uniqueData = filteredData.map((item, index) => {
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-gray-100">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal">Lookup Type</th>
+                <th className="border p-2 font-normal whitespace-nowrap">
+                  Lookup Type
+                </th>
                 <th className="border p-2 font-normal">Employee</th>
                 <th className="border p-2 font-normal">Employee Name</th>
                 <th className="border p-2 font-normal">PLC</th>
@@ -4662,7 +4657,7 @@ const uniqueData = filteredData.map((item, index) => {
                     />
                     <datalist id="employee-list">
                       {employees.map((emp, index) => (
-                        <option key={`${emp.empId}-${index}`}  value={emp.empId}>
+                        <option key={`${emp.empId}-${index}`} value={emp.empId}>
                           {emp.employeeName}
                         </option>
                       ))}
@@ -5007,7 +5002,7 @@ const uniqueData = filteredData.map((item, index) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
- 
+
                     <td className="border p-2 sm:w-1/8">
                       {editingEmployeeRowId === item.id ? (
                         <select
@@ -5201,13 +5196,17 @@ const uniqueData = filteredData.map((item, index) => {
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-gray-100">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal sm:w-1/8">Lookup Type</th>
+                <th className="border p-2 font-normal sm:w-1/8 whitespace-nowrap">
+                  Lookup Type
+                </th>
                 <th className="border p-2 font-normal sm:w-1/8">Vendor</th>
-                <th className="border p-2 font-normal sm:w-1/8">Vendor Name</th>
+                <th className="border p-2 font-normal sm:w-1/8 whitespace-nowrap">
+                  Vendor Name
+                </th>
                 <th className="border p-2 font-normal sm:w-1/8">
                   Vendor Employee ID
                 </th>
-                <th className="border p-2 font-normal sm:w-1/8">
+                <th className="border p-2 font-normal sm:w-1/8 whitespace-nowrap">
                   Vendor Employee Name
                 </th>
                 <th className="border p-2 font-normal sm:w-1/8">PLC</th>
@@ -5215,9 +5214,15 @@ const uniqueData = filteredData.map((item, index) => {
                   PLC Description
                 </th>
                 <th className="border p-2 font-normal sm:w-1/8">Bill Rate</th>
-                <th className="border p-2 font-normal">Rate Type</th>
-                <th className="border p-2 font-normal">Start Date</th>
-                <th className="border p-2 font-normal">End Date</th>
+                <th className="border p-2 font-normal whitespace-nowrap">
+                  Rate Type
+                </th>
+                <th className="border p-2 font-normal whitespace-nowrap">
+                  Start Date
+                </th>
+                <th className="border p-2 font-normal whitespace-nowrap">
+                  End Date
+                </th>
                 <th className="border p-2 font-normal sm:w-1/8">Actions</th>
               </tr>
             </thead>
@@ -5372,12 +5377,12 @@ const uniqueData = filteredData.map((item, index) => {
                       value={newVendorRate.billRate || ""}
                       onChange={(e) => {
                         const val = e.target.value;
- 
+
                         // ✅ allow only numbers, commas, and decimal
                         if (!/^[0-9,]*\.?[0-9]*$/.test(val) && val !== "") {
                           return; // ignore invalid input
                         }
- 
+
                         handleNewVendorRateChange("billRate", val);
                       }}
                       onBlur={() => {
@@ -5403,7 +5408,7 @@ const uniqueData = filteredData.map((item, index) => {
                       className="w-full p-2 border rounded text-xs"
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/18">
+                  <td className="border p-2 ">
                     <select
                       value={newVendorRate.rateType}
                       onChange={(e) =>
@@ -5853,7 +5858,6 @@ const uniqueData = filteredData.map((item, index) => {
       </div>
     </div>
   );
-
 };
 
 export default PLCComponent;

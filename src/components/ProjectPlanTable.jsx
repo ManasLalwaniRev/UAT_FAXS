@@ -303,6 +303,11 @@ const ProjectPlanTable = ({
     }
   };
 
+  const handleNewBusinessSave = async (savedData) => {
+    // Refresh the plans table to show the newly created project plan
+    await refreshPlans();
+  };
+
   // Updated handleRowClick to prevent any side effects that might trigger re-fetching
   const handleRowClick = (plan) => {
     if (
@@ -1028,7 +1033,10 @@ const ProjectPlanTable = ({
             <div className="bg-white rounded-lg shadow-2xl border border-gray-300 w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
               {/* Content - with proper scrolling */}
               <div className="flex-1 overflow-y-auto p-4">
-                <NewBusiness onClose={() => setShowNewBusinessPopup(false)} />
+                <NewBusiness
+                  onClose={() => setShowNewBusinessPopup(false)}
+                  onSaveSuccess={handleNewBusinessSave}
+                />
               </div>
             </div>
           </div>

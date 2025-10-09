@@ -470,8 +470,11 @@ const ProjectHoursDetails = ({
         // Load project data for accounts and PLC options
         if (projectId) {
           try {
+            // const response = await axios.get(
+            //   `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
+            // );
             const response = await axios.get(
-              `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
+              `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
             );
             const data = Array.isArray(response.data)
               ? response.data[0]
@@ -568,10 +571,10 @@ const ProjectHoursDetails = ({
   useEffect(() => {
     const fetchEmployeesSuggestions = async () => {
       // Skip fetching suggestions for NBBUD
-      if (planType === "NBBUD") {
-        setEmployeeSuggestions([]);
-        return;
-      }
+      // if (planType === "NBBUD") {
+      //   setEmployeeSuggestions([]);
+      //   return;
+      // }
 
       if (
         !projectId ||
@@ -580,7 +583,7 @@ const ProjectHoursDetails = ({
         newEntry.idType === ""
       ) {
         setEmployeeSuggestions([]);
-        return;
+        // return;
       }
 
       try {
@@ -626,12 +629,15 @@ const ProjectHoursDetails = ({
     };
 
     const fetchLaborAccounts = async () => {
-      if (planType === "NBBUD") return;
+      // if (planType === "NBBUD") return;
 
       if (!projectId || !showNewForm) return;
       try {
+        // const response = await axios.get(
+        //   `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
+        // );
         const response = await axios.get(
-          `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
+          `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
         );
         const data = Array.isArray(response.data)
           ? response.data[0]
@@ -1090,11 +1096,38 @@ const ProjectHoursDetails = ({
   const handleIdChange = (value) => {
     const trimmedValue = value.trim();
 
-    // Skip all validation and suggestions for NBBUD
     if (planType === "NBBUD") {
-      setNewEntry((prev) => ({ ...prev, id: trimmedValue }));
+      // For NBBUD, still try to populate from suggestions if available
+      if (
+        (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+        employeeSuggestions.length > 0 &&
+        trimmedValue
+      ) {
+        const selectedEmployee = employeeSuggestions.find(
+          (emp) => emp.emplId === trimmedValue
+        );
+
+        if (selectedEmployee) {
+          setNewEntry((prev) => ({
+            ...prev,
+            id: trimmedValue,
+            firstName: selectedEmployee.firstName || "",
+            lastName: selectedEmployee.lastName || "",
+            perHourRate: selectedEmployee.perHourRate || "",
+            orgId: selectedEmployee.orgId || prev.orgId,
+            plcGlcCode: selectedEmployee.plc || "",
+          }));
+          setPlcSearch(selectedEmployee.plc || "");
+        }
+      }
       return;
     }
+
+    // Skip all validation and suggestions for NBBUD
+    // if (planType === "NBBUD") {
+    //   setNewEntry((prev) => ({ ...prev, id: trimmedValue }));
+    //   return;
+    // }
 
     // 1. PLC type is always “PLC”
     if (newEntry.idType === "PLC") {
@@ -2922,9 +2955,10 @@ const ProjectHoursDetails = ({
                             ? "bg-gray-100 cursor-not-allowed"
                             : ""
                         }`}
-                        list={
-                          planType === "NBBUD" ? undefined : "employee-id-list"
-                        }
+                        // list={
+                        //   planType === "NBBUD" ? undefined : "employee-id-list"
+                        // }
+                        list="employee-id-list"
                         placeholder={
                           newEntry.idType === "PLC"
                             ? "Not required for PLC"

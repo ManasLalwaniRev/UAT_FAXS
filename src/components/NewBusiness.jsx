@@ -15,6 +15,159 @@ const FormField = ({ label, children }) => (
 );
 
 // Component to display all existing business data in a table
+// const SavedBusinessTableDisplay = ({
+//   allBusinessBudgets,
+//   onNewBusiness,
+//   onEditClick,
+//   onDeleteClick,
+//   onBackToSearch,
+// }) => {
+//   if (!allBusinessBudgets || allBusinessBudgets.length === 0) {
+//     return (
+//       <div className="bg-white rounded shadow p-4 text-center">
+//         <p className="text-gray-600 mb-4">
+//           No business budget data available to display.
+//         </p>
+//       </div>
+//     );
+//   }
+
+//   // Define table headers and their corresponding keys in the data object
+//   const headers = [
+//     { label: "Budget ID", key: "businessBudgetId" },
+//     { label: "Description", key: "description" },
+//     { label: "Level", key: "level" },
+//     { label: "Active", key: "isActive" },
+//     { label: "Version", key: "version" },
+//     { label: "Version Code", key: "versionCode" },
+//     { label: "Winning Probability %", key: "winningProbability" },
+//     { label: "Start Date", key: "startDate" },
+//     { label: "End Date", key: "endDate" },
+//     { label: "Escalation Rate", key: "escalationRate" },
+//     { label: "Org ID", key: "orgId" },
+//     { label: "Account Group", key: "accountGroup" },
+//     { label: "Burden Template ID", key: "burdenTemplateId" },
+//     { label: "Actions", key: "actions" }, // For Edit/Delete buttons
+//   ];
+
+//   // Helper function to format display values
+//   const formatValue = (key, value) => {
+//     if (key === "isActive") {
+//       return value ? "Yes" : "No";
+//     }
+//     if (key === "startDate" || key === "endDate") {
+//       // FIX: Explicitly check for the "0001-01-01T00:00:00" string or falsy values
+//       if (!value || value === "0001-01-01T00:00:00") {
+//         return "N/A";
+//       }
+//       const date = new Date(value);
+//       // Fallback for any other invalid date that might slip through
+//       if (isNaN(date.getTime())) {
+//         return "N/A";
+//       }
+//       return date.toLocaleDateString();
+//     }
+//     // Specific check for Winning Probability %: ensure 0 is displayed as "0"
+//     if (key === "winningProbability" && (value === 0 || value === "0")) {
+//       return "0";
+//     }
+//     // For any other value, display it as string, otherwise "N/A"
+//     return value !== null && value !== undefined && value !== ""
+//       ? String(value)
+//       : "N/A";
+//   };
+
+//   // FIX: Custom sort function for businessBudgetId (e.g., Test.1, Test.10, Test.2)
+//   const sortBudgets = (a, b) => {
+//     const idA = a.businessBudgetId;
+//     const idB = b.businessBudgetId;
+
+//     // Handle cases like "Test.1" vs "Test.10" correctly
+//     const partsA = idA.split(".");
+//     const partsB = idB.split(".");
+
+//     const prefixA = partsA[0];
+//     const prefixB = partsB[0];
+
+//     const numA = parseInt(partsA[1], 10);
+//     const numB = parseInt(partsB[1], 10);
+
+//     // First, sort by the text prefix
+//     if (prefixA < prefixB) return -1;
+//     if (prefixA > prefixB) return 1;
+
+//     // If prefixes are the same, sort by the numeric part
+//     return numA - numB;
+//   };
+
+//   const sortedBudgets = [...allBusinessBudgets].sort(sortBudgets);
+
+//   return (
+//     <div className="p-2 sm:p-4 space-y-6 text-[11px] sm:text-xs text-gray-800 font-sans max-w-4xl mx-auto">
+//       <div className="bg-white rounded shadow p-2 sm:p-4 mb-4 relative">
+//         <h2 className="text-xs sm:text-sm font-normal mb-3 font-sans">
+//           Business Budget Details
+//         </h2>
+
+//         <div className="overflow-x-auto mt-4">
+//           <table className="min-w-full divide-y divide-gray-200">
+//             <thead className="bg-gray-50">
+//               <tr>
+//                 {headers.map((header) => (
+//                   <th
+//                     key={header.key}
+//                     scope="col"
+//                     className="px-2 py-2 text-left text-[11px] sm:text-xs font-normal text-gray-700 font-sans"
+//                   >
+//                     {header.label}
+//                   </th>
+//                 ))}
+//               </tr>
+//             </thead>
+//             <tbody className="bg-white divide-y divide-gray-200">
+//               {sortedBudgets.map((budget) => (
+//                 <tr key={budget.businessBudgetId}>
+//                   {headers.map((header) => (
+//                     <td
+//                       key={header.key}
+//                       className="px-2 py-2 whitespace-nowrap text-[11px] sm:text-xs font-normal text-gray-900 font-sans"
+//                     >
+//                       {header.key === "actions" ? (
+//                         <div className="flex gap-2">
+//                           <button
+//                             onClick={() => {
+//                               // console.log("Edit button clicked for budget:", budget);
+//                               onEditClick(budget);
+//                             }}
+//                             className="bg-green-600 text-white px-2 py-1 rounded text-[10px] hover:bg-green-700 transition"
+//                           >
+//                             Edit
+//                           </button>
+//                           <button
+//                             onClick={() =>
+//                               onDeleteClick(budget.businessBudgetId)
+//                             }
+//                             className="bg-red-600 text-white px-2 py-1 rounded text-[10px] hover:bg-red-700 transition"
+//                           >
+//                             Delete
+//                           </button>
+//                         </div>
+//                       ) : (
+//                         <div>{formatValue(header.key, budget[header.key])}</div>
+//                       )}
+//                     </td>
+//                   ))}
+//                 </tr>
+//               ))}
+//             </tbody>
+//           </table>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// };
+
+// Component to display all existing project plans data in a table
 const SavedBusinessTableDisplay = ({
   allBusinessBudgets,
   onNewBusiness,
@@ -26,87 +179,79 @@ const SavedBusinessTableDisplay = ({
     return (
       <div className="bg-white rounded shadow p-4 text-center">
         <p className="text-gray-600 mb-4">
-          No business budget data available to display.
+          No project plan data available to display.
         </p>
       </div>
     );
   }
 
-  // Define table headers and their corresponding keys in the data object
+  // Define table headers matching the second image structure
   const headers = [
-    { label: "Budget ID", key: "businessBudgetId" },
-    { label: "Description", key: "description" },
-    { label: "Level", key: "level" },
-    { label: "Active", key: "isActive" },
-    { label: "Version", key: "version" },
-    { label: "Version Code", key: "versionCode" },
-    { label: "Winning Probability %", key: "winningProbability" },
-    { label: "Start Date", key: "startDate" },
-    { label: "End Date", key: "endDate" },
-    { label: "Escalation Rate", key: "escalationRate" },
-    { label: "Org ID", key: "orgId" },
-    { label: "Account Group", key: "accountGroup" },
-    { label: "Burden Template ID", key: "burdenTemplateId" },
+    { label: "Export", key: "export" },
+    { label: "Project ID", key: "projId" },
+    { label: "Project Name", key: "projectName" },
+    { label: "BUD/EAC", key: "plType" },
+    { label: "Revision", key: "version" },
+    { label: "Version Type", key: "versionCode" },
+    { label: "Origin", key: "origin" },
+    { label: "Submitted", key: "isCompleted" },
+    { label: "Approved", key: "isApproved" },
+    { label: "Concluded", key: "concluded" },
+    { label: "Status", key: "status" },
     { label: "Actions", key: "actions" }, // For Edit/Delete buttons
   ];
 
   // Helper function to format display values
   const formatValue = (key, value) => {
-    if (key === "isActive") {
-      return value ? "Yes" : "No";
+    if (key === "isCompleted" || key === "isApproved" || key === "concluded") {
+      // These appear to be checkboxes in the image
+      return (
+        <input
+          type="checkbox"
+          checked={value || false}
+          readOnly
+          className="accent-blue-600"
+          style={{ width: 14, height: 14 }}
+        />
+      );
     }
-    if (key === "startDate" || key === "endDate") {
-      // FIX: Explicitly check for the "0001-01-01T00:00:00" string or falsy values
-      if (!value || value === "0001-01-01T00:00:00") {
-        return "N/A";
-      }
-      const date = new Date(value);
-      // Fallback for any other invalid date that might slip through
-      if (isNaN(date.getTime())) {
-        return "N/A";
-      }
-      return date.toLocaleDateString();
+    if (key === "export") {
+      // Excel export icon
+      return (
+        <div className="flex justify-center">
+          <div className="w-6 h-6 bg-green-600 rounded flex items-center justify-center">
+            <span className="text-white text-xs font-bold">X</span>
+          </div>
+        </div>
+      );
     }
-    // Specific check for Winning Probability %: ensure 0 is displayed as "0"
-    if (key === "winningProbability" && (value === 0 || value === "0")) {
-      return "0";
+    if (key === "origin") {
+      // Display as number, defaulting to 0 if not present
+      return String(value || "0");
     }
-    // For any other value, display it as string, otherwise "N/A"
+    // For any other value, display it as string, otherwise empty
     return value !== null && value !== undefined && value !== ""
       ? String(value)
-      : "N/A";
+      : "";
   };
 
-  // FIX: Custom sort function for businessBudgetId (e.g., Test.1, Test.10, Test.2)
-  const sortBudgets = (a, b) => {
-    const idA = a.businessBudgetId;
-    const idB = b.businessBudgetId;
+  // FIX: Updated sort function for project plans data
+  const sortPlans = (a, b) => {
+    // Use projId instead of businessBudgetId and handle undefined values
+    const idA = a.projId || "";
+    const idB = b.projId || "";
 
-    // Handle cases like "Test.1" vs "Test.10" correctly
-    const partsA = idA.split(".");
-    const partsB = idB.split(".");
-
-    const prefixA = partsA[0];
-    const prefixB = partsB[0];
-
-    const numA = parseInt(partsA[1], 10);
-    const numB = parseInt(partsB[1], 10);
-
-    // First, sort by the text prefix
-    if (prefixA < prefixB) return -1;
-    if (prefixA > prefixB) return 1;
-
-    // If prefixes are the same, sort by the numeric part
-    return numA - numB;
+    // Basic string comparison for project IDs
+    return idA.localeCompare(idB);
   };
 
-  const sortedBudgets = [...allBusinessBudgets].sort(sortBudgets);
+  const sortedPlans = [...allBusinessBudgets].sort(sortPlans);
 
   return (
-    <div className="p-2 sm:p-4 space-y-6 text-[11px] sm:text-xs text-gray-800 font-sans max-w-4xl mx-auto">
+    <div className="p-2 sm:p-4 space-y-6 text-[11px] sm:text-xs text-gray-800 font-sans max-w-full mx-auto">
       <div className="bg-white rounded shadow p-2 sm:p-4 mb-4 relative">
         <h2 className="text-xs sm:text-sm font-normal mb-3 font-sans">
-          Business Budget Details
+          Project Plans
         </h2>
 
         <div className="overflow-x-auto mt-4">
@@ -125,8 +270,8 @@ const SavedBusinessTableDisplay = ({
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sortedBudgets.map((budget) => (
-                <tr key={budget.businessBudgetId}>
+              {sortedPlans.map((plan, index) => (
+                <tr key={plan.plId || index}>
                   {headers.map((header) => (
                     <td
                       key={header.key}
@@ -136,24 +281,21 @@ const SavedBusinessTableDisplay = ({
                         <div className="flex gap-2">
                           <button
                             onClick={() => {
-                              // console.log("Edit button clicked for budget:", budget);
-                              onEditClick(budget);
+                              onEditClick(plan);
                             }}
                             className="bg-green-600 text-white px-2 py-1 rounded text-[10px] hover:bg-green-700 transition"
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() =>
-                              onDeleteClick(budget.businessBudgetId)
-                            }
+                            onClick={() => onDeleteClick(plan.projId)}
                             className="bg-red-600 text-white px-2 py-1 rounded text-[10px] hover:bg-red-700 transition"
                           >
                             Delete
                           </button>
                         </div>
                       ) : (
-                        <div>{formatValue(header.key, budget[header.key])}</div>
+                        <div>{formatValue(header.key, plan[header.key])}</div>
                       )}
                     </td>
                   ))}
@@ -167,7 +309,7 @@ const SavedBusinessTableDisplay = ({
   );
 };
 
-const NewBusiness = ({ onClose }) => {
+const NewBusiness = ({ onClose, onSaveSuccess }) => {
   const [form, setForm] = useState({
     businessBudgetId: "",
     description: "",
@@ -219,6 +361,23 @@ const NewBusiness = ({ onClose }) => {
     fetchBurdenTemplates();
   }, []); // Empty dependency array means this runs once on mount
 
+  // Add this function after the useEffect hooks
+  const fetchAllBusinessBudgets = async () => {
+    try {
+      const response = await axios.get(`${backendUrl}/Project/GetProjectPlans`);
+      if (response.data && Array.isArray(response.data)) {
+        setAllBusinessBudgets(response.data);
+      } else {
+        // Handle case where response.data might be an object with a data property
+        setAllBusinessBudgets(response.data?.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching all business budgets:", error);
+      toast.error("Failed to fetch business budgets");
+      setAllBusinessBudgets([]);
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -231,6 +390,392 @@ const NewBusiness = ({ onClose }) => {
       [name]: type === "checkbox" ? checked : value,
     }));
   };
+
+  // const handleSave = async () => {
+  //   if (
+  //     !form.businessBudgetId ||
+  //     !form.description ||
+  //     !form.startDate ||
+  //     !form.endDate
+  //   ) {
+  //     toast.error(
+  //       "Please fill in all required fields: Business Budget ID, Description, Start Date, and End Date."
+  //     );
+  //     return;
+  //   }
+
+  //   if (form.startDate && form.endDate) {
+  //     const startDate = new Date(form.startDate);
+  //     const endDate = new Date(form.endDate);
+
+  //     if (endDate < startDate) {
+  //       toast.error(
+  //         "End Date cannot be earlier than Start Date. Please select a valid date range."
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   // const payload = {
+  //   //   businessBudgetId: form.businessBudgetId,
+  //   //   description: form.description,
+  //   //   level: parseInt(form.level) || 0,
+  //   //   isActive: form.active, // Map form.active to API's isActive
+  //   //   version: parseInt(form.version) || 0,
+  //   //   versionCode: form.versionCode,
+  //   //   winningProbability: parseFloat(form.winningProbability) || 0,
+  //   //   startDate: form.startDate ? `${form.startDate}T00:00:00` : "0001-01-01T00:00:00", // Ensure valid default if empty
+  //   //   endDate: form.endDate ? `${form.endDate}T00:00:00` : "0001-01-01T00:00:00",     // Ensure valid default if empty
+  //   //   escalationRate: parseFloat(form.escalationRate) || 0,
+  //   //   orgId: parseInt(form.orgId) || 0,
+  //   //   accountGroup: form.accountGrp, // Map form.accountGrp to API's accountGroup
+  //   //   burdenTemplateId: parseInt(form.burdenTemplateId) || 0,
+  //   //   modifiedBy: "admin", // Hardcoded
+  //   // };
+
+  //   const payload = {
+  //     projId: form.businessBudgetId, // Map businessBudgetId to projId
+  //     plId: 0,
+  //     plType: "NBBUD",
+  //     source: "",
+  //     type: "", // Empty string as requested
+  //     version: parseInt(form.version) || 0,
+  //     versionCode: form.versionCode || "",
+  //     finalVersion: false,
+  //     isCompleted: false,
+  //     isApproved: false,
+  //     status: "In Progress",
+  //     createdBy: "User",
+  //     modifiedBy: "User",
+  //     approvedBy: "",
+  //     templateId: parseInt(form.burdenTemplateId) || 1, // Map burdenTemplateId to templateId with default 1
+  //   };
+
+  //   // console.log("Sending payload:", payload);
+
+  //   try {
+  //     let response;
+  //     if (isUpdateMode) {
+  //       response = await axios.put(`${backendUrl}/UpdateNewBusiness`, payload, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //       toast.success("Budget details updated successfully!");
+  //     } else {
+  //       response = await axios.post(
+  //         `${backendUrl}/Project/AddProjectPlan`,
+  //         payload,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       toast.success("Budget details saved successfully!");
+  //     }
+
+  //     // console.log("API response:", response.data);
+  //     // After save/update, show the updated single item in table view
+  //     // setAllBusinessBudgets([response.data]); // Show the newly saved/updated item in table
+  //     // setViewMode('table'); // Go to table view after save/update
+  //     // Reset form and mode for next operation
+  //     setIsUpdateMode(false);
+  //     setForm({
+  //       businessBudgetId: "",
+  //       description: "",
+  //       level: "",
+  //       active: false,
+  //       version: "",
+  //       versionCode: "",
+  //       winningProbability: "",
+  //       startDate: "",
+  //       endDate: "",
+  //       period: "Q1 2024",
+  //       weeks: "12",
+  //       escalationRate: "",
+  //       orgId: "",
+  //       accountGrp: "",
+  //       burdenTemplateId: "",
+  //     });
+  //   } catch (error) {
+  //     // console.error("Error saving/updating form data:", error);
+  //     const errorMessage =
+  //       error.response?.data?.message ||
+  //       error.message ||
+  //       "Failed to save/update budget details.";
+  //     toast.error(`Error: ${errorMessage}`);
+  //   }
+  // };
+
+  //   const handleSave = async () => {
+  //   if (
+  //     !form.businessBudgetId ||
+  //     !form.description ||
+  //     !form.startDate ||
+  //     !form.endDate
+  //   ) {
+  //     toast.error(
+  //       "Please fill in all required fields: Business Budget ID, Description, Start Date, and End Date."
+  //     );
+  //     return;
+  //   }
+
+  //   if (form.startDate && form.endDate) {
+  //     const startDate = new Date(form.startDate);
+  //     const endDate = new Date(form.endDate);
+
+  //     if (endDate < startDate) {
+  //       toast.error(
+  //         "End Date cannot be earlier than Start Date. Please select a valid date range."
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   // First API call payload for /AddNewBusiness
+  //   const businessPayload = {
+  //     businessBudgetId: form.businessBudgetId,
+  //     description: form.description,
+  //     level: parseInt(form.level) || 0,
+  //     isActive: form.active,
+  //     version: parseInt(form.version) || 0,
+  //     versionCode: form.versionCode,
+  //     winningProbability: parseFloat(form.winningProbability) || 0,
+  //     startDate: form.startDate ? `${form.startDate}T00:00:00` : "0001-01-01T00:00:00",
+  //     endDate: form.endDate ? `${form.endDate}T00:00:00` : "0001-01-01T00:00:00",
+  //     escalationRate: parseFloat(form.escalationRate) || 0,
+  //     orgId: parseInt(form.orgId) || 0,
+  //     accountGroup: form.accountGrp,
+  //     burdenTemplateId: parseInt(form.burdenTemplateId) || 0,
+  //     modifiedBy: "admin",
+  //   };
+
+  //   // Second API call payload for /Project/AddProjectPlan
+  //   const projectPayload = {
+  //     projId: form.businessBudgetId,
+  //     plId: 0,
+  //     plType: "NBBUD",
+  //     source: "",
+  //     type: "",
+  //     version: parseInt(form.version) || 0,
+  //     versionCode: form.versionCode || "",
+  //     finalVersion: false,
+  //     isCompleted: false,
+  //     isApproved: false,
+  //     status: "In Progress",
+  //     createdBy: "User",
+  //     modifiedBy: "User",
+  //     approvedBy: "",
+  //     templateId: parseInt(form.burdenTemplateId) || 1,
+  //   };
+
+  //   try {
+  //     let response;
+  //     if (isUpdateMode) {
+  //       // For update mode, you might want to handle differently
+  //       response = await axios.put(`${backendUrl}/UpdateNewBusiness`, businessPayload, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //       toast.success("Budget details updated successfully!");
+  //     } else {
+  //       // Sequential API calls for new business creation
+  //       // First call: AddNewBusiness
+  //       console.log("Calling /AddNewBusiness with payload:", businessPayload);
+  //       const businessResponse = await axios.post(
+  //         `${backendUrl}/AddNewBusiness`,
+  //         businessPayload,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       console.log("AddNewBusiness API response:", businessResponse.data);
+
+  //       // Second call: AddProjectPlan (only if first call succeeds)
+  //       console.log("Calling /Project/AddProjectPlan with payload:", projectPayload);
+  //       response = await axios.post(
+  //         `${backendUrl}/Project/AddProjectPlan`,
+  //         projectPayload,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       console.log("AddProjectPlan API response:", response.data);
+
+  //       toast.success("Budget details saved successfully!");
+  //     }
+
+  //     // Reset form and mode for next operation
+  //     setIsUpdateMode(false);
+  //     setForm({
+  //       businessBudgetId: "",
+  //       description: "",
+  //       level: "",
+  //       active: false,
+  //       version: "",
+  //       versionCode: "",
+  //       winningProbability: "",
+  //       startDate: "",
+  //       endDate: "",
+  //       period: "Q1 2024",
+  //       weeks: "12",
+  //       escalationRate: "",
+  //       orgId: "",
+  //       accountGrp: "",
+  //       burdenTemplateId: "",
+  //     });
+  //   } catch (error) {
+  //     console.error("Error saving/updating form data:", error);
+  //     const errorMessage =
+  //       error.response?.data?.message ||
+  //       error.message ||
+  //       "Failed to save/update budget details.";
+  //     toast.error(`Error: ${errorMessage}`);
+  //   }
+  // };
+
+  //   const handleSave = async () => {
+  //   if (
+  //     !form.businessBudgetId ||
+  //     !form.description ||
+  //     !form.startDate ||
+  //     !form.endDate
+  //   ) {
+  //     toast.error(
+  //       "Please fill in all required fields: Business Budget ID, Description, Start Date, and End Date."
+  //     );
+  //     return;
+  //   }
+
+  //   if (form.startDate && form.endDate) {
+  //     const startDate = new Date(form.startDate);
+  //     const endDate = new Date(form.endDate);
+
+  //     if (endDate < startDate) {
+  //       toast.error(
+  //         "End Date cannot be earlier than Start Date. Please select a valid date range."
+  //       );
+  //       return;
+  //     }
+  //   }
+
+  //   // First API call payload for /AddNewBusiness
+  //   const businessPayload = {
+  //     businessBudgetId: form.businessBudgetId,
+  //     description: form.description,
+  //     level: parseInt(form.level) || 0,
+  //     isActive: form.active,
+  //     version: parseInt(form.version) || 0,
+  //     versionCode: form.versionCode,
+  //     winningProbability: parseFloat(form.winningProbability) || 0,
+  //     startDate: form.startDate ? `${form.startDate}T00:00:00` : "0001-01-01T00:00:00",
+  //     endDate: form.endDate ? `${form.endDate}T00:00:00` : "0001-01-01T00:00:00",
+  //     escalationRate: parseFloat(form.escalationRate) || 0,
+  //     orgId: parseInt(form.orgId) || 0,
+  //     accountGroup: form.accountGrp,
+  //     burdenTemplateId: parseInt(form.burdenTemplateId) || 0,
+  //     modifiedBy: "admin",
+  //   };
+
+  //   // Second API call payload for /Project/AddProjectPlan
+  //   const projectPayload = {
+  //     projId: form.businessBudgetId,
+  //     plId: 0,
+  //     plType: "NBBUD",
+  //     source: "",
+  //     type: "",
+  //     version: parseInt(form.version) || 0,
+  //     versionCode: form.versionCode || "",
+  //     finalVersion: false,
+  //     isCompleted: false,
+  //     isApproved: false,
+  //     status: "In Progress",
+  //     createdBy: "User",
+  //     modifiedBy: "User",
+  //     approvedBy: "",
+  //     templateId: parseInt(form.burdenTemplateId) || 1,
+  //   };
+
+  //   try {
+  //     let response;
+  //     if (isUpdateMode) {
+  //       // For update mode
+  //       response = await axios.put(`${backendUrl}/UpdateNewBusiness`, businessPayload, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //       toast.success("Budget details updated successfully!");
+  //     } else {
+  //       // Sequential API calls for new business creation
+  //       // First call: AddNewBusiness
+  //       console.log("Calling /AddNewBusiness with payload:", businessPayload);
+  //       const businessResponse = await axios.post(
+  //         `${backendUrl}/AddNewBusiness`,
+  //         businessPayload,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       console.log("AddNewBusiness API response:", businessResponse.data);
+
+  //       // Second call: AddProjectPlan (only if first call succeeds)
+  //       console.log("Calling /Project/AddProjectPlan with payload:", projectPayload);
+  //       response = await axios.post(
+  //         `${backendUrl}/Project/AddProjectPlan`,
+  //         projectPayload,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //           },
+  //         }
+  //       );
+  //       console.log("AddProjectPlan API response:", response.data);
+
+  //       toast.success("Budget details saved successfully!");
+  //     }
+
+  //     // Reset form and mode for next operation
+  //     setIsUpdateMode(false);
+  //     setForm({
+  //       businessBudgetId: "",
+  //       description: "",
+  //       level: "",
+  //       active: false,
+  //       version: "",
+  //       versionCode: "",
+  //       winningProbability: "",
+  //       startDate: "",
+  //       endDate: "",
+  //       period: "Q1 2024",
+  //       weeks: "12",
+  //       escalationRate: "",
+  //       orgId: "",
+  //       accountGrp: "",
+  //       burdenTemplateId: "",
+  //     });
+
+  //     // NEW: Fetch all business budgets and redirect to table view
+  //     await fetchAllBusinessBudgets();
+  //     setViewMode("table"); // Redirect to table view
+
+  //   } catch (error) {
+  //     console.error("Error saving/updating form data:", error);
+  //     const errorMessage =
+  //       error.response?.data?.message ||
+  //       error.message ||
+  //       "Failed to save/update budget details.";
+  //     toast.error(`Error: ${errorMessage}`);
+  //   }
+  // };
 
   const handleSave = async () => {
     if (
@@ -257,29 +802,35 @@ const NewBusiness = ({ onClose }) => {
       }
     }
 
-    // const payload = {
-    //   businessBudgetId: form.businessBudgetId,
-    //   description: form.description,
-    //   level: parseInt(form.level) || 0,
-    //   isActive: form.active, // Map form.active to API's isActive
-    //   version: parseInt(form.version) || 0,
-    //   versionCode: form.versionCode,
-    //   winningProbability: parseFloat(form.winningProbability) || 0,
-    //   startDate: form.startDate ? `${form.startDate}T00:00:00` : "0001-01-01T00:00:00", // Ensure valid default if empty
-    //   endDate: form.endDate ? `${form.endDate}T00:00:00` : "0001-01-01T00:00:00",     // Ensure valid default if empty
-    //   escalationRate: parseFloat(form.escalationRate) || 0,
-    //   orgId: parseInt(form.orgId) || 0,
-    //   accountGroup: form.accountGrp, // Map form.accountGrp to API's accountGroup
-    //   burdenTemplateId: parseInt(form.burdenTemplateId) || 0,
-    //   modifiedBy: "admin", // Hardcoded
-    // };
+    // First API call payload for /AddNewBusiness
+    const businessPayload = {
+      businessBudgetId: form.businessBudgetId,
+      description: form.description,
+      level: parseInt(form.level) || 0,
+      isActive: form.active,
+      version: parseInt(form.version) || 0,
+      versionCode: form.versionCode,
+      winningProbability: parseFloat(form.winningProbability) || 0,
+      startDate: form.startDate
+        ? `${form.startDate}T00:00:00`
+        : "0001-01-01T00:00:00",
+      endDate: form.endDate
+        ? `${form.endDate}T00:00:00`
+        : "0001-01-01T00:00:00",
+      escalationRate: parseFloat(form.escalationRate) || 0,
+      orgId: parseInt(form.orgId) || 0,
+      accountGroup: form.accountGrp,
+      burdenTemplateId: parseInt(form.burdenTemplateId) || 0,
+      modifiedBy: "admin",
+    };
 
-    const payload = {
-      projId: form.businessBudgetId, // Map businessBudgetId to projId
+    // Second API call payload for /Project/AddProjectPlan
+    const projectPayload = {
+      projId: form.businessBudgetId,
       plId: 0,
       plType: "NBBUD",
       source: "",
-      type: "", // Empty string as requested
+      type: "",
       version: parseInt(form.version) || 0,
       versionCode: form.versionCode || "",
       finalVersion: false,
@@ -289,37 +840,57 @@ const NewBusiness = ({ onClose }) => {
       createdBy: "User",
       modifiedBy: "User",
       approvedBy: "",
-      templateId: parseInt(form.burdenTemplateId) || 1, // Map burdenTemplateId to templateId with default 1
+      templateId: parseInt(form.burdenTemplateId) || 1,
     };
-
-    // console.log("Sending payload:", payload);
 
     try {
       let response;
       if (isUpdateMode) {
-        response = await axios.put(`${backendUrl}/UpdateNewBusiness`, payload, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-        toast.success("Budget details updated successfully!");
-      } else {
-        response = await axios.post(
-          `${backendUrl}/Project/AddProjectPlan`,
-          payload,
+        // For update mode
+        response = await axios.put(
+          `${backendUrl}/UpdateNewBusiness`,
+          businessPayload,
           {
             headers: {
               "Content-Type": "application/json",
             },
           }
         );
+        toast.success("Budget details updated successfully!");
+      } else {
+        // Sequential API calls for new business creation
+        // First call: AddNewBusiness
+        console.log("Calling /AddNewBusiness with payload:", businessPayload);
+        const businessResponse = await axios.post(
+          `${backendUrl}/AddNewBusiness`,
+          businessPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("AddNewBusiness API response:", businessResponse.data);
+
+        // Second call: AddProjectPlan (only if first call succeeds)
+        console.log(
+          "Calling /Project/AddProjectPlan with payload:",
+          projectPayload
+        );
+        response = await axios.post(
+          `${backendUrl}/Project/AddProjectPlan`,
+          projectPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("AddProjectPlan API response:", response.data);
+
         toast.success("Budget details saved successfully!");
       }
 
-      // console.log("API response:", response.data);
-      // After save/update, show the updated single item in table view
-      // setAllBusinessBudgets([response.data]); // Show the newly saved/updated item in table
-      // setViewMode('table'); // Go to table view after save/update
       // Reset form and mode for next operation
       setIsUpdateMode(false);
       setForm({
@@ -339,8 +910,17 @@ const NewBusiness = ({ onClose }) => {
         accountGrp: "",
         burdenTemplateId: "",
       });
+
+      // NEW: Call the parent's callback function to refresh data
+      if (onSaveSuccess) {
+        await onSaveSuccess(response.data); // Pass the saved data to parent
+      }
+
+      // REMOVED: Don't fetch data or redirect to table view
+      // Just close the modal/component and let user navigate to search manually
+      onClose(); // Close the NewBusiness component
     } catch (error) {
-      // console.error("Error saving/updating form data:", error);
+      console.error("Error saving/updating form data:", error);
       const errorMessage =
         error.response?.data?.message ||
         error.message ||

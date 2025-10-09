@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import NavigationSidebar from "../components/NavigationSidebar";
 import { Routes, Route } from "react-router-dom";
 import ProjectBudgetStatus from "../components/ProjectBudgetStatus";
@@ -13,8 +13,23 @@ import ProspectiveIdSetup from "../components/ProspectiveIdSetup";
 import DisplaySettings from "../components/DisplaySettings";
 import AnnualHolidays from "../components/HolidayCalendar";
 import MaintainFiscalYearPeriods from "../components/MaintainFiscalYearPeriods";
+import ChatBot from "../components/ChatBot";
 
 const Dashboard = () => {
+  const [currentUserRole, setCurrentUserRole] = useState(null);
+
+  useEffect(() => {
+    const userRoleString = localStorage.getItem("currentUser"); // or "userRole" depending on your app
+    if (userRoleString) {
+      try {
+        const role = JSON.parse(userRoleString); // parse if stored JSON
+        setCurrentUserRole(role.toLowerCase());
+      } catch {
+        setCurrentUserRole(null);
+      }
+    }
+  }, []);
+
   return (
     <>
       <style>
@@ -101,6 +116,12 @@ const Dashboard = () => {
             />
           </Routes>
         </div>
+        {/* Chatbot at corner */}
+        {/* {currentUserRole === "admin" && (
+          <div>
+            <ChatBot />
+          </div>
+        )} */}
       </div>
     </>
   );
