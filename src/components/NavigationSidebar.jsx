@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ChevronDown, ChevronRight, Plus, LogOut } from "lucide-react";
+import TopBar from "./TopBar";
+import.meta.env.VITE_APP_VERSION;
 
 const NavigationSidebar = () => {
   const { pathname } = useLocation();
@@ -44,19 +46,23 @@ const NavigationSidebar = () => {
   const [selectedPage, setSelectedPage] = useState(pathname);
 
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [userName, setUserName] = useState("User");
 
   useEffect(() => {
-    const userRoleString = localStorage.getItem("currentUser");
-    if (userRoleString) {
+    const userString = localStorage.getItem("currentUser");
+    if (userString) {
       try {
-        const role = JSON.parse(userRoleString); // This will be the role string
-        setCurrentUserRole(role.toLowerCase()); // convert to lowercase and set state
+        const userObj = JSON.parse(userString);
+        setUserName(userObj.name || "User");
+        setCurrentUserRole(userObj.role ? userObj.role.toLowerCase() : null);
       } catch {
         setCurrentUserRole(null);
+        setUserName("User");
       }
     }
   }, []);
 
+  const appVersion = import.meta.env.VITE_APP_VERSION || "N/A";
   // useEffect(() => {
   //   setSelectedPage(pathname);
   //   setGeneralMenuOpen(
@@ -190,6 +196,7 @@ const NavigationSidebar = () => {
     setIsSidebarOpen(false);
   };
 
+  <TopBar name={userName} onLogout={handleLogout} />;
   return (
     <div className="flex min-h-screen font-inter">
       <button
@@ -393,7 +400,7 @@ const NavigationSidebar = () => {
                           handleLinkClick("/dashboard/global-configuration");
                         }}
                       >
-                        Global Configuration
+                        Settings
                       </Link>
                       <Link
                         to="/dashboard/prospective-id-setup"
@@ -464,13 +471,17 @@ const NavigationSidebar = () => {
 
         {/* LOGOUT BUTTON AT THE BOTTOM */}
         <div className="mt-auto pt-4 border-t border-gray-700">
-          <button
+          {/* <button
             className="flex items-center gap-2 text-xs sm:text-sm px-2 py-2 w-full rounded-md hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />
             Logout
-          </button>
+          </button> */}
+          {/* Version number fixed at bottom right */}
+          <div className="fixed bottom-2 right-2 text-xs text-white font-mono select-none pointer-events-none">
+            v{appVersion}
+          </div>
         </div>
       </div>
 

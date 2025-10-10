@@ -735,7 +735,7 @@
 //         // acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
 //         acctId: (newEntry.idType === "Vendor" || newEntry.idType === "Vendor Employee"
 //   ? subContractorNonLaborAccounts
-//   : employeeNonLaborAccounts).length > 0
+//   : employeeNonLaborAccounts).length > 0 
 //   ? (newEntry.idType === "Vendor" || newEntry.idType === "Vendor Employee"
 //       ? subContractorNonLaborAccounts[0]?.id
 //       : employeeNonLaborAccounts[0]?.id) || ""
@@ -2951,7 +2951,7 @@
 //                     Delete
 //                   </button> */}
 //                   <button
-//                     className={`px-4 py-2 rounded text-xs font-medium transition
+//                     className={`px-4 py-2 rounded text-xs font-medium transition 
 //     ${
 //       planType === "EAC"
 //         ? "bg-gray-400 text-gray-700 cursor-not-allowed"
@@ -4106,6 +4106,7 @@
 
 // export default ProjectAmountsTable;
 
+
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -4200,6 +4201,8 @@ const ProjectAmountsTable = ({
   const [subContractorNonLaborAccounts, setSubContractorNonLaborAccounts] =
     useState([]);
   const [organizationOptions, setOrganizationOptions] = useState([]);
+  const [modifiedAmounts, setModifiedAmounts] = useState({});
+  const [hasUnsavedAmountChanges, setHasUnsavedAmountChanges] = useState(false);
 
   const isEditable = initialData.status === "In Progress";
   const planId = initialData.plId;
@@ -4728,9 +4731,8 @@ const ProjectAmountsTable = ({
         // const response = await axios.get(
         //   `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
         // );
-        const response = await axios.get(
-          `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
-        );
+        const response = await axios.get(`${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`)
+
 
         const data = Array.isArray(response.data)
           ? response.data[0]
@@ -5199,168 +5201,1232 @@ const ProjectAmountsTable = ({
     return monthAmounts;
   };
 
+  // const handleInputChange = (empIdx, uniqueKey, newValue) => {
+  //   if (!isEditable) return;
+  //   const currentDuration = sortedDurations.find(
+  //     (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //   );
+  //   if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+  //     toast.warn("Cannot edit amounts for a closed period.", {
+  //       toastId: "closed-period-warning",
+  //       autoClose: 3000,
+  //     });
+  //     return;
+  //   }
+  //   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
+  //     // console.log(
+  //     //   `Updating inputValues for ${empIdx}_${uniqueKey}: ${newValue}`
+  //     // );
+  //     setInputValues((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: newValue,
+  //     }));
+  //   }
+  // };
+  
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
-    if (!isEditable) return;
-    const currentDuration = sortedDurations.find(
-      (d) => `${d.monthNo}_${d.year}` === uniqueKey
-    );
-    if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-      toast.warn("Cannot edit amounts for a closed period.", {
-        toastId: "closed-period-warning",
-        autoClose: 3000,
-      });
-      return;
-    }
-    if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
-      // console.log(
-      //   `Updating inputValues for ${empIdx}_${uniqueKey}: ${newValue}`
-      // );
-      setInputValues((prev) => ({
-        ...prev,
-        [`${empIdx}_${uniqueKey}`]: newValue,
-      }));
-    }
-  };
+  if (!isEditable) return;
+  
+  const currentDuration = sortedDurations.find(
+    (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  );
 
-  const handleForecastAmountBlur = async (empIdx, uniqueKey, value) => {
-    if (!isEditable) return;
-    const newValue = value === "" ? 0 : Number(value);
-    const emp = employees[empIdx];
-    const monthAmounts = getMonthAmounts(emp);
-    const forecast = monthAmounts[uniqueKey];
-    const originalForecastedAmount = forecast?.forecastedamt ?? 0;
-    const currentDuration = sortedDurations.find(
-      (d) => `${d.monthNo}_${d.year}` === uniqueKey
-    );
+  if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+    toast.warn("Cannot edit amounts for a closed period.", {
+      toastId: "closed-period-warning",
+      autoClose: 3000,
+    });
+    return;
+  }
 
-    // console.log(
-    //   `handleForecastAmountBlur: empIdx=${empIdx}, uniqueKey=${uniqueKey}, newValue=${newValue}, original=${originalForecastedAmount}, month=${currentDuration?.monthNo}, year=${currentDuration?.year}`
-    // );
+  if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
+    console.log(`Updating inputValues for ${empIdx}_${uniqueKey}:`, newValue);
+    setInputValues((prev) => ({
+      ...prev,
+      [`${empIdx}_${uniqueKey}`]: newValue,
+    }));
 
-    if (newValue === originalForecastedAmount) {
-      // console.log("No change in forecast amount, skipping API call");
-      return;
-    }
-
-    if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-      // console.log(`Cannot edit ${uniqueKey}: period closed`);
-      setInputValues((prev) => ({
-        ...prev,
-        [`${empIdx}_${uniqueKey}`]: String(originalForecastedAmount),
-      }));
-      toast.warn("Cannot edit amounts for a closed period.", {
-        toastId: "closed-period-warning",
-        autoClose: 3000,
-      });
-      return;
-    }
-
-    const payload = {
-      forecastedamt: Number(newValue) || 0,
-      forecastid: Number(forecast?.forecastid ?? 0),
-      projId: forecast?.projId ?? projectId,
-      plId: forecast?.plId ?? planId,
-      emplId: forecast?.emplId ?? emp.emple.emplId,
-      dctId: forecast?.dctId ?? 0,
-      month: forecast?.month ?? currentDuration.monthNo,
-      year: forecast?.year ?? currentDuration.year,
-      totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-      burden: forecast?.burden ?? 0,
-      ccffRevenue: forecast?.ccffRevenue ?? 0,
-      tnmRevenue: forecast?.tnmRevenue ?? 0,
-      cost: forecast?.cost ?? 0,
-      fringe: forecast?.fringe ?? 0,
-      overhead: forecast?.overhead ?? 0,
-      gna: forecast?.gna ?? 0,
-      ...(planType === "EAC"
-        ? { actualamt: Number(newValue) || 0 }
-        : { forecastedamt: Number(newValue) || 0 }),
-      createdat: forecast?.createdat ?? new Date(0).toISOString(),
-      updatedat: new Date().toISOString().split("T")[0],
-      displayText: forecast?.displayText ?? "",
-    };
-
-    // console.log("UpdateForecastAmount payload:", payload);
-
-    try {
-      const response = await axios.put(
-        `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
-        payload,
-        { headers: { "Content-Type": "application/json" } }
-      );
-      setSuccessMessageText("Forecast updated!");
-      setShowSuccessMessage(true);
-      toast.success("Forecast amount updated successfully!", {
-        toastId: "forecast-update-success",
-        autoClose: 3000,
-      });
-
-      // Update local state with the response data for consistency
-      setEmployees((prev) => {
-        const updated = [...prev];
-        const updatedEmp = { ...updated[empIdx] };
-        const updatedForecasts = [...(updatedEmp.emple.plForecasts || [])];
-        const forecastIndex = updatedForecasts.findIndex(
-          (f) => f.month === payload.month && f.year === payload.year
-        );
-        const updatedForecast = response.data; // Assume API returns the updated forecast
-        if (forecastIndex >= 0) {
-          updatedForecasts[forecastIndex] = {
-            ...updatedForecasts[forecastIndex],
-            ...updatedForecast,
-            value:
-              planType === "EAC"
-                ? updatedForecast.actualamt
-                : updatedForecast.forecastedamt,
-          };
-        } else {
-          updatedForecasts.push({
-            ...updatedForecast,
-            value:
-              planType === "EAC"
-                ? updatedForecast.actualamt
-                : updatedForecast.forecastedamt,
-          });
-        }
-        updatedEmp.emple = {
-          ...updatedEmp.emple,
-          plForecasts: updatedForecasts,
-        };
-        updated[empIdx] = updatedEmp;
-        return updated;
-      });
-
-      // Clear the input value after successful update
-      setInputValues((prev) => {
-        const newInputs = { ...prev };
-        delete newInputs[`${empIdx}_${uniqueKey}`];
-        return newInputs;
-      });
-
-      // Trigger refetch to ensure UI syncs with server (like in ProjectHoursDetails)
-      if (onSaveSuccess) {
-        onSaveSuccess();
+    // Track modified amounts for save functionality
+    setModifiedAmounts((prev) => ({
+      ...prev,
+      [`${empIdx}_${uniqueKey}`]: {
+        empIdx,
+        uniqueKey,
+        newValue,
+        employee: employees[empIdx]
       }
-    } catch (err) {
-      // console.error("API error:", err.response?.data || err);
-      setInputValues((prev) => ({
-        ...prev,
-        [`${empIdx}_${uniqueKey}`]: String(originalForecastedAmount),
-      }));
-      setSuccessMessageText("Failed to update forecast.");
-      setShowSuccessMessage(true);
-      toast.error(
-        "Failed to update forecast amount: " +
-          (err.response?.data?.message || err.message),
-        {
-          toastId: "forecast-update-error",
-          autoClose: 3000,
-        }
+    }));
+    
+    setHasUnsavedAmountChanges(true);
+  }
+};
+
+  // const handleForecastAmountBlur = async (empIdx, uniqueKey, value) => {
+  //   if (!isEditable) return;
+  //   const newValue = value === "" ? 0 : Number(value);
+  //   const emp = employees[empIdx];
+  //   const monthAmounts = getMonthAmounts(emp);
+  //   const forecast = monthAmounts[uniqueKey];
+  //   const originalForecastedAmount = forecast?.forecastedamt ?? 0;
+  //   const currentDuration = sortedDurations.find(
+  //     (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //   );
+
+  //   // console.log(
+  //   //   `handleForecastAmountBlur: empIdx=${empIdx}, uniqueKey=${uniqueKey}, newValue=${newValue}, original=${originalForecastedAmount}, month=${currentDuration?.monthNo}, year=${currentDuration?.year}`
+  //   // );
+
+  //   if (newValue === originalForecastedAmount) {
+  //     // console.log("No change in forecast amount, skipping API call");
+  //     return;
+  //   }
+
+  //   if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+  //     // console.log(`Cannot edit ${uniqueKey}: period closed`);
+  //     setInputValues((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: String(originalForecastedAmount),
+  //     }));
+  //     toast.warn("Cannot edit amounts for a closed period.", {
+  //       toastId: "closed-period-warning",
+  //       autoClose: 3000,
+  //     });
+  //     return;
+  //   }
+
+  //   const payload = {
+  //     forecastedamt: Number(newValue) || 0,
+  //     forecastid: Number(forecast?.forecastid ?? 0),
+  //     projId: forecast?.projId ?? projectId,
+  //     plId: forecast?.plId ?? planId,
+  //     emplId: forecast?.emplId ?? emp.emple.emplId,
+  //     dctId: forecast?.dctId ?? 0,
+  //     month: forecast?.month ?? currentDuration.monthNo,
+  //     year: forecast?.year ?? currentDuration.year,
+  //     totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+  //     burden: forecast?.burden ?? 0,
+  //     ccffRevenue: forecast?.ccffRevenue ?? 0,
+  //     tnmRevenue: forecast?.tnmRevenue ?? 0,
+  //     cost: forecast?.cost ?? 0,
+  //     fringe: forecast?.fringe ?? 0,
+  //     overhead: forecast?.overhead ?? 0,
+  //     gna: forecast?.gna ?? 0,
+  //     ...(planType === "EAC"
+  //       ? { actualamt: Number(newValue) || 0 }
+  //       : { forecastedamt: Number(newValue) || 0 }),
+  //     createdat: forecast?.createdat ?? new Date(0).toISOString(),
+  //     updatedat: new Date().toISOString().split("T")[0],
+  //     displayText: forecast?.displayText ?? "",
+  //   };
+
+  //   // console.log("UpdateForecastAmount payload:", payload);
+
+  //   try {
+  //     const response = await axios.put(
+  //       `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
+  //       payload,
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+  //     setSuccessMessageText("Forecast updated!");
+  //     setShowSuccessMessage(true);
+  //     toast.success("Forecast amount updated successfully!", {
+  //       toastId: "forecast-update-success",
+  //       autoClose: 3000,
+  //     });
+
+  //     // Update local state with the response data for consistency
+  //     setEmployees((prev) => {
+  //       const updated = [...prev];
+  //       const updatedEmp = { ...updated[empIdx] };
+  //       const updatedForecasts = [...(updatedEmp.emple.plForecasts || [])];
+  //       const forecastIndex = updatedForecasts.findIndex(
+  //         (f) => f.month === payload.month && f.year === payload.year
+  //       );
+  //       const updatedForecast = response.data; // Assume API returns the updated forecast
+  //       if (forecastIndex >= 0) {
+  //         updatedForecasts[forecastIndex] = {
+  //           ...updatedForecasts[forecastIndex],
+  //           ...updatedForecast,
+  //           value:
+  //             planType === "EAC"
+  //               ? updatedForecast.actualamt
+  //               : updatedForecast.forecastedamt,
+  //         };
+  //       } else {
+  //         updatedForecasts.push({
+  //           ...updatedForecast,
+  //           value:
+  //             planType === "EAC"
+  //               ? updatedForecast.actualamt
+  //               : updatedForecast.forecastedamt,
+  //         });
+  //       }
+  //       updatedEmp.emple = {
+  //         ...updatedEmp.emple,
+  //         plForecasts: updatedForecasts,
+  //       };
+  //       updated[empIdx] = updatedEmp;
+  //       return updated;
+  //     });
+
+  //     // Clear the input value after successful update
+  //     setInputValues((prev) => {
+  //       const newInputs = { ...prev };
+  //       delete newInputs[`${empIdx}_${uniqueKey}`];
+  //       return newInputs;
+  //     });
+
+  //     // Trigger refetch to ensure UI syncs with server (like in ProjectHoursDetails)
+  //     if (onSaveSuccess) {
+  //       onSaveSuccess();
+  //     }
+  //   } catch (err) {
+  //     // console.error("API error:", err.response?.data || err);
+  //     setInputValues((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: String(originalForecastedAmount),
+  //     }));
+  //     setSuccessMessageText("Failed to update forecast.");
+  //     setShowSuccessMessage(true);
+  //     toast.error(
+  //       "Failed to update forecast amount: " +
+  //         (err.response?.data?.message || err.message),
+  //       {
+  //         toastId: "forecast-update-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   } finally {
+  //     setTimeout(() => setShowSuccessMessage(false), 2000);
+  //   }
+  // };
+
+//   const handleSaveAllAmounts = async () => {
+//   if (Object.keys(modifiedAmounts).length === 0) {
+//     toast.info("No changes to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsLoading(true);
+//   const updates = [];
+//   let successCount = 0;
+//   let errorCount = 0;
+
+//   try {
+//     for (const key in modifiedAmounts) {
+//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
+      
+//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+//       const emp = employee;
+//       const monthAmounts = getMonthAmounts(emp);
+//       const forecast = monthAmounts[uniqueKey];
+
+//       if (!forecast || !forecast.forecastid) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       const currentDuration = sortedDurations.find(
+//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//       );
+
+//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       const payload = {
+//         forecastedamt: forecast?.forecastedamt ?? 0,
+//         forecastid: Number(forecast?.forecastid ?? 0),
+//         projId: forecast?.projId ?? projectId,
+//         plId: forecast?.plId ?? planId,
+//         emplId: forecast?.emplId ?? emp?.emple?.emplId,
+//         dctId: forecast?.dctId ?? 0,
+//         month: forecast?.month ?? currentDuration?.monthNo,
+//         year: forecast?.year ?? currentDuration?.year,
+//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+//         burden: forecast?.burden ?? 0,
+//         ccffRevenue: forecast?.ccffRevenue ?? 0,
+//         tnmRevenue: forecast?.tnmRevenue ?? 0,
+//         cost: forecast?.cost ?? 0,
+//         fringe: forecast?.fringe ?? 0,
+//         overhead: forecast?.overhead ?? 0,
+//         gna: forecast?.gna ?? 0,
+//         ...(planType === "EAC"
+//           ? { actualamt: Number(newNumericValue) || 0 }
+//           : { forecastedamt: Number(newNumericValue) || 0 }),
+//         createdat: forecast?.createdat ?? new Date().toISOString(),
+//         updatedat: new Date().toISOString().split("T")[0],
+//         displayText: forecast?.displayText ?? "",
+//       };
+
+//       updates.push(
+//         axios.put(
+//           `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
+//           payload,
+//           { headers: { "Content-Type": "application/json" } }
+//         ).then(() => {
+//           successCount++;
+//           // Update local state
+//           setEmployees((prev) => {
+//             const updated = [...prev];
+//             if (
+//               updated[empIdx] &&
+//               updated[empIdx].emple &&
+//               updated[empIdx].emple.plForecasts
+//             ) {
+//               const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+//                 (f) => f.month === payload.month && f.year === payload.year
+//               );
+//               if (forecastIndex !== -1) {
+//                 if (planType === "EAC") {
+//                   updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
+//                 } else {
+//                   updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
+//                 }
+//               }
+//             }
+//             return updated;
+//           });
+//         }).catch(() => {
+//           errorCount++;
+//         })
+//       );
+//     }
+
+//     await Promise.all(updates);
+
+//     // Clear modified amounts and reset flags
+//     setModifiedAmounts({});
+//     setHasUnsavedAmountChanges(false);
+
+//     if (successCount > 0) {
+//       toast.success(`Successfully saved ${successCount} amount entries!`, {
+//         autoClose: 3000,
+//       });
+//     }
+
+//     if (errorCount > 0) {
+//       toast.warning(`${errorCount} entries could not be saved.`, {
+//         autoClose: 3000,
+//       });
+//     }
+
+//   } catch (err) {
+//     toast.error(
+//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
+//       {
+//         toastId: "save-amounts-error",
+//         autoClose: 3000,
+//       }
+//     );
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+
+//   const handleSaveAllAmounts = async () => {
+//   if (Object.keys(modifiedAmounts).length === 0) {
+//     toast.info("No changes to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsLoading(true);
+//   let successCount = 0;
+//   let errorCount = 0;
+
+//   try {
+//     // Prepare bulk payload array
+//     const bulkPayload = [];
+
+//     for (const key in modifiedAmounts) {
+//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
+      
+//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+//       const emp = employee;
+//       const monthAmounts = getMonthAmounts(emp);
+//       const forecast = monthAmounts[uniqueKey];
+
+//       if (!forecast || !forecast.forecastid) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       const currentDuration = sortedDurations.find(
+//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//       );
+
+//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       // Create payload matching the bulk API structure
+//       const payload = {
+//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
+//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
+//         forecastid: Number(forecast?.forecastid ?? 0),
+//         projId: forecast?.projId ?? projectId ?? "",
+//         plId: forecast?.plId ?? planId ?? 0,
+//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+//         dctId: forecast?.dctId ?? 0,
+//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
+//         year: forecast?.year ?? currentDuration?.year ?? 0,
+//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+//         fees: forecast?.fees ?? 0,
+//         burden: forecast?.burden ?? 0,
+//         ccffRevenue: forecast?.ccffRevenue ?? 0,
+//         tnmRevenue: forecast?.tnmRevenue ?? 0,
+//         revenue: forecast?.revenue ?? 0,
+//         cost: forecast?.cost ?? 0,
+//         forecastedCost: forecast?.forecastedCost ?? 0,
+//         fringe: forecast?.fringe ?? 0,
+//         overhead: forecast?.overhead ?? 0,
+//         gna: forecast?.gna ?? 0,
+//         materials: forecast?.materials ?? 0,
+//         forecastedhours: forecast?.forecastedhours ?? 0,
+//         actualhours: forecast?.actualhours ?? 0,
+//         createdat: forecast?.createdat ?? new Date().toISOString(),
+//         updatedat: new Date().toISOString(),
+//         displayText: forecast?.displayText ?? "",
+//         acctId: emp?.emple?.accId ?? "",
+//         orgId: emp?.emple?.orgId ?? "",
+//         plc: emp?.emple?.plcGlcCode ?? "",
+//         empleId: emp?.emple?.id ?? 0,
+//         hrlyRate: emp?.emple?.perHourRate ?? 0,
+//         effectDt: new Date().toISOString().split('T')[0],
+//         emple: emp?.emple ? {
+//           id: emp.emple.id ?? 0,
+//           emplId: emp.emple.emplId ?? "",
+//           orgId: emp.emple.orgId ?? "",
+//           firstName: emp.emple.firstName ?? "",
+//           lastName: emp.emple.lastName ?? "",
+//           plcGlcCode: emp.emple.plcGlcCode ?? "",
+//           perHourRate: emp.emple.perHourRate ?? 0,
+//           salary: emp.emple.salary ?? 0,
+//           accId: emp.emple.accId ?? "",
+//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+//           isRev: emp.emple.isRev ?? false,
+//           isBrd: emp.emple.isBrd ?? false,
+//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+//           type: emp.emple.type ?? "",
+//           status: emp.emple.status ?? "",
+//           plId: planId ?? 0,
+//           isWarning: emp.emple.isWarning ?? false,
+//           plForecasts: [],
+//           organization: emp.emple.organization ?? null,
+//           plProjectPlan: emp.emple.plProjectPlan ?? null
+//         } : null
+//       };
+
+//       bulkPayload.push(payload);
+//       successCount++; // Count valid entries
+//     }
+
+//     if (bulkPayload.length === 0) {
+//       toast.warning("No valid entries to save.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Use bulk API endpoint
+//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
+//     console.log("Payload:", bulkPayload);
+    
+//     const response = await axios.put(
+//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
+//       bulkPayload,
+//       { headers: { "Content-Type": "application/json" } }
+//     );
+
+//     console.log("Bulk amount update response:", response.data);
+
+//     // Update local state for all successful updates
+//     setEmployees((prev) => {
+//       const updated = [...prev];
+      
+//       for (const key in modifiedAmounts) {
+//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
+//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
+        
+//         if (
+//           updated[empIdx] &&
+//           updated[empIdx].emple &&
+//           updated[empIdx].emple.plForecasts
+//         ) {
+//           const currentDuration = sortedDurations.find(
+//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//           );
+          
+//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
+//           );
+          
+//           if (forecastIndex !== -1) {
+//             if (planType === "EAC") {
+//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
+//             } else {
+//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
+//             }
+//           }
+//         }
+//       }
+      
+//       return updated;
+//     });
+
+//     // Clear modified amounts and reset flags
+//     setModifiedAmounts({});
+//     setHasUnsavedAmountChanges(false);
+
+//     toast.success(`Successfully saved ${successCount} amount entries!`, {
+//       autoClose: 3000,
+//     });
+
+//     if (errorCount > 0) {
+//       toast.warning(`${errorCount} entries could not be processed.`, {
+//         autoClose: 3000,
+//       });
+//     }
+
+//   } catch (err) {
+//     console.error("Bulk amount update error:", err);
+//     toast.error(
+//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
+//       {
+//         toastId: "save-amounts-error",
+//         autoClose: 3000,
+//       }
+//     );
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+  
+// const handleSaveAllAmounts = async () => {
+//   if (Object.keys(modifiedAmounts).length === 0) {
+//     toast.info("No changes to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsLoading(true);
+//   let successCount = 0;
+//   let errorCount = 0;
+
+//   try {
+//     // Prepare bulk payload array
+//     const bulkPayload = [];
+
+//     for (const key in modifiedAmounts) {
+//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
+      
+//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+//       const emp = employee;
+//       const monthAmounts = getMonthAmounts(emp);
+//       const forecast = monthAmounts[uniqueKey];
+
+//       if (!forecast || !forecast.forecastid) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       const currentDuration = sortedDurations.find(
+//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//       );
+
+//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       // Create the plForecast object (this is what the API expects)
+//       const plForecast = {
+//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
+//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
+//         forecastid: Number(forecast?.forecastid ?? 0),
+//         projId: forecast?.projId ?? projectId ?? "",
+//         plId: forecast?.plId ?? planId ?? 0,
+//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+//         dctId: forecast?.dctId ?? 0,
+//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
+//         year: forecast?.year ?? currentDuration?.year ?? 0,
+//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+//         fees: forecast?.fees ?? 0,
+//         burden: forecast?.burden ?? 0,
+//         ccffRevenue: forecast?.ccffRevenue ?? 0,
+//         tnmRevenue: forecast?.tnmRevenue ?? 0,
+//         revenue: forecast?.revenue ?? 0,
+//         cost: forecast?.cost ?? 0,
+//         forecastedCost: forecast?.forecastedCost ?? 0,
+//         fringe: forecast?.fringe ?? 0,
+//         overhead: forecast?.overhead ?? 0,
+//         gna: forecast?.gna ?? 0,
+//         materials: forecast?.materials ?? 0,
+//         forecastedhours: forecast?.forecastedhours ?? 0,
+//         actualhours: forecast?.actualhours ?? 0,
+//         createdat: forecast?.createdat ?? new Date().toISOString(),
+//         updatedat: new Date().toISOString(),
+//         displayText: forecast?.displayText ?? "",
+//         acctId: emp?.emple?.accId ?? "",
+//         orgId: emp?.emple?.orgId ?? "",
+//         plc: emp?.emple?.plcGlcCode ?? "",
+//         empleId: emp?.emple?.id ?? 0,
+//         hrlyRate: parseFloat(emp?.emple?.perHourRate ?? 0) || 0, // Fixed: ensure it's a valid number
+//         effectDt: new Date().toISOString().split('T')[0],
+//         emple: emp?.emple ? {
+//           id: emp.emple.id ?? 0,
+//           emplId: emp.emple.emplId ?? "",
+//           orgId: emp.emple.orgId ?? "",
+//           firstName: emp.emple.firstName ?? "",
+//           lastName: emp.emple.lastName ?? "",
+//           plcGlcCode: emp.emple.plcGlcCode ?? "",
+//           perHourRate: parseFloat(emp.emple.perHourRate ?? 0) || 0, // Fixed: ensure valid number
+//           salary: parseFloat(emp.emple.salary ?? 0) || 0,
+//           accId: emp.emple.accId ?? "",
+//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+//           isRev: emp.emple.isRev ?? false,
+//           isBrd: emp.emple.isBrd ?? false,
+//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+//           type: emp.emple.type ?? "",
+//           status: emp.emple.status ?? "",
+//           plId: planId ?? 0,
+//           isWarning: emp.emple.isWarning ?? false,
+//           plForecasts: [],
+//           organization: emp.emple.organization ?? null,
+//           plProjectPlan: emp.emple.plProjectPlan ?? null
+//         } : null
+//       };
+
+//       // Add the plForecast object to the payload (this is the key fix)
+//       bulkPayload.push({
+//         plForecast: plForecast // ← This is what the API expects
+//       });
+      
+//       successCount++; // Count valid entries
+//     }
+
+//     if (bulkPayload.length === 0) {
+//       toast.warning("No valid entries to save.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Use bulk API endpoint
+//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
+//     console.log("Payload:", bulkPayload);
+    
+//     const response = await axios.put(
+//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
+//       bulkPayload,
+//       { headers: { "Content-Type": "application/json" } }
+//     );
+
+//     console.log("Bulk amount update response:", response.data);
+
+//     // Update local state for all successful updates
+//     setEmployees((prev) => {
+//       const updated = [...prev];
+      
+//       for (const key in modifiedAmounts) {
+//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
+//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
+        
+//         if (
+//           updated[empIdx] &&
+//           updated[empIdx].emple &&
+//           updated[empIdx].emple.plForecasts
+//         ) {
+//           const currentDuration = sortedDurations.find(
+//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//           );
+          
+//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
+//           );
+          
+//           if (forecastIndex !== -1) {
+//             if (planType === "EAC") {
+//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
+//             } else {
+//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
+//             }
+//           }
+//         }
+//       }
+      
+//       return updated;
+//     });
+
+//     // Clear modified amounts and reset flags
+//     setModifiedAmounts({});
+//     setHasUnsavedAmountChanges(false);
+
+//     toast.success(`Successfully saved ${successCount} amount entries!`, {
+//       autoClose: 3000,
+//     });
+
+//     if (errorCount > 0) {
+//       toast.warning(`${errorCount} entries could not be processed.`, {
+//         autoClose: 3000,
+//       });
+//     }
+
+//   } catch (err) {
+//     console.error("Bulk amount update error:", err);
+//     toast.error(
+//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
+//       {
+//         toastId: "save-amounts-error",
+//         autoClose: 3000,
+//       }
+//     );
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+
+// const handleSaveAllAmounts = async () => {
+//   if (Object.keys(modifiedAmounts).length === 0) {
+//     toast.info("No changes to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsLoading(true);
+//   let successCount = 0;
+//   let errorCount = 0;
+
+//   try {
+//     // Prepare bulk payload array
+//     const bulkPayload = [];
+
+//     for (const key in modifiedAmounts) {
+//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
+      
+//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+//       const emp = employee;
+//       const monthAmounts = getMonthAmounts(emp);
+//       const forecast = monthAmounts[uniqueKey];
+
+//       if (!forecast || !forecast.forecastid) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       const currentDuration = sortedDurations.find(
+//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//       );
+
+//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       // Create payload matching EXACT API structure
+//       const payload = {
+//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
+//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
+//         forecastid: Number(forecast?.forecastid ?? 0),
+//         projId: String(forecast?.projId ?? projectId ?? ""),
+//         plId: Number(forecast?.plId ?? planId ?? 0),
+//         emplId: String(forecast?.emplId ?? emp?.emple?.emplId ?? ""),
+//         dctId: Number(forecast?.dctId ?? 0),
+//         month: Number(forecast?.month ?? currentDuration?.monthNo ?? 0),
+//         year: Number(forecast?.year ?? currentDuration?.year ?? 0),
+//         totalBurdenCost: Number(forecast?.totalBurdenCost ?? 0),
+//         fees: Number(forecast?.fees ?? 0),
+//         burden: Number(forecast?.burden ?? 0),
+//         ccffRevenue: Number(forecast?.ccffRevenue ?? 0),
+//         tnmRevenue: Number(forecast?.tnmRevenue ?? 0),
+//         revenue: Number(forecast?.revenue ?? 0),
+//         cost: Number(forecast?.cost ?? 0),
+//         forecastedCost: Number(forecast?.forecastedCost ?? 0),
+//         fringe: Number(forecast?.fringe ?? 0),
+//         overhead: Number(forecast?.overhead ?? 0),
+//         gna: Number(forecast?.gna ?? 0),
+//         materials: Number(forecast?.materials ?? 0),
+//         forecastedhours: Number(forecast?.forecastedhours ?? 0),
+//         actualhours: Number(forecast?.actualhours ?? 0),
+//         createdat: forecast?.createdat ?? new Date().toISOString(),
+//         updatedat: new Date().toISOString(),
+//         displayText: String(forecast?.displayText ?? ""),
+//         acctId: String(emp?.emple?.accId ?? ""),
+//         orgId: String(emp?.emple?.orgId ?? ""),
+//         plc: String(emp?.emple?.plcGlcCode ?? ""),
+//         empleId: Number(emp?.emple?.id ?? 0),
+//         hrlyRate: Number(parseFloat(emp?.emple?.perHourRate ?? 0) || 0),
+//         effectDt: new Date().toISOString().split('T')[0],
+//         emple: emp?.emple ? {
+//           id: Number(emp.emple.id ?? 0),
+//           emplId: String(emp.emple.emplId ?? ""),
+//           orgId: String(emp.emple.orgId ?? ""),
+//           firstName: String(emp.emple.firstName ?? ""),
+//           lastName: String(emp.emple.lastName ?? ""),
+//           plcGlcCode: String(emp.emple.plcGlcCode ?? ""),
+//           perHourRate: Number(parseFloat(emp.emple.perHourRate ?? 0) || 0),
+//           salary: Number(parseFloat(emp.emple.salary ?? 0) || 0),
+//           accId: String(emp.emple.accId ?? ""),
+//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+//           isRev: Boolean(emp.emple.isRev ?? false),
+//           isBrd: Boolean(emp.emple.isBrd ?? false),
+//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+//           type: String(emp.emple.type ?? ""),
+//           status: String(emp.emple.status ?? ""),
+//           plId: Number(planId ?? 0),
+//           isWarning: Boolean(emp.emple.isWarning ?? false),
+//           plForecasts: [],
+//           organization: emp.emple.organization || null,
+//           plProjectPlan: emp.emple.plProjectPlan || null
+//         } : null
+//       };
+
+//       // Add payload directly to array (NOT wrapped in plForecast)
+//       bulkPayload.push(payload);
+//       successCount++;
+//     }
+
+//     if (bulkPayload.length === 0) {
+//       toast.warning("No valid entries to save.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Use bulk API endpoint
+//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
+//     console.log("Payload:", JSON.stringify(bulkPayload, null, 2));
+    
+//     const response = await axios.put(
+//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
+//       bulkPayload,
+//       { headers: { "Content-Type": "application/json" } }
+//     );
+
+//     console.log("Bulk amount update response:", response.data);
+
+//     // Update local state for all successful updates
+//     setEmployees((prev) => {
+//       const updated = [...prev];
+      
+//       for (const key in modifiedAmounts) {
+//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
+//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
+        
+//         if (
+//           updated[empIdx] &&
+//           updated[empIdx].emple &&
+//           updated[empIdx].emple.plForecasts
+//         ) {
+//           const currentDuration = sortedDurations.find(
+//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//           );
+          
+//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
+//           );
+          
+//           if (forecastIndex !== -1) {
+//             if (planType === "EAC") {
+//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
+//             } else {
+//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
+//             }
+//           }
+//         }
+//       }
+      
+//       return updated;
+//     });
+
+//     // Clear modified amounts and reset flags
+//     setModifiedAmounts({});
+//     setHasUnsavedAmountChanges(false);
+
+//     toast.success(`Successfully saved ${successCount} amount entries!`, {
+//       autoClose: 3000,
+//     });
+
+//     if (errorCount > 0) {
+//       toast.warning(`${errorCount} entries could not be processed.`, {
+//         autoClose: 3000,
+//       });
+//     }
+
+//     // Trigger parent refresh
+//     if (onSaveSuccess) {
+//       onSaveSuccess();
+//     }
+
+//   } catch (err) {
+//     console.error("Bulk amount update error:", err);
+//     toast.error(
+//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
+//       {
+//         toastId: "save-amounts-error",
+//         autoClose: 3000,
+//       }
+//     );
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+
+// const handleSaveAllAmounts = async () => {
+//   if (Object.keys(modifiedAmounts).length === 0) {
+//     toast.info("No changes to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsLoading(true);
+//   let successCount = 0;
+//   let errorCount = 0;
+
+//   try {
+//     // Prepare bulk payload array
+//     const bulkPayload = [];
+
+//     for (const key in modifiedAmounts) {
+//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
+      
+//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+//       const emp = employee;
+//       const monthAmounts = getMonthAmounts(emp);
+//       const forecast = monthAmounts[uniqueKey];
+
+//       if (!forecast || !forecast.forecastid) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       const currentDuration = sortedDurations.find(
+//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//       );
+
+//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+//         errorCount++;
+//         continue;
+//       }
+
+//       // Create payload matching EXACT API structure
+//       const payload = {
+//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
+//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
+//         forecastid: Number(forecast?.forecastid ?? 0),
+//         projId: String(forecast?.projId ?? projectId ?? ""),
+//         plId: Number(forecast?.plId ?? planId ?? 0),
+//         emplId: String(forecast?.emplId ?? emp?.emple?.emplId ?? ""),
+//         dctId: Number(forecast?.dctId ?? 0),
+//         month: Number(forecast?.month ?? currentDuration?.monthNo ?? 0),
+//         year: Number(forecast?.year ?? currentDuration?.year ?? 0),
+//         totalBurdenCost: Number(forecast?.totalBurdenCost ?? 0),
+//         fees: Number(forecast?.fees ?? 0),
+//         burden: Number(forecast?.burden ?? 0),
+//         ccffRevenue: Number(forecast?.ccffRevenue ?? 0),
+//         tnmRevenue: Number(forecast?.tnmRevenue ?? 0),
+//         revenue: Number(forecast?.revenue ?? 0),
+//         cost: Number(forecast?.cost ?? 0),
+//         forecastedCost: Number(forecast?.forecastedCost ?? 0),
+//         fringe: Number(forecast?.fringe ?? 0),
+//         overhead: Number(forecast?.overhead ?? 0),
+//         gna: Number(forecast?.gna ?? 0),
+//         materials: Number(forecast?.materials ?? 0),
+//         forecastedhours: Number(forecast?.forecastedhours ?? 0),
+//         actualhours: Number(forecast?.actualhours ?? 0),
+//         createdat: forecast?.createdat ?? new Date().toISOString(),
+//         updatedat: new Date().toISOString(),
+//         displayText: String(forecast?.displayText ?? ""),
+//         acctId: String(emp?.emple?.accId ?? ""),
+//         orgId: String(emp?.emple?.orgId ?? ""),
+//         plc: String(emp?.emple?.plcGlcCode ?? ""),
+//         empleId: Number(emp?.emple?.id ?? 0),
+//         hrlyRate: Number(parseFloat(emp?.emple?.perHourRate ?? 0) || 0),
+//         effectDt: new Date().toISOString().split('T')[0],
+//         emple: emp?.emple ? {
+//           id: Number(emp.emple.id ?? 0),
+//           emplId: String(emp.emple.emplId ?? ""),
+//           orgId: String(emp.emple.orgId ?? ""),
+//           firstName: String(emp.emple.firstName ?? ""),
+//           lastName: String(emp.emple.lastName ?? ""),
+//           plcGlcCode: String(emp.emple.plcGlcCode ?? ""),
+//           perHourRate: Number(parseFloat(emp.emple.perHourRate ?? 0) || 0),
+//           salary: Number(parseFloat(emp.emple.salary ?? 0) || 0),
+//           accId: String(emp.emple.accId ?? ""),
+//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+//           isRev: Boolean(emp.emple.isRev ?? false),
+//           isBrd: Boolean(emp.emple.isBrd ?? false),
+//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+//           type: String(emp.emple.type ?? ""),
+//           status: String(emp.emple.status ?? ""),
+//           plId: Number(planId ?? 0),
+//           isWarning: Boolean(emp.emple.isWarning ?? false),
+//           plForecasts: [],
+//           organization: emp.emple.organization || null,
+//           plProjectPlan: emp.emple.plProjectPlan || null
+//         } : null
+//       };
+
+//       bulkPayload.push(payload);
+//       successCount++;
+//     }
+
+//     if (bulkPayload.length === 0) {
+//       toast.warning("No valid entries to save.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Use bulk API endpoint - NOT individual updates
+//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
+//     console.log("Payload:", JSON.stringify(bulkPayload, null, 2));
+    
+//     const response = await axios.put(
+//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
+//       bulkPayload,
+//       { headers: { "Content-Type": "application/json" } }
+//     );
+
+//     console.log("Bulk amount update response:", response.data);
+
+//     // Update local state for all successful updates
+//     setEmployees((prev) => {
+//       const updated = [...prev];
+      
+//       for (const key in modifiedAmounts) {
+//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
+//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
+        
+//         if (
+//           updated[empIdx] &&
+//           updated[empIdx].emple &&
+//           updated[empIdx].emple.plForecasts
+//         ) {
+//           const currentDuration = sortedDurations.find(
+//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
+//           );
+          
+//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
+//           );
+          
+//           if (forecastIndex !== -1) {
+//             if (planType === "EAC") {
+//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
+//             } else {
+//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
+//             }
+//           }
+//         }
+//       }
+      
+//       return updated;
+//     });
+
+//     // Clear modified amounts and reset flags
+//     setModifiedAmounts({});
+//     setHasUnsavedAmountChanges(false);
+
+//     toast.success(`Successfully saved ${successCount} amount entries!`, {
+//       autoClose: 3000,
+//     });
+
+//     if (errorCount > 0) {
+//       toast.warning(`${errorCount} entries could not be processed.`, {
+//         autoClose: 3000,
+//       });
+//     }
+
+//   } catch (err) {
+//     console.error("Bulk amount update error:", err);
+//     toast.error(
+//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
+//       {
+//         toastId: "save-amounts-error",
+//         autoClose: 3000,
+//       }
+//     );
+//   } finally {
+//     setIsLoading(false);
+//   }
+// };
+
+const handleSaveAllAmounts = async () => {
+  if (Object.keys(modifiedAmounts).length === 0) {
+    toast.info("No changes to save.", { autoClose: 2000 });
+    return;
+  }
+
+  setIsLoading(true);
+  let successCount = 0;
+  let errorCount = 0;
+
+  try {
+    // Prepare bulk payload array - DO NOT use individual updates
+    const bulkPayload = [];
+
+    for (const key in modifiedAmounts) {
+      const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
+      
+      const newNumericValue = newValue === "" ? 0 : Number(newValue);
+      const emp = employee;
+      const monthAmounts = getMonthAmounts(emp);
+      const forecast = monthAmounts[uniqueKey];
+
+      if (!forecast || !forecast.forecastid) {
+        errorCount++;
+        continue;
+      }
+
+      const currentDuration = sortedDurations.find(
+        (d) => `${d.monthNo}_${d.year}` === uniqueKey
       );
-    } finally {
-      setTimeout(() => setShowSuccessMessage(false), 2000);
+
+      if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+        errorCount++;
+        continue;
+      }
+
+      // Create payload matching EXACT bulk API structure
+      const payload = {
+        forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
+        actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
+        forecastid: Number(forecast?.forecastid ?? 0),
+        projId: String(forecast?.projId ?? projectId ?? ""),
+        plId: Number(forecast?.plId ?? planId ?? 0),
+        emplId: String(forecast?.emplId ?? emp?.emple?.emplId ?? ""),
+        dctId: Number(forecast?.dctId ?? 0),
+        month: Number(forecast?.month ?? currentDuration?.monthNo ?? 0),
+        year: Number(forecast?.year ?? currentDuration?.year ?? 0),
+        totalBurdenCost: Number(forecast?.totalBurdenCost ?? 0),
+        fees: Number(forecast?.fees ?? 0),
+        burden: Number(forecast?.burden ?? 0),
+        ccffRevenue: Number(forecast?.ccffRevenue ?? 0),
+        tnmRevenue: Number(forecast?.tnmRevenue ?? 0),
+        revenue: Number(forecast?.revenue ?? 0),
+        cost: Number(forecast?.cost ?? 0),
+        forecastedCost: Number(forecast?.forecastedCost ?? 0),
+        fringe: Number(forecast?.fringe ?? 0),
+        overhead: Number(forecast?.overhead ?? 0),
+        gna: Number(forecast?.gna ?? 0),
+        materials: Number(forecast?.materials ?? 0),
+        forecastedhours: Number(forecast?.forecastedhours ?? 0),
+        actualhours: Number(forecast?.actualhours ?? 0),
+        createdat: forecast?.createdat ?? new Date().toISOString(),
+        updatedat: new Date().toISOString(),
+        displayText: String(forecast?.displayText ?? ""),
+        acctId: String(emp?.emple?.accId ?? ""),
+        orgId: String(emp?.emple?.orgId ?? ""),
+        plc: String(emp?.emple?.plcGlcCode ?? ""),
+        empleId: Number(emp?.emple?.id ?? 0),
+        hrlyRate: Number(parseFloat(emp?.emple?.perHourRate ?? 0) || 0),
+        effectDt: new Date().toISOString().split('T')[0],
+        emple: emp?.emple ? {
+          id: Number(emp.emple.id ?? 0),
+          emplId: String(emp.emple.emplId ?? ""),
+          orgId: String(emp.emple.orgId ?? ""),
+          firstName: String(emp.emple.firstName ?? ""),
+          lastName: String(emp.emple.lastName ?? ""),
+          plcGlcCode: String(emp.emple.plcGlcCode ?? ""),
+          perHourRate: Number(parseFloat(emp.emple.perHourRate ?? 0) || 0),
+          salary: Number(parseFloat(emp.emple.salary ?? 0) || 0),
+          accId: String(emp.emple.accId ?? ""),
+          hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+          isRev: Boolean(emp.emple.isRev ?? false),
+          isBrd: Boolean(emp.emple.isBrd ?? false),
+          createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+          type: String(emp.emple.type ?? ""),
+          status: String(emp.emple.status ?? ""),
+          plId: Number(planId ?? 0),
+          isWarning: Boolean(emp.emple.isWarning ?? false),
+          plForecasts: [],
+          organization: emp.emple.organization || null,
+          plProjectPlan: emp.emple.plProjectPlan || null
+        } : null
+      };
+
+      bulkPayload.push(payload);
+      successCount++;
     }
-  };
+
+    if (bulkPayload.length === 0) {
+      toast.warning("No valid entries to save.", { autoClose: 3000 });
+      return;
+    }
+
+    // SINGLE BULK API CALL - NOT individual updates
+    console.log("Calling BULK amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
+    console.log("Bulk Payload:", JSON.stringify(bulkPayload, null, 2));
+    
+    const response = await axios.put(
+      `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
+      bulkPayload,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log("Bulk amount update SUCCESS:", response.data);
+
+    // Update local state for all successful updates
+    setEmployees((prev) => {
+      const updated = [...prev];
+      
+      for (const key in modifiedAmounts) {
+        const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
+        const newNumericValue = newValue === "" ? 0 : Number(newValue);
+        
+        if (
+          updated[empIdx] &&
+          updated[empIdx].emple &&
+          updated[empIdx].emple.plForecasts
+        ) {
+          const currentDuration = sortedDurations.find(
+            (d) => `${d.monthNo}_${d.year}` === uniqueKey
+          );
+          
+          const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+            (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
+          );
+          
+          if (forecastIndex !== -1) {
+            if (planType === "EAC") {
+              updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
+            } else {
+              updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
+            }
+            // Update the displayed value as well
+            updated[empIdx].emple.plForecasts[forecastIndex].value = newNumericValue;
+          }
+        }
+      }
+      
+      return updated;
+    });
+
+    // Clear modified amounts and reset flags
+    setModifiedAmounts({});
+    setHasUnsavedAmountChanges(false);
+
+    toast.success(`Successfully saved ${successCount} amount entries`, {
+      autoClose: 3000,
+    });
+
+    if (errorCount > 0) {
+      toast.warning(`${errorCount} entries could not be processed.`, {
+        autoClose: 3000,
+      });
+    }
+
+    // DO NOT call onSaveSuccess to avoid refetch
+    // The local state update above should be sufficient
+
+  } catch (err) {
+    console.error("Bulk amount update ERROR:", err);
+    toast.error(
+      "Failed to save amounts via BULK API: " + (err.response?.data?.message || err.message),
+      {
+        toastId: "save-amounts-error",
+        autoClose: 3000,
+      }
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+
 
   const resetNewEntry = (newIdType) => {
     setNewEntry({
@@ -5557,228 +6623,445 @@ const ProjectAmountsTable = ({
   //   }
   // };
 
+  // const handleSaveNewEntry = async () => {
+  //   if (!planId) {
+  //     toast.error("Plan ID is required to save a new entry.", {
+  //       toastId: "no-plan-id",
+  //       autoClose: 3000,
+  //     });
+  //     return;
+  //   }
+
+  //   // Check for empty ID
+  //   if (!newEntry.id || newEntry.id.trim() === "") {
+  //     toast.error("ID is required to save a new entry.", {
+  //       toastId: "empty-id-error",
+  //       autoClose: 3000,
+  //     });
+  //     return;
+  //   }
+
+  //   // Check for duplicate ID
+  //   // const isDuplicateId = employees.some(
+  //   //   (emp) => emp.emple.emplId === newEntry.id
+  //   // );
+
+  //   // if (isDuplicateId) {
+  //   //   toast.error("ID is already present in table so can't save.", {
+  //   //     toastId: "duplicate-id-error",
+  //   //     autoClose: 3000,
+  //   //   });
+  //   //   return;
+  //   // }
+  //   // Only check for duplicate ID if NOT "Other"
+  //   // if (newEntry.idType !== "Other") {
+  //   //   const isDuplicateId = employees.some(
+  //   //     (emp) => emp.emple.emplId === newEntry.id
+  //   //   );
+
+  //   //   if (isDuplicateId) {
+  //   //     toast.error("ID is already present in table so can't save.", {
+  //   //       toastId: "duplicate-id-error",
+  //   //       autoClose: 3000,
+  //   //     });
+  //   //     return;
+  //   //   }
+  //   // }
+  //   // if (newEntry.idType !== "Other") {
+  //   // const isDuplicateId = employees.some((emp) => {
+  //   //   const emple = emp.emple;
+  //   //   if (!emple) return false;
+  //   //   return (
+  //   //     emple.emplId === newEntry.id &&
+  //   //     emple.accId === newEntry.acctId &&
+  //   //     emple.orgId === newEntry.orgId
+  //   //   );
+  //   // });
+
+  //   const isDuplicateId = employees.some((emp) => {
+  //     const emple = emp.emple;
+  //     if (!emple) return false;
+  //     return emple.emplId === newEntry.id;
+  //   });
+
+  //   if (isDuplicateId) {
+  //     toast.error(
+  //       "An entry with this ID, Account, and Org already exists; cannot save duplicate.",
+  //       {
+  //         toastId: "duplicate-id-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+
+  //   const payloadForecasts = durations.map((duration) => ({
+  //     forecastedamt:
+  //       Number(newEntryPeriodAmounts[`${duration.monthNo}_${duration.year}`]) ||
+  //       0,
+  //     forecastid: 0,
+  //     projId: projectId,
+  //     plId: planId,
+  //     emplId: newEntry.id,
+  //     dctId: 0,
+  //     month: duration.monthNo,
+  //     year: duration.year,
+  //     totalBurdenCost: 0,
+  //     fees: 0,
+  //     burden: 0,
+  //     ccffRevenue: 0,
+  //     tnmRevenue: 0,
+  //     revenue: 0,
+  //     cost: 0,
+  //     fringe: 0,
+  //     overhead: 0,
+  //     gna: 0,
+  //     forecastedhours: 0,
+  //     updatedat: new Date().toISOString().split("T")[0],
+  //     displayText: "",
+  //     acctId: newEntry.acctId,
+  //     orgId: newEntry.orgId,
+  //     hrlyRate: Number(newEntry.perHourRate) || 0,
+  //     effectDt: null,
+  //   }));
+
+  //   const payload = {
+  //     dctId: 0,
+  //     plId: planId,
+  //     acctId: newEntry.acctId || "",
+  //     orgId: newEntry.orgId || "",
+  //     notes: "",
+  //     // category: newEntry.name || "",
+  //     category:
+  //       newEntry.lastName && newEntry.firstName
+  //         ? `${newEntry.lastName}, ${newEntry.firstName}`
+  //         : newEntry.lastName || newEntry.firstName || "",
+
+  //     amountType: "",
+  //     id: newEntry.id,
+  //     type: newEntry.idType || "Employee",
+  //     isRev: newEntry.isRev || false,
+  //     isBrd: newEntry.isBrd || false,
+  //     status: newEntry.status || "Act",
+  //     createdBy: "System",
+  //     lastModifiedBy: "System",
+  //     plForecasts: payloadForecasts,
+  //     plDct: {},
+  //   };
+
+  //   // console.log("AddNewDirectCost payload for new entry:", payload);
+
+  //   try {
+  //     const response = await axios.post(
+  //       `${backendUrl}/DirectCost/AddNewDirectCost`,
+  //       payload,
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+
+  //     // console.log("Save response:", response.status, response.data);
+
+  //     const newEmployee = {
+  //       emple: {
+  //         empleId: newEntry.id,
+  //         emplId: newEntry.id,
+  //         firstName: newEntry.firstName || "",
+  //         lastName: newEntry.lastName || "",
+  //         accId: newEntry.acctId || "",
+  //         orgId: newEntry.orgId || "",
+  //         perHourRate: Number(newEntry.perHourRate) || 0,
+  //         isRev: newEntry.isRev || false,
+  //         isBrd: newEntry.isBrd || false,
+  //         status: newEntry.status || "Act",
+  //         type: newEntry.idType || "Employee",
+  //         category:
+  //           newEntry.lastName && newEntry.firstName
+  //             ? `${newEntry.lastName}, ${newEntry.firstName}`
+  //             : newEntry.lastName || newEntry.firstName || "", // Add this line
+  //         plForecasts: payloadForecasts.map((forecast) => ({
+  //           ...forecast,
+  //           forecastid:
+  //             response.data?.plForecasts?.find(
+  //               (f) => f.month === forecast.month && f.year === forecast.year
+  //             )?.forecastid || 0,
+  //           createdat: new Date().toISOString(),
+  //         })),
+  //       },
+  //     };
+
+  //     setEmployees((prevEmployees) => {
+  //       const employeeMap = new Map();
+  //       prevEmployees.forEach((emp) => {
+  //         const emplId = emp.emple.emplId || `auto-${Math.random()}`;
+  //         employeeMap.set(emplId, emp);
+  //       });
+  //       employeeMap.set(newEntry.id, newEmployee);
+  //       return Array.from(employeeMap.values());
+  //     });
+
+  //     setSuccessMessageText("Entry saved successfully!");
+  //     setShowSuccessMessage(true);
+  //     setShowNewForm(false);
+  //     setNewEntry({
+  //       id: "",
+  //       firstName: "",
+  //       lastName: "",
+  //       isRev: false,
+  //       isBrd: false,
+  //       idType: "",
+  //       acctId: "",
+  //       orgId: "",
+  //       perHourRate: "",
+  //       status: "Act",
+  //     });
+  //     setEmployeeSuggestions([]);
+  //     setNonLaborAccounts([]);
+
+  //     if (onSaveSuccess) {
+  //       // console.log("Calling onSaveSuccess");
+  //       onSaveSuccess();
+  //     }
+
+  //     toast.success("New entry saved and added to table!", {
+  //       toastId: "save-entry-success",
+  //       autoClose: 3000,
+  //     });
+  //   } catch (err) {
+  //     const errorMessage = err.response?.data?.errors
+  //       ? Object.entries(err.response.data.errors)
+  //           .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+  //           .join("; ")
+  //       : err.response?.data?.message || err.message;
+  //     // console.error("Save error:", err.response?.data || err);
+  //     setSuccessMessageText("Failed to save entry.");
+  //     setShowSuccessMessage(true);
+  //     toast.error(`Failed to save new entry: ${errorMessage}`, {
+  //       toastId: "save-entry-error",
+  //       autoClose: 5000,
+  //     });
+  //   } finally {
+  //     setIsLoading(false);
+  //     setTimeout(() => setShowSuccessMessage(false), 2000);
+  //   }
+  // };
+
   const handleSaveNewEntry = async () => {
-    if (!planId) {
-      toast.error("Plan ID is required to save a new entry.", {
-        toastId: "no-plan-id",
-        autoClose: 3000,
-      });
-      return;
-    }
-
-    // Check for empty ID
-    if (!newEntry.id || newEntry.id.trim() === "") {
-      toast.error("ID is required to save a new entry.", {
-        toastId: "empty-id-error",
-        autoClose: 3000,
-      });
-      return;
-    }
-
-    // Check for duplicate ID
-    // const isDuplicateId = employees.some(
-    //   (emp) => emp.emple.emplId === newEntry.id
-    // );
-
-    // if (isDuplicateId) {
-    //   toast.error("ID is already present in table so can't save.", {
-    //     toastId: "duplicate-id-error",
-    //     autoClose: 3000,
-    //   });
-    //   return;
-    // }
-    // Only check for duplicate ID if NOT "Other"
-    // if (newEntry.idType !== "Other") {
-    //   const isDuplicateId = employees.some(
-    //     (emp) => emp.emple.emplId === newEntry.id
-    //   );
-
-    //   if (isDuplicateId) {
-    //     toast.error("ID is already present in table so can't save.", {
-    //       toastId: "duplicate-id-error",
-    //       autoClose: 3000,
-    //     });
-    //     return;
-    //   }
-    // }
-    // if (newEntry.idType !== "Other") {
-    // const isDuplicateId = employees.some((emp) => {
-    //   const emple = emp.emple;
-    //   if (!emple) return false;
-    //   return (
-    //     emple.emplId === newEntry.id &&
-    //     emple.accId === newEntry.acctId &&
-    //     emple.orgId === newEntry.orgId
-    //   );
-    // });
-
-    const isDuplicateId = employees.some((emp) => {
-      const emple = emp.emple;
-      if (!emple) return false;
-      return emple.emplId === newEntry.id;
+  if (!planId) {
+    toast.error("Plan ID is required to save a new entry.", {
+      toastId: "no-plan-id",
+      autoClose: 3000,
     });
+    return;
+  }
 
-    if (isDuplicateId) {
-      toast.error(
-        "An entry with this ID, Account, and Org already exists; cannot save duplicate.",
-        {
-          toastId: "duplicate-id-error",
-          autoClose: 3000,
-        }
-      );
+  // Check for empty ID
+  if (!newEntry.id || newEntry.id.trim() === "") {
+    toast.error("ID is required to save a new entry.", {
+      toastId: "empty-id-error",
+      autoClose: 3000,
+    });
+    return;
+  }
+
+  // **NEW VALIDATION: Check if ID is from valid suggestions (not for "Other" type)**
+  if (newEntry.idType !== "Other") {
+    const isValidEmployeeId = employeeSuggestions.some(emp => emp.emplId === newEntry.id);
+    
+    if (!isValidEmployeeId) {
+      toast.error("Please select a valid employee ID from the suggestions.", {
+        toastId: "invalid-employee-selection",
+        autoClose: 3000,
+      });
+      return; // Prevent saving
+    }
+  }
+
+  // **NEW VALIDATION: Check if account is valid**
+  if (newEntry.acctId) {
+    const validAccounts = newEntry.idType === "Vendor" || newEntry.idType === "Vendor Employee" 
+      ? subContractorNonLaborAccounts.map(a => a.id || a.accountId)
+      : employeeNonLaborAccounts.map(a => a.id || a.accountId);
+      
+    if (!validAccounts.includes(newEntry.acctId)) {
+      toast.error("Please select a valid account from the suggestions.", {
+        toastId: "invalid-account-selection",
+        autoClose: 3000,
+      });
       return;
     }
+  }
 
-    setIsLoading(true);
+  // **NEW VALIDATION: Check if organization is valid**
+  if (newEntry.orgId) {
+    const validOrgs = organizationOptions.map(org => org.value);
+    if (!validOrgs.includes(newEntry.orgId)) {
+      toast.error("Please select a valid organization from the suggestions.", {
+        toastId: "invalid-org-selection",
+        autoClose: 3000,
+      });
+      return;
+    }
+  }
 
-    const payloadForecasts = durations.map((duration) => ({
-      forecastedamt:
-        Number(newEntryPeriodAmounts[`${duration.monthNo}_${duration.year}`]) ||
-        0,
-      forecastid: 0,
-      projId: projectId,
-      plId: planId,
-      emplId: newEntry.id,
-      dctId: 0,
-      month: duration.monthNo,
-      year: duration.year,
-      totalBurdenCost: 0,
-      fees: 0,
-      burden: 0,
-      ccffRevenue: 0,
-      tnmRevenue: 0,
-      revenue: 0,
-      cost: 0,
-      fringe: 0,
-      overhead: 0,
-      gna: 0,
-      forecastedhours: 0,
-      updatedat: new Date().toISOString().split("T")[0],
-      displayText: "",
-      acctId: newEntry.acctId,
-      orgId: newEntry.orgId,
-      hrlyRate: Number(newEntry.perHourRate) || 0,
-      effectDt: null,
-    }));
+  // Check for duplicate ID
+  const isDuplicateId = employees.some((emp) => {
+    const emple = emp.emple;
+    if (!emple) return false;
+    return emple.emplId === newEntry.id;
+  });
 
-    const payload = {
-      dctId: 0,
-      plId: planId,
-      acctId: newEntry.acctId || "",
-      orgId: newEntry.orgId || "",
-      notes: "",
-      // category: newEntry.name || "",
-      category:
-        newEntry.lastName && newEntry.firstName
-          ? `${newEntry.lastName}, ${newEntry.firstName}`
-          : newEntry.lastName || newEntry.firstName || "",
+  if (isDuplicateId) {
+    toast.error("An entry with this ID already exists; cannot save duplicate.", {
+      toastId: "duplicate-id-error",
+      autoClose: 3000,
+    });
+    return;
+  }
 
-      amountType: "",
-      id: newEntry.id,
-      type: newEntry.idType || "Employee",
-      isRev: newEntry.isRev || false,
-      isBrd: newEntry.isBrd || false,
-      status: newEntry.status || "Act",
-      createdBy: "System",
-      lastModifiedBy: "System",
-      plForecasts: payloadForecasts,
-      plDct: {},
+  setIsLoading(true);
+
+  const payloadForecasts = durations.map((duration) => ({
+    forecastedamt:
+      Number(newEntryPeriodAmounts[`${duration.monthNo}_${duration.year}`]) ||
+      0,
+    forecastid: 0,
+    projId: projectId,
+    plId: planId,
+    emplId: newEntry.id,
+    dctId: 0,
+    month: duration.monthNo,
+    year: duration.year,
+    totalBurdenCost: 0,
+    fees: 0,
+    burden: 0,
+    ccffRevenue: 0,
+    tnmRevenue: 0,
+    revenue: 0,
+    cost: 0,
+    fringe: 0,
+    overhead: 0,
+    gna: 0,
+    forecastedhours: 0,
+    updatedat: new Date().toISOString().split("T")[0],
+    displayText: "",
+    acctId: newEntry.acctId,
+    orgId: newEntry.orgId,
+    hrlyRate: Number(newEntry.perHourRate) || 0,
+    effectDt: null,
+  }));
+
+  const payload = {
+    dctId: 0,
+    plId: planId,
+    acctId: newEntry.acctId || "",
+    orgId: newEntry.orgId || "",
+    notes: "",
+    category:
+      newEntry.lastName && newEntry.firstName
+        ? `${newEntry.lastName}, ${newEntry.firstName}`
+        : newEntry.lastName || newEntry.firstName || "",
+    amountType: "",
+    id: newEntry.id,
+    type: newEntry.idType || "Employee",
+    isRev: newEntry.isRev || false,
+    isBrd: newEntry.isBrd || false,
+    status: newEntry.status || "Act",
+    createdBy: "System",
+    lastModifiedBy: "System",
+    plForecasts: payloadForecasts,
+    plDct: {},
+  };
+
+  try {
+    const response = await axios.post(
+      `${backendUrl}/DirectCost/AddNewDirectCost`,
+      payload,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    const newEmployee = {
+      emple: {
+        empleId: newEntry.id,
+        emplId: newEntry.id,
+        firstName: newEntry.firstName || "",
+        lastName: newEntry.lastName || "",
+        accId: newEntry.acctId || "",
+        orgId: newEntry.orgId || "",
+        perHourRate: Number(newEntry.perHourRate) || 0,
+        isRev: newEntry.isRev || false,
+        isBrd: newEntry.isBrd || false,
+        status: newEntry.status || "Act",
+        type: newEntry.idType || "Employee",
+        category:
+          newEntry.lastName && newEntry.firstName
+            ? `${newEntry.lastName}, ${newEntry.firstName}`
+            : newEntry.lastName || newEntry.firstName || "",
+        plForecasts: payloadForecasts.map((forecast) => ({
+          ...forecast,
+          forecastid:
+            response.data?.plForecasts?.find(
+              (f) => f.month === forecast.month && f.year === forecast.year
+            )?.forecastid || 0,
+          createdat: new Date().toISOString(),
+        })),
+      },
     };
 
-    // console.log("AddNewDirectCost payload for new entry:", payload);
-
-    try {
-      const response = await axios.post(
-        `${backendUrl}/DirectCost/AddNewDirectCost`,
-        payload,
-        { headers: { "Content-Type": "application/json" } }
-      );
-
-      // console.log("Save response:", response.status, response.data);
-
-      const newEmployee = {
-        emple: {
-          empleId: newEntry.id,
-          emplId: newEntry.id,
-          firstName: newEntry.firstName || "",
-          lastName: newEntry.lastName || "",
-          accId: newEntry.acctId || "",
-          orgId: newEntry.orgId || "",
-          perHourRate: Number(newEntry.perHourRate) || 0,
-          isRev: newEntry.isRev || false,
-          isBrd: newEntry.isBrd || false,
-          status: newEntry.status || "Act",
-          type: newEntry.idType || "Employee",
-          category:
-            newEntry.lastName && newEntry.firstName
-              ? `${newEntry.lastName}, ${newEntry.firstName}`
-              : newEntry.lastName || newEntry.firstName || "", // Add this line
-          plForecasts: payloadForecasts.map((forecast) => ({
-            ...forecast,
-            forecastid:
-              response.data?.plForecasts?.find(
-                (f) => f.month === forecast.month && f.year === forecast.year
-              )?.forecastid || 0,
-            createdat: new Date().toISOString(),
-          })),
-        },
-      };
-
-      setEmployees((prevEmployees) => {
-        const employeeMap = new Map();
-        prevEmployees.forEach((emp) => {
-          const emplId = emp.emple.emplId || `auto-${Math.random()}`;
-          employeeMap.set(emplId, emp);
-        });
-        employeeMap.set(newEntry.id, newEmployee);
-        return Array.from(employeeMap.values());
+    setEmployees((prevEmployees) => {
+      const employeeMap = new Map();
+      prevEmployees.forEach((emp) => {
+        const emplId = emp.emple.emplId || `auto-${Math.random()}`;
+        employeeMap.set(emplId, emp);
       });
+      employeeMap.set(newEntry.id, newEmployee);
+      return Array.from(employeeMap.values());
+    });
 
-      setSuccessMessageText("Entry saved successfully!");
-      setShowSuccessMessage(true);
-      setShowNewForm(false);
-      setNewEntry({
-        id: "",
-        firstName: "",
-        lastName: "",
-        isRev: false,
-        isBrd: false,
-        idType: "",
-        acctId: "",
-        orgId: "",
-        perHourRate: "",
-        status: "Act",
-      });
-      setEmployeeSuggestions([]);
-      setNonLaborAccounts([]);
+    setSuccessMessageText("Entry saved successfully!");
+    setShowSuccessMessage(true);
+    setShowNewForm(false);
+    setNewEntry({
+      id: "",
+      firstName: "",
+      lastName: "",
+      isRev: false,
+      isBrd: false,
+      idType: "",
+      acctId: "",
+      orgId: "",
+      perHourRate: "",
+      status: "Act",
+    });
+    setEmployeeSuggestions([]);
+    setNonLaborAccounts([]);
 
-      if (onSaveSuccess) {
-        // console.log("Calling onSaveSuccess");
-        onSaveSuccess();
-      }
-
-      toast.success("New entry saved and added to table!", {
-        toastId: "save-entry-success",
-        autoClose: 3000,
-      });
-    } catch (err) {
-      const errorMessage = err.response?.data?.errors
-        ? Object.entries(err.response.data.errors)
-            .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-            .join("; ")
-        : err.response?.data?.message || err.message;
-      // console.error("Save error:", err.response?.data || err);
-      setSuccessMessageText("Failed to save entry.");
-      setShowSuccessMessage(true);
-      toast.error(`Failed to save new entry: ${errorMessage}`, {
-        toastId: "save-entry-error",
-        autoClose: 5000,
-      });
-    } finally {
-      setIsLoading(false);
-      setTimeout(() => setShowSuccessMessage(false), 2000);
+    if (onSaveSuccess) {
+      onSaveSuccess();
     }
-  };
+
+    toast.success("New entry saved and added to table!", {
+      toastId: "save-entry-success",
+      autoClose: 3000,
+    });
+  } catch (err) {
+    const errorMessage = err.response?.data?.errors
+      ? Object.entries(err.response.data.errors)
+          .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
+          .join("; ")
+      : err.response?.data?.message || err.message;
+    setSuccessMessageText("Failed to save entry.");
+    setShowSuccessMessage(true);
+    toast.error(`Failed to save new entry: ${errorMessage}`, {
+      toastId: "save-entry-error",
+      autoClose: 5000,
+    });
+  } finally {
+    setIsLoading(false);
+    setTimeout(() => setShowSuccessMessage(false), 2000);
+  }
+};
+
 
   // const handleRowClick = (actualEmpIdx) => {
   //   if (!isEditable) return;
@@ -5848,27 +7131,247 @@ const ProjectAmountsTable = ({
     setReplaceScope(uniqueKey === selectedColumnKey ? "all" : "column");
   };
 
+  // const handleFindReplace = async () => {
+  //   if (
+  //     !isEditable ||
+  //     findValue === "" ||
+  //     (replaceScope === "row" && selectedRowIndex === null) ||
+  //     (replaceScope === "column" && selectedColumnKey === null)
+  //   ) {
+  //     toast.warn("Please select a valid scope and enter a value to find.", {
+  //       toastId: "find-replace-warning",
+  //       autoClose: 3000,
+  //     });
+  //     return;
+  //   }
+
+  //   // Show loading state
+  //   setIsLoading(true);
+
+  //   const updates = [];
+  //   const updatedInputValues = { ...inputValues };
+  //   let replacementsCount = 0;
+  //   let skippedCount = 0;
+
+  //   for (const empIdx in employees) {
+  //     const emp = employees[empIdx];
+  //     const actualEmpIdx = parseInt(empIdx, 10);
+
+  //     if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) {
+  //       continue;
+  //     }
+
+  //     for (const duration of sortedDurations) {
+  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+  //       if (replaceScope === "column" && uniqueKey !== selectedColumnKey) {
+  //         continue;
+  //       }
+
+  //       if (!isMonthEditable(duration, closedPeriod, planType)) {
+  //         continue;
+  //       }
+
+  //       const currentInputKey = `${actualEmpIdx}_${uniqueKey}`;
+
+  //       // Get the actual displayed value
+  //       let displayedValue;
+  //       if (inputValues[currentInputKey] !== undefined) {
+  //         displayedValue = String(inputValues[currentInputKey]);
+  //       } else {
+  //         const monthAmounts = getMonthAmounts(emp);
+  //         const forecast = monthAmounts[uniqueKey];
+  //         if (forecast && forecast.value !== undefined) {
+  //           displayedValue = String(forecast.value);
+  //         } else {
+  //           displayedValue = "0";
+  //         }
+  //       }
+
+  //       const findValueTrimmed = findValue.trim();
+  //       const displayedValueTrimmed = displayedValue.trim();
+
+  //       // Matching logic
+  //       let isMatch = false;
+
+  //       if (findValueTrimmed === "0") {
+  //         const numValue = parseFloat(displayedValueTrimmed);
+  //         isMatch =
+  //           displayedValueTrimmed === "" ||
+  //           displayedValueTrimmed === "0" ||
+  //           (!isNaN(numValue) && numValue === 0);
+  //       } else {
+  //         isMatch = displayedValueTrimmed === findValueTrimmed;
+
+  //         if (!isMatch) {
+  //           const findNum = parseFloat(findValueTrimmed);
+  //           const displayNum = parseFloat(displayedValueTrimmed);
+  //           if (!isNaN(findNum) && !isNaN(displayNum)) {
+  //             isMatch = findNum === displayNum;
+  //           }
+  //         }
+  //       }
+
+  //       if (isMatch) {
+  //         const newValue = replaceValue.trim();
+  //         const newNumericValue =
+  //           newValue === "" ? 0 : parseFloat(newValue) || 0;
+
+  //         const forecast = getMonthAmounts(emp)[uniqueKey];
+
+  //         // Only proceed if we have a valid forecast with forecastid
+  //         if (forecast && forecast.forecastid) {
+  //           const originalValue =
+  //             planType === "EAC"
+  //               ? forecast.actualamt ?? 0
+  //               : forecast.forecastedamt ?? 0;
+
+  //           if (newNumericValue !== originalValue) {
+  //             updatedInputValues[currentInputKey] = newValue;
+  //             replacementsCount++;
+
+  //             const payload = {
+  //               forecastid: Number(forecast.forecastid),
+  //               projId: forecast.projId || projectId,
+  //               plId: forecast.plId || planId,
+  //               emplId: forecast.emplId || "",
+  //               dctId: forecast.dctId || 0,
+  //               month: forecast.month || duration.monthNo,
+  //               year: forecast.year || duration.year,
+  //               totalBurdenCost: forecast.totalBurdenCost || 0,
+  //               burden: forecast.burden || 0,
+  //               ccffRevenue: forecast.ccffRevenue || 0,
+  //               tnmRevenue: forecast.tnmRevenue || 0,
+  //               cost: forecast.cost || 0,
+  //               fringe: forecast.fringe || 0,
+  //               overhead: forecast.overhead || 0,
+  //               gna: forecast.gna || 0,
+  //               forecastedhours: forecast.forecastedhours || 0,
+  //               updatedat: new Date().toISOString().split("T")[0],
+  //               displayText: forecast.displayText || "",
+  //               [planType === "EAC" ? "actualamt" : "forecastedamt"]:
+  //                 newNumericValue,
+  //             };
+
+  //             updates.push(
+  //               axios
+  //                 .put(
+  //                   `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
+  //                   payload,
+  //                   { headers: { "Content-Type": "application/json" } }
+  //                 )
+  //                 .catch((err) => {
+  //                   // console.error(
+  //                   //   "Failed update for payload:",
+  //                   //   payload,
+  //                   //   err?.response?.data || err.message
+  //                   // );
+  //                 })
+  //             );
+  //           }
+  //         } else {
+  //           // Skip cells without existing forecasts and count them
+  //           // console.log(
+  //           //   `Skipping cell without forecast: employee ${emp.emple?.emplId} for ${duration.monthNo}/${duration.year}`
+  //           // );
+  //           skippedCount++;
+  //         }
+  //       }
+  //     }
+  //   }
+
+  //   // console.log(
+  //   //   `Total replacements to make: ${replacementsCount}, Skipped: ${skippedCount}`
+  //   // );
+
+  //   setInputValues(updatedInputValues);
+  //   try {
+  //     if (updates.length > 0) {
+  //       await Promise.all(updates);
+  //     }
+
+  //     // Update local state only for cells that were actually updated
+  //     setEmployees((prev) => {
+  //       const updated = [...prev];
+  //       for (const empIdx in updated) {
+  //         const emp = updated[empIdx];
+  //         for (const duration of sortedDurations) {
+  //           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //           const currentInputKey = `${empIdx}_${uniqueKey}`;
+  //           if (updatedInputValues[currentInputKey] !== undefined) {
+  //             if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
+  //               const forecast = emp.emple.plForecasts.find(
+  //                 (f) =>
+  //                   f.month === duration.monthNo && f.year === duration.year
+  //               );
+  //               if (forecast) {
+  //                 const newValue =
+  //                   parseFloat(updatedInputValues[currentInputKey]) || 0;
+  //                 if (planType === "EAC") {
+  //                   forecast.actualamt = newValue;
+  //                 } else {
+  //                   forecast.forecastedamt = newValue;
+  //                 }
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //       return updated;
+  //     });
+
+  //     if (replacementsCount > 0) {
+  //       toast.success(`Successfully replaced ${replacementsCount} cells.`, {
+  //         autoClose: 2000,
+  //       });
+  //     }
+
+  //     if (replacementsCount === 0 && skippedCount === 0) {
+  //       toast.info("No cells replaced.", { autoClose: 2000 });
+  //     }
+  //   } catch (err) {
+  //     toast.error(
+  //       "Failed to replace values: " +
+  //         (err.response?.data?.message || err.message),
+  //       {
+  //         toastId: "replace-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   } finally {
+  //     // Hide loading state
+  //     setIsLoading(false);
+  //     setShowFindReplace(false);
+  //     setFindValue("");
+  //     setReplaceValue("");
+  //     setSelectedRowIndex(null);
+  //     setSelectedColumnKey(null);
+  //     setReplaceScope("all");
+  //   }
+  // };
+  
   const handleFindReplace = async () => {
-    if (
-      !isEditable ||
-      findValue === "" ||
-      (replaceScope === "row" && selectedRowIndex === null) ||
-      (replaceScope === "column" && selectedColumnKey === null)
-    ) {
-      toast.warn("Please select a valid scope and enter a value to find.", {
-        toastId: "find-replace-warning",
-        autoClose: 3000,
-      });
-      return;
-    }
+  if (
+    !isEditable ||
+    findValue === "" ||
+    (replaceScope === "row" && selectedRowIndex === null) ||
+    (replaceScope === "column" && selectedColumnKey === null)
+  ) {
+    toast.warn("Please select a valid scope and enter a value to find.", {
+      toastId: "find-replace-warning",
+      autoClose: 3000,
+    });
+    return;
+  }
 
-    // Show loading state
-    setIsLoading(true);
+  setIsLoading(true);
+  let replacementsCount = 0;
+  let skippedCount = 0;
 
-    const updates = [];
+  try {
+    // Prepare bulk payload array - DO NOT use individual updates
+    const bulkPayload = [];
     const updatedInputValues = { ...inputValues };
-    let replacementsCount = 0;
-    let skippedCount = 0;
 
     for (const empIdx in employees) {
       const emp = employees[empIdx];
@@ -5931,141 +7434,175 @@ const ProjectAmountsTable = ({
 
         if (isMatch) {
           const newValue = replaceValue.trim();
-          const newNumericValue =
-            newValue === "" ? 0 : parseFloat(newValue) || 0;
-
-          const forecast = getMonthAmounts(emp)[uniqueKey];
+          const newNumericValue = newValue === "" ? 0 : Number(newValue);
+          const monthAmounts = getMonthAmounts(emp);
+          const forecast = monthAmounts[uniqueKey];
 
           // Only proceed if we have a valid forecast with forecastid
-          if (forecast && forecast.forecastid) {
-            const originalValue =
-              planType === "EAC"
-                ? forecast.actualamt ?? 0
-                : forecast.forecastedamt ?? 0;
-
-            if (newNumericValue !== originalValue) {
-              updatedInputValues[currentInputKey] = newValue;
-              replacementsCount++;
-
-              const payload = {
-                forecastid: Number(forecast.forecastid),
-                projId: forecast.projId || projectId,
-                plId: forecast.plId || planId,
-                emplId: forecast.emplId || "",
-                dctId: forecast.dctId || 0,
-                month: forecast.month || duration.monthNo,
-                year: forecast.year || duration.year,
-                totalBurdenCost: forecast.totalBurdenCost || 0,
-                burden: forecast.burden || 0,
-                ccffRevenue: forecast.ccffRevenue || 0,
-                tnmRevenue: forecast.tnmRevenue || 0,
-                cost: forecast.cost || 0,
-                fringe: forecast.fringe || 0,
-                overhead: forecast.overhead || 0,
-                gna: forecast.gna || 0,
-                forecastedhours: forecast.forecastedhours || 0,
-                updatedat: new Date().toISOString().split("T")[0],
-                displayText: forecast.displayText || "",
-                [planType === "EAC" ? "actualamt" : "forecastedamt"]:
-                  newNumericValue,
-              };
-
-              updates.push(
-                axios
-                  .put(
-                    `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
-                    payload,
-                    { headers: { "Content-Type": "application/json" } }
-                  )
-                  .catch((err) => {
-                    // console.error(
-                    //   "Failed update for payload:",
-                    //   payload,
-                    //   err?.response?.data || err.message
-                    // );
-                  })
-              );
-            }
-          } else {
-            // Skip cells without existing forecasts and count them
-            // console.log(
-            //   `Skipping cell without forecast: employee ${emp.emple?.emplId} for ${duration.monthNo}/${duration.year}`
-            // );
+          if (!forecast || !forecast.forecastid) {
             skippedCount++;
+            continue;
+          }
+
+          const originalValue =
+            planType === "EAC"
+              ? forecast.actualamt ?? 0
+              : forecast.forecastedamt ?? 0;
+
+          if (newNumericValue !== originalValue) {
+            updatedInputValues[currentInputKey] = newValue;
+            replacementsCount++;
+
+            // Create payload matching EXACT bulk API structure from handleSaveAllAmounts
+            const payload = {
+              forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
+              actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
+              forecastid: Number(forecast?.forecastid ?? 0),
+              projId: String(forecast?.projId ?? projectId ?? ""),
+              plId: Number(forecast?.plId ?? planId ?? 0),
+              emplId: String(forecast?.emplId ?? emp?.emple?.emplId ?? ""),
+              dctId: Number(forecast?.dctId ?? 0),
+              month: Number(forecast?.month ?? duration?.monthNo ?? 0),
+              year: Number(forecast?.year ?? duration?.year ?? 0),
+              totalBurdenCost: Number(forecast?.totalBurdenCost ?? 0),
+              fees: Number(forecast?.fees ?? 0),
+              burden: Number(forecast?.burden ?? 0),
+              ccffRevenue: Number(forecast?.ccffRevenue ?? 0),
+              tnmRevenue: Number(forecast?.tnmRevenue ?? 0),
+              revenue: Number(forecast?.revenue ?? 0),
+              cost: Number(forecast?.cost ?? 0),
+              forecastedCost: Number(forecast?.forecastedCost ?? 0),
+              fringe: Number(forecast?.fringe ?? 0),
+              overhead: Number(forecast?.overhead ?? 0),
+              gna: Number(forecast?.gna ?? 0),
+              materials: Number(forecast?.materials ?? 0),
+              forecastedhours: Number(forecast?.forecastedhours ?? 0),
+              actualhours: Number(forecast?.actualhours ?? 0),
+              createdat: forecast?.createdat ?? new Date().toISOString(),
+              updatedat: new Date().toISOString(),
+              displayText: String(forecast?.displayText ?? ""),
+              acctId: String(emp?.emple?.accId ?? ""),
+              orgId: String(emp?.emple?.orgId ?? ""),
+              plc: String(emp?.emple?.plcGlcCode ?? ""),
+              empleId: Number(emp?.emple?.id ?? 0),
+              hrlyRate: Number(parseFloat(emp?.emple?.perHourRate ?? 0) || 0),
+              effectDt: new Date().toISOString().split('T')[0],
+              emple: emp?.emple ? {
+                id: Number(emp.emple.id ?? 0),
+                emplId: String(emp.emple.emplId ?? ""),
+                orgId: String(emp.emple.orgId ?? ""),
+                firstName: String(emp.emple.firstName ?? ""),
+                lastName: String(emp.emple.lastName ?? ""),
+                plcGlcCode: String(emp.emple.plcGlcCode ?? ""),
+                perHourRate: Number(parseFloat(emp.emple.perHourRate ?? 0) || 0),
+                salary: Number(parseFloat(emp.emple.salary ?? 0) || 0),
+                accId: String(emp.emple.accId ?? ""),
+                hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+                isRev: Boolean(emp.emple.isRev ?? false),
+                isBrd: Boolean(emp.emple.isBrd ?? false),
+                createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+                type: String(emp.emple.type ?? ""),
+                status: String(emp.emple.status ?? ""),
+                plId: Number(planId ?? 0),
+                isWarning: Boolean(emp.emple.isWarning ?? false),
+                plForecasts: [],
+                organization: emp.emple.organization || null,
+                plProjectPlan: emp.emple.plProjectPlan || null
+              } : null
+            };
+
+            bulkPayload.push(payload);
           }
         }
       }
     }
 
-    // console.log(
-    //   `Total replacements to make: ${replacementsCount}, Skipped: ${skippedCount}`
-    // );
-
-    setInputValues(updatedInputValues);
-    try {
-      if (updates.length > 0) {
-        await Promise.all(updates);
+    if (bulkPayload.length === 0) {
+      if (replacementsCount === 0 && skippedCount === 0) {
+        toast.info("No cells replaced.", { autoClose: 2000 });
       }
+      return;
+    }
 
-      // Update local state only for cells that were actually updated
-      setEmployees((prev) => {
-        const updated = [...prev];
-        for (const empIdx in updated) {
-          const emp = updated[empIdx];
-          for (const duration of sortedDurations) {
-            const uniqueKey = `${duration.monthNo}_${duration.year}`;
-            const currentInputKey = `${empIdx}_${uniqueKey}`;
-            if (updatedInputValues[currentInputKey] !== undefined) {
-              if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
-                const forecast = emp.emple.plForecasts.find(
-                  (f) =>
-                    f.month === duration.monthNo && f.year === duration.year
-                );
-                if (forecast) {
-                  const newValue =
-                    parseFloat(updatedInputValues[currentInputKey]) || 0;
-                  if (planType === "EAC") {
-                    forecast.actualamt = newValue;
-                  } else {
-                    forecast.forecastedamt = newValue;
-                  }
+    // Update input values for UI consistency
+    setInputValues(updatedInputValues);
+
+    // SINGLE BULK API CALL - NOT individual updates, matching handleSaveAllAmounts
+    console.log("Calling BULK find/replace amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
+    console.log("Bulk Find/Replace Payload:", JSON.stringify(bulkPayload, null, 2));
+    
+    const response = await axios.put(
+      `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
+      bulkPayload,
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    console.log("Bulk find/replace amount update SUCCESS:", response.data);
+
+    // Update local state for all successful updates matching handleSaveAllAmounts pattern
+    setEmployees((prev) => {
+      const updated = [...prev];
+      
+      for (const empIdx in updated) {
+        const emp = updated[empIdx];
+        for (const duration of sortedDurations) {
+          const uniqueKey = `${duration.monthNo}_${duration.year}`;
+          const currentInputKey = `${empIdx}_${uniqueKey}`;
+          if (updatedInputValues[currentInputKey] !== undefined) {
+            if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
+              const forecastIndex = emp.emple.plForecasts.findIndex(
+                (f) => f.month === duration.monthNo && f.year === duration.year
+              );
+              
+              if (forecastIndex !== -1) {
+                const newValue = parseFloat(updatedInputValues[currentInputKey]) || 0;
+                if (planType === "EAC") {
+                  updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newValue;
+                } else {
+                  updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newValue;
                 }
+                // Update the displayed value as well
+                updated[empIdx].emple.plForecasts[forecastIndex].value = newValue;
               }
             }
           }
         }
-        return updated;
+      }
+      
+      return updated;
+    });
+
+    if (replacementsCount > 0) {
+      toast.success(`Successfully replaced ${replacementsCount} cells.`, {
+        autoClose: 2000,
       });
-
-      if (replacementsCount > 0) {
-        toast.success(`Successfully replaced ${replacementsCount} cells.`, {
-          autoClose: 2000,
-        });
-      }
-
-      if (replacementsCount === 0 && skippedCount === 0) {
-        toast.info("No cells replaced.", { autoClose: 2000 });
-      }
-    } catch (err) {
-      toast.error(
-        "Failed to replace values: " +
-          (err.response?.data?.message || err.message),
-        {
-          toastId: "replace-error",
-          autoClose: 3000,
-        }
-      );
-    } finally {
-      // Hide loading state
-      setIsLoading(false);
-      setShowFindReplace(false);
-      setFindValue("");
-      setReplaceValue("");
-      setSelectedRowIndex(null);
-      setSelectedColumnKey(null);
-      setReplaceScope("all");
     }
-  };
+
+    if (skippedCount > 0) {
+      toast.warning(`${skippedCount} entries could not be processed.`, {
+        autoClose: 3000,
+      });
+    }
+
+  } catch (err) {
+    console.error("Bulk find/replace amount ERROR:", err);
+    toast.error(
+      "Failed to replace values via BULK API: " + (err.response?.data?.message || err.message),
+      {
+        toastId: "replace-error",
+        autoClose: 3000,
+      }
+    );
+  } finally {
+    setIsLoading(false);
+    setShowFindReplace(false);
+    setFindValue("");
+    setReplaceValue("");
+    setSelectedRowIndex(null);
+    setSelectedColumnKey(null);
+    setReplaceScope("all");
+  }
+};
 
   const showHiddenRows = () => setHiddenRows({});
 
@@ -6996,6 +8533,27 @@ const ProjectAmountsTable = ({
         >
           {showNewForm ? "Cancel" : "New"}
         </button> */}
+
+        {hasUnsavedAmountChanges && (
+  <button
+    onClick={handleSaveAllAmounts}
+    disabled={isLoading}
+    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-xs font-medium transition-colors duration-200 flex items-center gap-2"
+  >
+    {isLoading ? (
+      <>
+        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+        Saving...
+      </>
+    ) : (
+      <>
+        {/* <span>💾</span> */}
+        Save({Object.keys(modifiedAmounts).length})
+      </>
+    )}
+  </button>
+)}
+
               <button
                 onClick={() => {
                   if (showNewForm) {
@@ -8066,13 +9624,13 @@ const ProjectAmountsTable = ({
                                     e.target.value.replace(/[^0-9.]/g, "")
                                   )
                                 }
-                                onBlur={(e) =>
-                                  handleForecastAmountBlur(
-                                    actualEmpIdx,
-                                    uniqueKey,
-                                    e.target.value
-                                  )
-                                }
+                                // onBlur={(e) =>
+                                //   handleForecastAmountBlur(
+                                //     actualEmpIdx,
+                                //     uniqueKey,
+                                //     e.target.value
+                                //   )
+                                // }
                                 disabled={!isInputEditable}
                                 placeholder="Enter Amount"
                               />

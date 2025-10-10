@@ -3,7 +3,13 @@ import { backendUrl } from "./config";
 
 const FundingComponent = ({ selectedProjectId }) => {
   const [fundingData, setFundingData] = useState([
-    { label: "Revenue", funding: "", budget: "", balance: "", percent: "" },
+    {
+      label: "Cost Fee + Funding",
+      funding: "",
+      budget: "",
+      balance: "",
+      percent: "",
+    },
     { label: "Cost", funding: "", budget: "", balance: "", percent: "" },
     { label: "Profit", funding: "", budget: "", balance: "", percent: "" },
   ]);
@@ -36,14 +42,14 @@ const FundingComponent = ({ selectedProjectId }) => {
         }));
 
         setFundingData([
-          { label: "Revenue", ...roundedData[0] },
+          { label: "Cost Fee + Funding", ...roundedData[0] },
           { label: "Cost", ...roundedData[1] },
           { label: "Profit", ...roundedData[2] },
         ]);
       } catch (error) {
         setFundingData([
           {
-            label: "Revenue",
+            label: "Cost Fee + Funding",
             funding: "",
             budget: "",
             balance: "",

@@ -184,7 +184,8 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
       modifiedBy: "user",
       timeStamp: new Date().toISOString(),
       companyId: "company",
-      atRiskAmt: parseFloat(atRiskValue) || 0,
+      // atRiskAmt: parseFloat(atRiskValue) || 0,
+      atRiskAmt: parseFloat(atRiskValue.replace(/,/g, "")) || 0,
       versionNo: selectedPlan?.version || 0,
       bgtType: selectedPlan?.plType || "",
     };

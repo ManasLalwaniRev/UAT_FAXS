@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import Select from "react-select";
 import { backendUrl } from "./config";
 
 const cn = (...args) => {
@@ -63,6 +64,10 @@ const LaborForm = () => {
   const [error, setError] = useState(null);
   const [configValues, setConfigValues] = useState([]);
   const [closingPeriodId, setClosingPeriodId] = useState("");
+  const [escalationPercentId, setEscalationPercentId] = useState("");
+  const [escalationMonthId, setEscalationMonthId] = useState("");
+  const [escalationPercent, setEscalationPercent] = useState("");
+  const [escalationMonth, setEscalationMonth] = useState("");
 
   // Month options mapping numeric values to display text
   const monthOptions = [
@@ -128,44 +133,102 @@ const LaborForm = () => {
     }
   };
 
+  const projectOptions = availableProjects.map((project) => ({
+    value: project.projectId,
+    label: project.name
+      ? `${project.projectId} - ${project.name}`
+      : project.projectId,
+  }));
+
+  // useEffect(() => {
+  //   const fetchClosingPeriod = async () => {
+  //     setLoading(true);
+  //     try {
+  //       const res = await fetch(
+  //         `${backendUrl}/api/Configuration/GetAllConfigValuesByProject/xxxxx`
+  //       );
+  //       if (!res.ok) throw new Error("Failed to fetch closing period");
+
+  //       const data = await res.json(); // 👈 parse JSON
+  //       const rawValue = (data?.value || "").trim();
+  //       setClosingPeriodId(data?.id || null);
+  //       let formattedDate = "";
+
+  //       if (/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
+  //         // Already yyyy-MM-dd
+  //         formattedDate = rawValue;
+  //       } else if (/^\d{2}-\d{2}-\d{4}$/.test(rawValue)) {
+  //         // Convert dd-MM-yyyy → yyyy-MM-dd
+  //         const [day, month, year] = rawValue.split("-");
+  //         formattedDate = `${year}-${month}-${day}`;
+  //       } else if (rawValue) {
+  //         // console.warn("Unexpected closing_period format:", rawValue);
+  //       }
+
+  //       setClosingPeriod(formattedDate);
+  //     } catch (err) {
+  //       // console.error("Error fetching closing period:", err);
+  //       setClosingPeriod("");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchClosingPeriod();
+  // }, []);
+
+  // --- API Fetching for ALL available Project IDs ---
+
   useEffect(() => {
-    const fetchClosingPeriod = async () => {
+    const fetchOrgConfig = async () => {
       setLoading(true);
       try {
         const res = await fetch(
-          `${backendUrl}/api/Configuration/GetConfigValueByName/closing_period`
+          `${backendUrl}/api/Configuration/GetAllConfigValuesByProject/xxxxx`
         );
-        if (!res.ok) throw new Error("Failed to fetch closing period");
+        if (!res.ok) throw new Error("Failed to fetch organization config");
+        const configArray = await res.json();
 
-        const data = await res.json(); // 👈 parse JSON
-        const rawValue = (data?.value || "").trim();
-        setClosingPeriodId(data?.id || null);
+        // Fetch values by name
+        const closingConfig = configArray.find(
+          (cfg) => cfg.name === "closing_period"
+        );
+        const percentConfig = configArray.find(
+          (cfg) => cfg.name === "escallation_percent"
+        );
+        const monthConfig = configArray.find(
+          (cfg) => cfg.name === "escallation_month"
+        );
+
+        setClosingPeriodId(closingConfig?.id || 0);
+        setEscalationPercentId(percentConfig?.id || 0);
+        setEscalationMonthId(monthConfig?.id || 0);
+
+        // Format date for input type="date" (yyyy-MM-dd)
         let formattedDate = "";
-
-        if (/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
-          // Already yyyy-MM-dd
-          formattedDate = rawValue;
-        } else if (/^\d{2}-\d{2}-\d{4}$/.test(rawValue)) {
-          // Convert dd-MM-yyyy → yyyy-MM-dd
-          const [day, month, year] = rawValue.split("-");
-          formattedDate = `${year}-${month}-${day}`;
-        } else if (rawValue) {
-          // console.warn("Unexpected closing_period format:", rawValue);
+        if (closingConfig?.value) {
+          const rawValue = closingConfig.value.trim();
+          if (/^\d{4}-\d{2}-\d{2}$/.test(rawValue)) {
+            formattedDate = rawValue;
+          } else if (/^\d{2}-\d{2}-\d{4}$/.test(rawValue)) {
+            const [day, month, year] = rawValue.split("-");
+            formattedDate = `${year}-${month}-${day}`;
+          }
         }
-
         setClosingPeriod(formattedDate);
+        setEscalationPercent(percentConfig?.value || "");
+        setEscalationMonth(monthConfig?.value?.toString() || "");
       } catch (err) {
-        // console.error("Error fetching closing period:", err);
         setClosingPeriod("");
+        setEscalationPercent("");
+        setEscalationMonth("");
       } finally {
         setLoading(false);
       }
     };
-
-    fetchClosingPeriod();
+    fetchOrgConfig();
   }, []);
 
-  // --- API Fetching for ALL available Project IDs ---
   useEffect(() => {
     const fetchAllProjects = async () => {
       setLoading(true); // Set loading to true for initial project list fetch
@@ -378,18 +441,34 @@ const LaborForm = () => {
 
     // console.log("Attempting to save Closing Period...");
 
-    const updateApiUrl = `${backendUrl}/api/Configuration/UpdateConfigValue`;
+    const updateApiUrl = `${backendUrl}/api/Configuration/UpdateConfigValues`;
 
     const nowIsoString = new Date().toISOString();
 
     // Build payload ONLY for closing period
-    const closingPeriodPayload = {
-      id: closingPeriodId, // 0 = let backend assign, or use existing id if you fetched it
-      name: "closing_period",
-      value: closingPeriod, // <-- your state variable for closing period
-      createdAt: nowIsoString,
-      projId: "xxxxx",
-    };
+    const closingPeriodPayload = [
+      {
+        id: closingPeriodId, // 0 = let backend assign, or use existing id if you fetched it
+        name: "closing_period",
+        value: closingPeriod, // <-- your state variable for closing period
+        createdAt: nowIsoString,
+        projId: "xxxxx",
+      },
+      {
+        id: escalationMonthId, // 0 = let backend assign, or use existing id if you fetched it
+        name: "escallation_month",
+        value: escalationMonth, // <-- your state variable for closing period
+        createdAt: nowIsoString,
+        projId: "xxxxx",
+      },
+      {
+        id: escalationPercentId, // 0 = let backend assign, or use existing id if you fetched it
+        name: "escallation_percent",
+        value: escalationPercent, // <-- your state variable for closing period
+        createdAt: nowIsoString,
+        projId: "xxxxx",
+      },
+    ];
 
     // console.log("Closing Period Payload:", closingPeriodPayload);
 
@@ -430,6 +509,17 @@ const LaborForm = () => {
       await handleSaveOrganizationSettings();
     }
   };
+
+  const filteredProjects = availableProjects.filter((project) => {
+    const keyword = selectedProjectId ? selectedProjectId.toLowerCase() : "";
+    const projectIdMatch =
+      typeof project.projectId === "string" &&
+      project.projectId.toLowerCase().includes(keyword);
+    const nameMatch =
+      typeof project.name === "string" &&
+      project.name.toLowerCase().includes(keyword);
+    return projectIdMatch || nameMatch;
+  });
 
   if (loading && availableProjects.length === 0 && !error) {
     return (
@@ -487,7 +577,7 @@ const LaborForm = () => {
                 {/* Left Column */}
                 <div className="space-y-4">
                   {/* Project ID Dropdown */}
-                  <div>
+                  {/* <div>
                     <label
                       htmlFor="projectId"
                       className="block text-sm font-medium"
@@ -504,7 +594,7 @@ const LaborForm = () => {
                       <option key="select-project-placeholder" value="">
                         Select a Project
                       </option>
-                      {/* Ensure unique keys even if project.id is null or undefined */}
+                      
                       {availableProjects.map((project, index) => (
                         <option
                           key={
@@ -520,6 +610,31 @@ const LaborForm = () => {
                         </option>
                       ))}
                     </select>
+                  </div> */}
+
+                  <div>
+                    <label
+                      htmlFor="projectId"
+                      className="block text-sm font-medium"
+                    >
+                      Project ID <span className="text-red-500">*</span>
+                    </label>
+                    <Select
+                      inputId="projectId"
+                      options={projectOptions}
+                      isLoading={loading}
+                      value={
+                        projectOptions.find(
+                          (opt) => opt.value === selectedProjectId
+                        ) || null
+                      }
+                      onChange={(opt) =>
+                        setSelectedProjectId(opt ? opt.value : "")
+                      }
+                      isSearchable
+                      placeholder="Search & select a project"
+                      menuPlacement="auto"
+                    />
                   </div>
 
                   {/* Project Budget Period Method */}
@@ -1070,7 +1185,55 @@ const LaborForm = () => {
                       // disabled={loading || !selectedProjectId}
                     />
                   </div>
-                  {/* Paid Time Off Expense Account */}
+
+                  {/* Labor Escalation Month */}
+                  <div>
+                    <label
+                      htmlFor="laborEscalationMonth"
+                      className="block text-sm font-medium"
+                    >
+                      Labor Escalation Month{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="laborEscalationMonth"
+                      value={escalationMonth}
+                      onChange={(e) => setEscalationMonth(e.target.value)}
+                      className="w-full mt-1 border border-gray-300 rounded-md shadow-sm py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      disabled={loading}
+                    >
+                      <option value="">Select Option</option>
+                      {monthOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Labor Escalation Value */}
+                  <div>
+                    <label
+                      htmlFor="laborEscalationValue"
+                      className="block text-sm font-medium"
+                    >
+                      Labor Escalation Value{" "}
+                      <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative mt-1">
+                      <input
+                        id="laborEscalationValue"
+                        type="text"
+                        value={escalationPercent ? `${escalationPercent}%` : ""}
+                        onChange={(e) =>
+                          setEscalationPercent(e.target.value.replace("%", ""))
+                        }
+                        placeholder="0.00000"
+                        className="w-full pl-7 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                        disabled={loading}
+                      />
+                    </div>
+                  </div>
                   <div>
                     <label
                       htmlFor="paidTimeOffExpenseAccount"

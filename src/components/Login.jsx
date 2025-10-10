@@ -84,10 +84,19 @@ const Login = () => {
         if (data.token) {
           localStorage.setItem("authToken", data.token);
         }
-        if (data.role) {
-          localStorage.setItem("currentUser", JSON.stringify(data.role));
-          console.log("User role after login:", data.role);
+        if (data.token) {
+          localStorage.setItem("authToken", data.token);
         }
+        if (data.role) {
+          // Store everything in one key
+          const userObj = {
+            name: data.username, // don't lower-case now, for display
+            role: data.role,
+            token: data.token,
+          };
+          localStorage.setItem("currentUser", JSON.stringify(userObj));
+        }
+
         navigate("/dashboard/project-budget-status");
       } else {
         // Check the Content-Type to determine how to parse the response

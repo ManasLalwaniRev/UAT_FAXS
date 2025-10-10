@@ -51,15 +51,22 @@ const ProjectBudgetStatus = () => {
   const CALCULATE_COST_ENDPOINT = "/Forecast/CalculateCost";
 
   const [currentUserRole, setCurrentUserRole] = useState(null);
+  const [userName, setUserName] = useState("User");
+
+  function capitalizeWords(str) {
+    return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  }
 
   useEffect(() => {
-    const userRoleString = localStorage.getItem("currentUser");
-    if (userRoleString) {
+    const userString = localStorage.getItem("currentUser");
+    if (userString) {
       try {
-        const role = JSON.parse(userRoleString); // role stored as a string
-        setCurrentUserRole(role?.toLowerCase() ?? null);
+        const userObj = JSON.parse(userString);
+        setUserName(userObj.name ? capitalizeWords(userObj.name) : "User");
+        setCurrentUserRole(userObj.role ? userObj.role.toLowerCase() : null);
       } catch {
         setCurrentUserRole(null);
+        setUserName("User");
       }
     }
   }, []);
