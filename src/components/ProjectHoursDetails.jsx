@@ -104,11 +104,11 @@ const ProjectHoursDetails = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [filteredPlcOptions, setFilteredPlcOptions] = useState([]);
   // NEW STATE VARIABLES FOR SAVE FUNCTIONALITY
-const [modifiedHours, setModifiedHours] = useState({});
-const [hasUnsavedHoursChanges, setHasUnsavedHoursChanges] = useState(false);
+  const [modifiedHours, setModifiedHours] = useState({});
+  const [hasUnsavedHoursChanges, setHasUnsavedHoursChanges] = useState(false);
 
-const [hasUnsavedEmployeeChanges, setHasUnsavedEmployeeChanges] = useState(false);
-
+  const [hasUnsavedEmployeeChanges, setHasUnsavedEmployeeChanges] =
+    useState(false);
 
   // Add these state variables after your existing useState declarations
   const [updateAccountOptions, setUpdateAccountOptions] = useState([]);
@@ -120,7 +120,7 @@ const [hasUnsavedEmployeeChanges, setHasUnsavedEmployeeChanges] = useState(false
   const [selectedEmployeeIdForWarning, setSelectedEmployeeIdForWarning] =
     useState(null);
   const [localWarnings, setLocalWarnings] = useState({});
-  
+
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
 
@@ -131,40 +131,6 @@ const [hasUnsavedEmployeeChanges, setHasUnsavedEmployeeChanges] = useState(false
     React.useState(null);
   const [isEditingNewEntry, setIsEditingNewEntry] = React.useState(false);
 
-  // const [maxKbdSuffix, setMaxKbdSuffix] = useState(0);
-
-  // useEffect(() => {
-  //   const existingKbdIds =
-  //     localEmployees
-  //       ?.map((emp) => emp.emple?.emplId)
-  //       .filter((id) => id && id.startsWith("KBD")) || [];
-
-  //   const suffixes = existingKbdIds.map((id) => {
-  //     const match = id.match(/^KBD(\d{3})$/);
-  //     return match ? parseInt(match[1], 10) : 0;
-  //   });
-
-  //   const maxSuffix = suffixes.length ? Math.max(...suffixes) : 0;
-  //   setMaxKbdSuffix(maxSuffix);
-  // }, [localEmployees]);
-
-  // useEffect(() => {
-  //   if (newEntry.idType === "Other") {
-  //     // Only generate if id is empty or invalid
-  //     if (
-  //       !newEntry.id ||
-  //       newEntry.id === "" ||
-  //       /^KBD\d{3}$/.test(newEntry.id) === false
-  //     ) {
-  //       const newId = "KBD" + String(maxKbdSuffix + 1).padStart(3, "0");
-  //       setNewEntry((prev) => ({
-  //         ...prev,
-  //         id: newId,
-  //       }));
-  //       setMaxKbdSuffix((prev) => prev + 1); // increment so next time increments further too
-  //     }
-  //   }
-  // }, [newEntry.idType, maxKbdSuffix]);
 
   const syncScroll = (sourceRef, targetRef) => {
     if (!sourceRef.current || !targetRef.current) return;
@@ -188,10 +154,10 @@ const [hasUnsavedEmployeeChanges, setHasUnsavedEmployeeChanges] = useState(false
   };
 
   const isEditable = status === "In Progress";
-  // const isBudPlan = planType === "BUD";
+ 
   const isBudPlan = planType === "BUD" || planType === "NBBUD";
 
-  // const isFieldEditable = planType === "BUD" || planType === "EAC"; // Add this line
+ 
   const isFieldEditable =
     planType === "BUD" || planType === "EAC" || planType === "NBBUD";
 
@@ -225,64 +191,61 @@ const [hasUnsavedEmployeeChanges, setHasUnsavedEmployeeChanges] = useState(false
       setPlcSearch("");
       setAutoPopulatedPLC(false);
     }
-    // eslint-disable-next-line
   }, [newEntry.idType]);
 
   // Reset new entry form when planId changes (project/plan change)
-useEffect(() => {
-  if (planId) {
-    // Reset new entry form completely when planId changes
-    setShowNewForm(false);
-    setNewEntry({
-      id: "",
-      firstName: "",
-      lastName: "",
-      isRev: false,
-      isBrd: false,
-      idType: "",
-      acctId: "",
-      orgId: "",
-      plcGlcCode: "",
-      perHourRate: "",
-      status: "Act",
-    });
-    setNewEntryPeriodHours({});
-    
-    // Clear all related states
-    setEmployeeSuggestions([]);
-    setLaborAccounts([]);
-    setPlcOptions([]);
-    setFilteredPlcOptions([]);
-    setPlcSearch("");
-    setOrgSearch("");
-    setAutoPopulatedPLC(false);
-    
-    // Clear any save-related states
-    setHasUnsavedEmployeeChanges(false);
-    setHasUnsavedHoursChanges(false);
-    setEditedEmployeeData({});
-    setModifiedHours({});
-    setInputValues({});
-    
-    // Clear UI states
-    setShowSuccessMessage(false);
-    setSuccessMessageText("");
-    setSelectedEmployeeId(null);
-    setSelectedRowIndex(null);
-    setSelectedColumnKey(null);
-    
-    // Clear warning states
-    setLocalWarnings({});
-    setShowWarningPopup(false);
-    setSelectedEmployeeIdForWarning(null);
-    
-    // Clear update options
-    setUpdateAccountOptions([]);
-    setUpdateOrganizationOptions([]);
-    setUpdatePlcOptions([]);
-  }
-}, [planId]); // This will trigger when planId changes
+  useEffect(() => {
+    if (planId) {
+      setShowNewForm(false);
+      setNewEntry({
+        id: "",
+        firstName: "",
+        lastName: "",
+        isRev: false,
+        isBrd: false,
+        idType: "",
+        acctId: "",
+        orgId: "",
+        plcGlcCode: "",
+        perHourRate: "",
+        status: "Act",
+      });
+      setNewEntryPeriodHours({});
 
+      // Clear all related states
+      setEmployeeSuggestions([]);
+      setLaborAccounts([]);
+      setPlcOptions([]);
+      setFilteredPlcOptions([]);
+      setPlcSearch("");
+      setOrgSearch("");
+      setAutoPopulatedPLC(false);
+
+      // Clear any save-related states
+      setHasUnsavedEmployeeChanges(false);
+      setHasUnsavedHoursChanges(false);
+      setEditedEmployeeData({});
+      setModifiedHours({});
+      setInputValues({});
+
+      // Clear UI states
+      setShowSuccessMessage(false);
+      setSuccessMessageText("");
+      setSelectedEmployeeId(null);
+      setSelectedRowIndex(null);
+      setSelectedColumnKey(null);
+
+      // Clear warning states
+      setLocalWarnings({});
+      setShowWarningPopup(false);
+      setSelectedEmployeeIdForWarning(null);
+
+      // Clear update options
+      setUpdateAccountOptions([]);
+      setUpdateOrganizationOptions([]);
+      setUpdatePlcOptions([]);
+    }
+  }, [planId]); // This will trigger when planId changes
 
   const isValidEmployeeId = (id) => {
     if (planType === "NBBUD") return true; // Add this line
@@ -324,29 +287,20 @@ useEffect(() => {
     return updateOptions.some((opt) => opt.id === trimmed);
   };
 
-  // const isValidPlc = (val) => {
-  //   if (planType === "NBBUD") return true; // Add this line
-  //   if (!val) return true;
-  //   if (plcOptions.length === 0) return true;
-  //   const isValid = plcOptions.some((option) => option.value === val.trim());
-  //   return isValid;
-  // };
-  
-  const isValidPlc = (val) => {
-  if (planType === "NBBUD") return true;
-  if (!val) return true; // Allow empty values
-  if (plcOptions.length === 0) return true; // Allow if no options loaded yet
-  
-  const trimmedVal = val.toString().trim();
-  const isValid = plcOptions.some((option) => {
-    const optionValue = option.value ? option.value.toString().trim() : '';
-    return optionValue === trimmedVal;
-  });
-  
 
-  
-  return isValid;
-};
+  const isValidPlc = (val) => {
+    if (planType === "NBBUD") return true;
+    if (!val) return true; 
+    if (plcOptions.length === 0) return true; 
+
+    const trimmedVal = val.toString().trim();
+    const isValid = plcOptions.some((option) => {
+      const optionValue = option.value ? option.value.toString().trim() : "";
+      return optionValue === trimmedVal;
+    });
+
+    return isValid;
+  };
 
   const isValidPlcForUpdate = (val, updateOptions) => {
     if (planType === "NBBUD") return true; // Add this line
@@ -402,40 +356,7 @@ useEffect(() => {
     };
   }, [newEntry, newEntryPeriodHours, inputValues, editedEmployeeData]);
 
-  // Vertical sync only
-  // useEffect(() => {
-  //   const container = verticalScrollRef.current;
-  //   const firstScroll = vfirstTableRef.current;
-  //   const lastScroll = vlastTableRef.current;
 
-  //   if (!container || !firstScroll || !lastScroll) return;
-
-  //   const onScroll = () => {
-  //     const scrollTop = container.scrollTop;
-  //     firstScroll.scrollTop = scrollTop;
-  //     lastScroll.scrollTop = scrollTop;
-  //   };
-
-  //   container.addEventListener("scroll", onScroll);
-  //   return () => container.removeEventListener("scroll", onScroll);
-  // }, []);
-
-  // useEffect(() => {
-  //   const container = horizontalScrollRef.current;
-  //   const firstScroll = firstTableRef.current;
-  //   const lastScroll = lastTableRef.current;
-
-  //   if (!container || !firstScroll || !lastScroll) return;
-
-  //   const onScroll = () => {
-  //     const scrollLeft = container.scrollLeft;
-  //     firstScroll.scrollLeft = scrollLeft;
-  //     lastScroll.scrollLeft = scrollLeft;
-  //   };
-
-  //   container.addEventListener("scroll", onScroll);
-  //   return () => container.removeEventListener("scroll", onScroll);
-  // }, []);
 
   const fetchEmployees = async () => {
     if (!planId) return;
@@ -553,7 +474,9 @@ useEffect(() => {
             // const response = await axios.get(
             //   `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
             // );
-            const response = await axios.get(`${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`)
+            const response = await axios.get(
+              `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
+            );
             const data = Array.isArray(response.data)
               ? response.data[0]
               : response.data;
@@ -707,7 +630,6 @@ useEffect(() => {
     };
 
     const fetchLaborAccounts = async () => {
-
       // if (planType === "NBBUD") return;
 
       if (!projectId || !showNewForm) return;
@@ -715,7 +637,9 @@ useEffect(() => {
         // const response = await axios.get(
         //   `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
         // );
-        const response = await axios.get(`${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`)
+        const response = await axios.get(
+          `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
+        );
         const data = Array.isArray(response.data)
           ? response.data[0]
           : response.data;
@@ -750,17 +674,6 @@ useEffect(() => {
               }))
             : [];
         } else if (newEntry.idType === "Other") {
-          // ADD THIS: For "Other" type, show all available accounts (both employee and vendor)
-          // const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
-          //   ? data.employeeLaborAccounts.map(account => ({ id: account.accountId }))
-          //   : [];
-
-          // const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
-          //   ? data.sunContractorLaborAccounts.map(account => ({ id: account.accountId }))
-          //   : [];
-
-          // accounts = [...employeeAccounts, ...vendorAccounts];
-          // For "Other" type, show only otherDirectCostLaborAccounts
           accounts = Array.isArray(data.otherDirectCostLaborAccounts)
             ? data.otherDirectCostLaborAccounts.map((account) => ({
                 id: account.accountId,
@@ -825,11 +738,6 @@ useEffect(() => {
       setPlcSearch("");
       setOrgSearch("");
       setAutoPopulatedPLC(false);
-      // setEmployeeSuggestions([]);
-      // setLaborAccounts([]);
-      // setPlcSearch("");
-      // setOrgSearch("");
-      // setAutoPopulatedPLC(false);
     }
 
     return () => {
@@ -843,163 +751,64 @@ useEffect(() => {
   useEffect(() => {
     if (plcOptions.length > 0) {
       setFilteredPlcOptions(plcOptions);
-      // console.log('PLC options initialized:', plcOptions.length); // DEBUG LOG
     }
   }, [plcOptions]);
 
-  // const handleEmployeeDataChange = (empIdx, field, value) => {
-  //   if (!isEditable || !isFieldEditable) return;
-
-  //   setEditedEmployeeData((prev) => ({
-  //     ...prev,
-  //     [empIdx]: {
-  //       ...prev[empIdx],
-  //       [field]: value,
-  //     },
-  //   }));
-
-  //   // ADD WARNING CHECKS FOR ACCOUNT AND ORGANIZATION
-  //   const emp = localEmployees[empIdx];
-  //   if (emp && emp.emple) {
-  //     const emplId = emp.emple.emplId;
-
-  //     if (field === "acctId") {
-  //       const warningKey = generateFieldWarningKey(emplId, "account", value);
-  //       const hasWarning = checkAccountInvalid(value, updateAccountOptions);
-
-  //       setLocalWarnings(prev => {
-  //         const updated = { ...prev };
-  //         if (hasWarning) {
-  //           updated[warningKey] = true;
-  //         } else {
-  //           // Remove warning when value becomes valid
-  //           delete updated[warningKey];
-  //         }
-  //         return updated;
-  //       });
-  //     }
-
-  //     if (field === "orgId") {
-  //       const warningKey = generateFieldWarningKey(emplId, "organization", value);
-  //       const hasWarning = checkOrgInvalid(value, updateOrganizationOptions);
-
-  //       setLocalWarnings(prev => {
-  //         const updated = { ...prev };
-  //         if (hasWarning) {
-  //           updated[warningKey] = true;
-  //         } else {
-  //           // Remove warning when value becomes valid
-  //           delete updated[warningKey];
-  //         }
-  //         return updated;
-  //       });
-  //     }
-  //   }
-  // };
-
-  // const handleEmployeeDataChange = (empIdx, field, value) => {
-  //   if (!isEditable || !isFieldEditable) return;
-
-  //   setEditedEmployeeData((prev) => ({
-  //     ...prev,
-  //     [empIdx]: {
-  //       ...prev[empIdx],
-  //       [field]: value,
-  //     },
-  //   }));
-
-  //   // ADD WARNING CHECKS FOR ACCOUNT AND ORGANIZATION
-  //   const emp = localEmployees[empIdx];
-  //   if (emp && emp.emple) {
-  //     const emplId = emp.emple.emplId;
-
-  //     if (field === "acctId") {
-  //       const warningKey = generateFieldWarningKey(emplId, "account", value);
-  //       const hasWarning = checkAccountInvalid(value, updateAccountOptions);
-
-  //       setLocalWarnings((prev) => {
-  //         const updated = { ...prev };
-  //         if (hasWarning) {
-  //           updated[warningKey] = true;
-  //         } else {
-  //           delete updated[warningKey]; // ✅ ENSURE THIS IS PRESENT
-  //         }
-  //         return updated;
-  //       });
-  //     }
-
-  //     if (field === "orgId") {
-  //       const warningKey = generateFieldWarningKey(
-  //         emplId,
-  //         "organization",
-  //         value
-  //       );
-  //       const hasWarning = checkOrgInvalid(value, updateOrganizationOptions);
-
-  //       setLocalWarnings((prev) => {
-  //         const updated = { ...prev };
-  //         if (hasWarning) {
-  //           updated[warningKey] = true;
-  //         } else {
-  //           delete updated[warningKey]; // ✅ ENSURE THIS IS PRESENT
-  //         }
-  //         return updated;
-  //       });
-  //     }
-  //   }
-  // };
-
+ 
   const handleEmployeeDataChange = (empIdx, field, value) => {
-  if (!isEditable || !isFieldEditable) return;
+    if (!isEditable || !isFieldEditable) return;
 
-  setEditedEmployeeData((prev) => ({
-    ...prev,
-    [empIdx]: {
-      ...prev[empIdx],
-      [field]: value,
-    },
-  }));
+    setEditedEmployeeData((prev) => ({
+      ...prev,
+      [empIdx]: {
+        ...prev[empIdx],
+        [field]: value,
+      },
+    }));
 
-  // Mark as having unsaved changes
-  setHasUnsavedEmployeeChanges(true);
+    // Mark as having unsaved changes
+    setHasUnsavedEmployeeChanges(true);
 
-  // Rest of your warning logic...
-  const emp = localEmployees[empIdx];
-  if (emp && emp.emple) {
-    const emplId = emp.emple.emplId;
+    // Rest of your warning logic...
+    const emp = localEmployees[empIdx];
+    if (emp && emp.emple) {
+      const emplId = emp.emple.emplId;
 
-    if (field === "acctId") {
-      const warningKey = generateFieldWarningKey(emplId, "account", value);
-      const hasWarning = checkAccountInvalid(value, updateAccountOptions);
+      if (field === "acctId") {
+        const warningKey = generateFieldWarningKey(emplId, "account", value);
+        const hasWarning = checkAccountInvalid(value, updateAccountOptions);
 
-      setLocalWarnings((prev) => {
-        const updated = { ...prev };
-        if (hasWarning) {
-          updated[warningKey] = true;
-        } else {
-          delete updated[warningKey];
-        }
-        return updated;
-      });
+        setLocalWarnings((prev) => {
+          const updated = { ...prev };
+          if (hasWarning) {
+            updated[warningKey] = true;
+          } else {
+            delete updated[warningKey];
+          }
+          return updated;
+        });
+      }
+
+      if (field === "orgId") {
+        const warningKey = generateFieldWarningKey(
+          emplId,
+          "organization",
+          value
+        );
+        const hasWarning = checkOrgInvalid(value, updateOrganizationOptions);
+
+        setLocalWarnings((prev) => {
+          const updated = { ...prev };
+          if (hasWarning) {
+            updated[warningKey] = true;
+          } else {
+            delete updated[warningKey];
+          }
+          return updated;
+        });
+      }
     }
-
-    if (field === "orgId") {
-      const warningKey = generateFieldWarningKey(emplId, "organization", value);
-      const hasWarning = checkOrgInvalid(value, updateOrganizationOptions);
-
-      setLocalWarnings((prev) => {
-        const updated = { ...prev };
-        if (hasWarning) {
-          updated[warningKey] = true;
-        } else {
-          delete updated[warningKey];
-        }
-        return updated;
-      });
-    }
-  }
-};
-
+  };
 
   const handleOrgInputChangeForUpdate = (value, actualEmpIdx) => {
     const numericValue = value.replace(/[^0-9.]/g, "");
@@ -1141,7 +950,8 @@ useEffect(() => {
       orgId: "",
       plcGlcCode: "",
       perHourRate: "",
-      status: "Act",
+      // status: "Act",
+      status: value === "Other" ? "ACT" : "Act",
     }));
     setPlcSearch("");
     setAutoPopulatedPLC(false);
@@ -1167,42 +977,43 @@ useEffect(() => {
   //     setAutoPopulatedPLC(false);
   //   }
   // };
-  
+
   const handlePlcInputChange = (value) => {
-  if (planType === "NBBUD") {
+    if (planType === "NBBUD") {
+      setPlcSearch(value);
+      setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+      return;
+    }
+
+    // Only allow typing if the value matches available PLC options
+    const isValidInput =
+      plcOptions.some((option) =>
+        option.value.toLowerCase().startsWith(value.toLowerCase())
+      ) || value === "";
+
+    if (!isValidInput && value.length > 0) {
+      // Don't update if the input doesn't match any PLC option
+      return;
+    }
+
     setPlcSearch(value);
     setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
-    return;
-  }
 
-  // Only allow typing if the value matches available PLC options
-  const isValidInput = plcOptions.some(option => 
-    option.value.toLowerCase().startsWith(value.toLowerCase())
-  ) || value === "";
+    // Filter PLC options
+    if (value.length >= 1) {
+      const filtered = plcOptions.filter((option) =>
+        option.value.toLowerCase().startsWith(value.toLowerCase())
+      );
+      setFilteredPlcOptions(filtered);
+    } else {
+      setFilteredPlcOptions(plcOptions);
+    }
 
-  if (!isValidInput && value.length > 0) {
-    // Don't update if the input doesn't match any PLC option
-    return;
-  }
-
-  setPlcSearch(value);
-  setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
-
-  // Filter PLC options
-  if (value.length >= 1) {
-    const filtered = plcOptions.filter((option) =>
-      option.value.toLowerCase().startsWith(value.toLowerCase())
-    );
-    setFilteredPlcOptions(filtered);
-  } else {
-    setFilteredPlcOptions(plcOptions);
-  }
-
-  // Reset auto-populated flag when user manually types
-  if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
-    setAutoPopulatedPLC(false);
-  }
-};
+    // Reset auto-populated flag when user manually types
+    if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+      setAutoPopulatedPLC(false);
+    }
+  };
 
   const handleAccountBlur = (val) => {
     if (planType === "NBBUD") return; // Add this line
@@ -1262,28 +1073,31 @@ useEffect(() => {
     const trimmedValue = value.trim();
 
     if (planType === "NBBUD") {
-  // For NBBUD, still try to populate from suggestions if available
-  if ((newEntry.idType === "Employee" || newEntry.idType === "Vendor") && 
-      employeeSuggestions.length > 0 && trimmedValue) {
-    const selectedEmployee = employeeSuggestions.find(
-      (emp) => emp.emplId === trimmedValue
-    );
-    
-    if (selectedEmployee) {
-      setNewEntry((prev) => ({
-        ...prev,
-        id: trimmedValue,
-        firstName: selectedEmployee.firstName || "",
-        lastName: selectedEmployee.lastName || "",
-        perHourRate: selectedEmployee.perHourRate || "",
-        orgId: selectedEmployee.orgId || prev.orgId,
-        plcGlcCode: selectedEmployee.plc || "",
-      }));
-      setPlcSearch(selectedEmployee.plc || "");
+      // For NBBUD, still try to populate from suggestions if available
+      if (
+        (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+        employeeSuggestions.length > 0 &&
+        trimmedValue
+      ) {
+        const selectedEmployee = employeeSuggestions.find(
+          (emp) => emp.emplId === trimmedValue
+        );
+
+        if (selectedEmployee) {
+          setNewEntry((prev) => ({
+            ...prev,
+            id: trimmedValue,
+            firstName: selectedEmployee.firstName || "",
+            lastName: selectedEmployee.lastName || "",
+            perHourRate: selectedEmployee.perHourRate || "",
+            orgId: selectedEmployee.orgId || prev.orgId,
+            plcGlcCode: selectedEmployee.plc || "",
+          }));
+          setPlcSearch(selectedEmployee.plc || "");
+        }
+      }
+      return;
     }
-  }
-  return;
-}
 
     // Skip all validation and suggestions for NBBUD
     // if (planType === "NBBUD") {
@@ -1685,7 +1499,7 @@ useEffect(() => {
     return monthHours;
   };
 
-  //   const handleInputChange = (empIdx, uniqueKey, newValue) => {
+ 
   //   if (!isEditable) return;
   //   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
   //     setInputValues((prev) => ({
@@ -1739,92 +1553,146 @@ useEffect(() => {
   //   }
   // };
 
-//   const handleInputChange = (empIdx, uniqueKey, newValue) => {
-//   if (!isEditable) return;
-//   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
-//     setInputValues((prev) => ({
-//       ...prev,
-//       [`${empIdx}_${uniqueKey}`]: newValue,
-//     }));
+  //   const handleInputChange = (empIdx, uniqueKey, newValue) => {
+  //   if (!isEditable) return;
+  //   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
+  //     setInputValues((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: newValue,
+  //     }));
 
-//     // Track modified hours for save functionality
-//     setModifiedHours((prev) => ({
-//       ...prev,
-//       [`${empIdx}_${uniqueKey}`]: {
-//         empIdx,
-//         uniqueKey,
-//         newValue,
-//         employee: localEmployees[empIdx]
-//       }
-//     }));
-    
-//     setHasUnsavedHoursChanges(true);
+  //     // Track modified hours for save functionality
+  //     setModifiedHours((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: {
+  //         empIdx,
+  //         uniqueKey,
+  //         newValue,
+  //         employee: localEmployees[empIdx]
+  //       }
+  //     }));
 
-//     // Keep the warning logic
-//     const emp = localEmployees[empIdx];
-//     if (emp && emp.emple) {
-//       const plcCode = emp.emple.plcGlcCode || "";
-//       const warningKey = generateWarningKey(
-//         emp.emple.emplId,
-//         plcCode,
-//         uniqueKey
-//       );
-//       const hasWarning = checkHoursExceedLimit(empIdx, uniqueKey, newValue);
+  //     setHasUnsavedHoursChanges(true);
 
-//       setLocalWarnings((prev) => {
-//         const updated = { ...prev };
-//         if (hasWarning) {
-//           updated[warningKey] = true;
-//         } else {
-//           delete updated[warningKey];
-//         }
-//         return updated;
-//       });
-//     }
-//   }
-// };
+  //     // Keep the warning logic
+  //     const emp = localEmployees[empIdx];
+  //     if (emp && emp.emple) {
+  //       const plcCode = emp.emple.plcGlcCode || "";
+  //       const warningKey = generateWarningKey(
+  //         emp.emple.emplId,
+  //         plcCode,
+  //         uniqueKey
+  //       );
+  //       const hasWarning = checkHoursExceedLimit(empIdx, uniqueKey, newValue);
 
-const handleInputChange = (empIdx, uniqueKey, newValue) => {
+  //       setLocalWarnings((prev) => {
+  //         const updated = { ...prev };
+  //         if (hasWarning) {
+  //           updated[warningKey] = true;
+  //         } else {
+  //           delete updated[warningKey];
+  //         }
+  //         return updated;
+  //       });
+  //     }
+  //   }
+  // };
+
+  // const handleInputChange = (empIdx, uniqueKey, newValue) => {
+  //   if (!isEditable) return;
+  //   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
+  //     setInputValues((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: newValue,
+  //     }));
+
+  //     // Track modified hours for save functionality
+  //     setModifiedHours((prev) => ({
+  //       ...prev,
+  //       [`${empIdx}_${uniqueKey}`]: {
+  //         empIdx,
+  //         uniqueKey,
+  //         newValue,
+  //         employee: localEmployees[empIdx],
+  //       },
+  //     }));
+
+  //     setHasUnsavedHoursChanges(true);
+
+  //     // Keep the warning logic
+  //     const emp = localEmployees[empIdx];
+  //     if (emp && emp.emple) {
+  //       const plcCode = emp.emple.plcGlcCode || "";
+  //       const warningKey = generateWarningKey(
+  //         emp.emple.emplId,
+  //         plcCode,
+  //         uniqueKey
+  //       );
+  //       const hasWarning = checkHoursExceedLimit(empIdx, uniqueKey, newValue);
+
+  //       setLocalWarnings((prev) => {
+  //         const updated = { ...prev };
+  //         if (hasWarning) {
+  //           updated[warningKey] = true;
+  //         } else {
+  //           delete updated[warningKey];
+  //         }
+  //         return updated;
+  //       });
+  //     }
+  //   }
+  // };
+
+  const handleInputChange = (empIdx, uniqueKey, newValue) => {
   if (!isEditable) return;
-  if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
-    setInputValues((prev) => ({
-      ...prev,
-      [`${empIdx}_${uniqueKey}`]: newValue,
-    }));
-
-    // Track modified hours for save functionality
-    setModifiedHours((prev) => ({
-      ...prev,
-      [`${empIdx}_${uniqueKey}`]: {
-        empIdx,
-        uniqueKey,
-        newValue,
-        employee: localEmployees[empIdx]
-      }
-    }));
+  
+  // Allow only numbers and dots
+  if (!/^[0-9.]*$/.test(newValue)) return;
+  
+  // Get available hours for validation
+  const duration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
+  if (duration && duration.workingHours) {
+    const maxAllowedHours = duration.workingHours * 2;
+    const numericValue = parseFloat(newValue) || 0;
     
-    setHasUnsavedHoursChanges(true);
-
-    // Keep the warning logic
-    const emp = localEmployees[empIdx];
-    if (emp && emp.emple) {
-      const plcCode = emp.emple.plcGlcCode || "";
-      const warningKey = generateWarningKey(emp.emple.emplId, plcCode, uniqueKey);
-      const hasWarning = checkHoursExceedLimit(empIdx, uniqueKey, newValue);
-
-      setLocalWarnings((prev) => {
-        const updated = { ...prev };
-        if (hasWarning) {
-          updated[warningKey] = true;
-        } else {
-          delete updated[warningKey];
-        }
-        return updated;
+    // Prevent input if exceeds limit
+    if (numericValue > maxAllowedHours) {
+      toast.error(`Hours cannot exceed more than available hours `, {
+        autoClose: 3000,
       });
+      return; // Don't update the state
     }
   }
-};
+  
+  setInputValues(prev => ({
+    ...prev,
+    [`${empIdx}_${uniqueKey}`]: newValue,
+  }));
 
+  // Track modified hours for save functionality
+  setModifiedHours(prev => ({
+    ...prev,
+    [`${empIdx}_${uniqueKey}`]: { empIdx, uniqueKey, newValue, employee: localEmployees[empIdx] },
+  }));
+  setHasUnsavedHoursChanges(true);
+
+  // Keep the warning logic
+  const emp = localEmployees[empIdx];
+  if (emp?.emple) {
+    const plcCode = emp.emple.plcGlcCode;
+    const warningKey = generateWarningKey(emp.emple.emplId, plcCode, uniqueKey);
+    const hasWarning = checkHoursExceedLimit(empIdx, uniqueKey, newValue);
+    setLocalWarnings(prev => {
+      const updated = { ...prev };
+      if (hasWarning) {
+        updated[warningKey] = true;
+      } else {
+        delete updated[warningKey];
+      }
+      return updated;
+    });
+  }
+};
 
 
   const handleEmployeeDataBlur = async (empIdx, emp) => {
@@ -2031,777 +1899,798 @@ const handleInputChange = (empIdx, uniqueKey, newValue) => {
   //   }
   // };
 
-//   const handleSaveAllHours = async () => {
-//   if (Object.keys(modifiedHours).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   const updates = [];
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     for (const key in modifiedHours) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthHours = getMonthHours(emp);
-//       const forecast = monthHours[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const payload = {
-//         forecastedamt: forecast?.forecastedamt ?? 0,
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: forecast?.projId ?? projectId ?? "",
-//         plId: forecast?.plId ?? planId ?? 0,
-//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-//         dctId: forecast?.dctId ?? 0,
-//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
-//         year: forecast?.year ?? currentDuration?.year ?? 0,
-//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-//         burden: forecast?.burden ?? 0,
-//         ccffRevenue: forecast?.ccffRevenue ?? 0,
-//         tnmRevenue: forecast?.tnmRevenue ?? 0,
-//         cost: forecast?.cost ?? 0,
-//         fringe: forecast?.fringe ?? 0,
-//         overhead: forecast?.overhead ?? 0,
-//         gna: forecast?.gna ?? 0,
-//         ...(planType === "EAC"
-//           ? { actualhours: Number(newNumericValue) || 0 }
-//           : { forecastedhours: Number(newNumericValue) || 0 }),
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString().split("T")[0],
-//         displayText: forecast?.displayText ?? "",
-//       };
-
-//       const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-
-//       updates.push(
-//         axios.put(
-//           `${backendUrl}/Forecast/UpdateForecastHours/${apiPlanType}`,
-//           payload,
-//           { headers: { "Content-Type": "application/json" } }
-//         ).then(() => {
-//           successCount++;
-//           // Update local state
-//           setLocalEmployees((prev) => {
-//             const updated = [...prev];
-//             if (
-//               updated[empIdx] &&
-//               updated[empIdx].emple &&
-//               updated[empIdx].emple.plForecasts
-//             ) {
-//               const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//                 (f) => f.month === payload.month && f.year === payload.year
-//               );
-//               if (forecastIndex !== -1) {
-//                 if (planType === "EAC") {
-//                   updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
-//                 } else {
-//                   updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
-//                 }
-//               }
-//             }
-//             return updated;
-//           });
-//         }).catch(() => {
-//           errorCount++;
-//         })
-//       );
-//     }
-
-//     await Promise.all(updates);
-
-//     // Clear modified hours and reset flags
-//     setModifiedHours({});
-//     setHasUnsavedHoursChanges(false);
-
-//     if (successCount > 0) {
-//       toast.success(`Successfully saved ${successCount} hour entries!`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be saved.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     toast.error(
-//       "Failed to save hours: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-hours-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-// const handleSaveAllHours = async () => {
-//   if (Object.keys(modifiedHours).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   const updates = [];
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     for (const key in modifiedHours) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthHours = getMonthHours(emp);
-//       const forecast = monthHours[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const payload = {
-//         forecastedamt: forecast?.forecastedamt ?? 0,
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: forecast?.projId ?? projectId ?? "",
-//         plId: forecast?.plId ?? planId ?? 0,
-//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-//         dctId: forecast?.dctId ?? 0,
-//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
-//         year: forecast?.year ?? currentDuration?.year ?? 0,
-//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-//         burden: forecast?.burden ?? 0,
-//         ccffRevenue: forecast?.ccffRevenue ?? 0,
-//         tnmRevenue: forecast?.tnmRevenue ?? 0,
-//         cost: forecast?.cost ?? 0,
-//         fringe: forecast?.fringe ?? 0,
-//         overhead: forecast?.overhead ?? 0,
-//         gna: forecast?.gna ?? 0,
-//         ...(planType === "EAC"
-//           ? { actualhours: Number(newNumericValue) || 0 }
-//           : { forecastedhours: Number(newNumericValue) || 0 }),
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString().split("T")[0],
-//         displayText: forecast?.displayText ?? "",
-//       };
-
-//       const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-
-//       updates.push(
-//         axios.put(
-//           `${backendUrl}/Forecast/UpdateForecastHours/${apiPlanType}`,
-//           payload,
-//           { headers: { "Content-Type": "application/json" } }
-//         ).then(() => {
-//           successCount++;
-//           // Update local state
-//           setLocalEmployees((prev) => {
-//             const updated = [...prev];
-//             if (
-//               updated[empIdx] &&
-//               updated[empIdx].emple &&
-//               updated[empIdx].emple.plForecasts
-//             ) {
-//               const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//                 (f) => f.month === payload.month && f.year === payload.year
-//               );
-//               if (forecastIndex !== -1) {
-//                 if (planType === "EAC") {
-//                   updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
-//                 } else {
-//                   updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
-//                 }
-//               }
-//             }
-//             return updated;
-//           });
-//         }).catch(() => {
-//           errorCount++;
-//         })
-//       );
-//     }
-
-//     await Promise.all(updates);
-
-//     // Clear modified hours and reset flags
-//     setModifiedHours({});
-//     setHasUnsavedHoursChanges(false);
-
-//     if (successCount > 0) {
-//       toast.success(`Successfully saved ${successCount} hour entries!`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be saved.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     toast.error(
-//       "Failed to save hours: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-hours-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-// const handleSaveAllEmployeeChanges = async () => {
-//   if (Object.keys(editedEmployeeData).length === 0) {
-//     toast.info("No employee changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     for (const empIdx in editedEmployeeData) {
-//       const emp = localEmployees[empIdx];
-//       const editedData = editedEmployeeData[empIdx];
-
-//       if (!emp || !emp.emple) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const payload = {
-//         id: emp.emple.id || 0,
-//         emplId: emp.emple.emplId,
-//         firstName: emp.emple.firstName || "",
-//         lastName: emp.emple.lastName || "",
-//         type: emp.emple.type || "Employee",
-//         isRev: editedData.isRev !== undefined ? editedData.isRev : emp.emple.isRev,
-//         isBrd: editedData.isBrd !== undefined ? editedData.isBrd : emp.emple.isBrd,
-//         plcGlcCode: (editedData.glcPlc || emp.emple.plcGlcCode || "")
-//           .split("-")[0]
-//           .substring(0, 20),
-//         perHourRate: Number(editedData.perHourRate || emp.emple.perHourRate || 0),
-//         status: emp.emple.status || "Act",
-//         accId: editedData.acctId || emp.emple.accId || "",
-//         orgId: editedData.orgId || emp.emple.orgId || "",
-//         plId: planId,
-//         plForecasts: emp.emple.plForecasts || [],
-//       };
-
-//       try {
-//         await axios.put(`${backendUrl}/Employee/UpdateEmployee`, payload, {
-//           headers: { "Content-Type": "application/json" },
-//         });
-
-//         // Update local state
-//         setLocalEmployees((prev) => {
-//           const updated = [...prev];
-//           updated[empIdx] = {
-//             ...updated[empIdx],
-//             emple: {
-//               ...updated[empIdx].emple,
-//               ...payload,
-//             },
-//           };
-//           return updated;
-//         });
-
-//         successCount++;
-//       } catch (err) {
-//         console.error(`Failed to update employee ${emp.emple.emplId}:`, err);
-//         errorCount++;
-//       }
-//     }
-
-//     // Clear edited employee data and reset flags
-//     setEditedEmployeeData({});
-//     setHasUnsavedEmployeeChanges(false);
-
-//     if (successCount > 0) {
-//       toast.success(`Successfully updated ${successCount} employees!`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} employees could not be updated.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     toast.error(
-//       "Failed to save employee data: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-employee-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-
-// const handleSaveAllHours = async () => {
-//   if (Object.keys(modifiedHours).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     // Prepare bulk payload array
-//     const bulkPayload = [];
-
-//     for (const key in modifiedHours) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthHours = getMonthHours(emp);
-//       const forecast = monthHours[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       // Create payload matching the bulk API structure
-//       const payload = {
-//         forecastedamt: forecast?.forecastedamt ?? 0,
-//         actualamt: forecast?.actualamt ?? 0,
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: forecast?.projId ?? projectId ?? "",
-//         plId: forecast?.plId ?? planId ?? 0,
-//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-//         dctId: forecast?.dctId ?? 0,
-//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
-//         year: forecast?.year ?? currentDuration?.year ?? 0,
-//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-//         fees: forecast?.fees ?? 0,
-//         burden: forecast?.burden ?? 0,
-//         ccffRevenue: forecast?.ccffRevenue ?? 0,
-//         tnmRevenue: forecast?.tnmRevenue ?? 0,
-//         revenue: forecast?.revenue ?? 0,
-//         cost: forecast?.cost ?? 0,
-//         forecastedCost: forecast?.forecastedCost ?? 0,
-//         fringe: forecast?.fringe ?? 0,
-//         overhead: forecast?.overhead ?? 0,
-//         gna: forecast?.gna ?? 0,
-//         materials: forecast?.materials ?? 0,
-//         // Update hours based on plan type
-//         ...(planType === "EAC"
-//           ? { 
-//               actualhours: Number(newNumericValue) || 0,
-//               forecastedhours: forecast?.forecastedhours ?? 0
-//             }
-//           : { 
-//               forecastedhours: Number(newNumericValue) || 0,
-//               actualhours: forecast?.actualhours ?? 0
-//             }),
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString(),
-//         displayText: forecast?.displayText ?? "",
-//         acctId: emp?.emple?.accId ?? "",
-//         orgId: emp?.emple?.orgId ?? "",
-//         plc: emp?.emple?.plcGlcCode ?? "",
-//         empleId: emp?.emple?.id ?? 0,
-//         hrlyRate: emp?.emple?.perHourRate ?? 0,
-//         effectDt: new Date().toISOString().split('T')[0],
-//         emple: emp?.emple ? {
-//           id: emp.emple.id ?? 0,
-//           emplId: emp.emple.emplId ?? "",
-//           orgId: emp.emple.orgId ?? "",
-//           firstName: emp.emple.firstName ?? "",
-//           lastName: emp.emple.lastName ?? "",
-//           plcGlcCode: emp.emple.plcGlcCode ?? "",
-//           perHourRate: emp.emple.perHourRate ?? 0,
-//           salary: emp.emple.salary ?? 0,
-//           accId: emp.emple.accId ?? "",
-//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
-//           isRev: emp.emple.isRev ?? false,
-//           isBrd: emp.emple.isBrd ?? false,
-//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-//           type: emp.emple.type ?? "",
-//           status: emp.emple.status ?? "",
-//           plId: planId ?? 0,
-//           isWarning: emp.emple.isWarning ?? false,
-//           plForecasts: [],
-//           organization: emp.emple.organization ?? null,
-//           plProjectPlan: emp.emple.plProjectPlan ?? null
-//         } : null
-//       };
-
-//       bulkPayload.push(payload);
-//       successCount++; // Count valid entries
-//     }
-
-//     if (bulkPayload.length === 0) {
-//       toast.warning("No valid entries to save.", { autoClose: 3000 });
-//       return;
-//     }
-
-//     // Use correct bulk API endpoint
-//     const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-    
-//     console.log("Calling bulk API:", `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`);
-//     console.log("Payload:", bulkPayload);
-    
-//     const response = await axios.put(
-//       `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`,
-//       bulkPayload,
-//       { headers: { "Content-Type": "application/json" } }
-//     );
-
-//     console.log("Bulk update response:", response.data);
-
-//     // Update local state for all successful updates
-//     setLocalEmployees((prev) => {
-//       const updated = [...prev];
-      
-//       for (const key in modifiedHours) {
-//         const { empIdx, uniqueKey, newValue } = modifiedHours[key];
-//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
-        
-//         if (
-//           updated[empIdx] &&
-//           updated[empIdx].emple &&
-//           updated[empIdx].emple.plForecasts
-//         ) {
-//           const currentDuration = sortedDurations.find(
-//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//           );
-          
-//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
-//           );
-          
-//           if (forecastIndex !== -1) {
-//             if (planType === "EAC") {
-//               updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
-//             } else {
-//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
-//             }
-//           }
-//         }
-//       }
-      
-//       return updated;
-//     });
-
-//     // Clear modified hours and reset flags
-//     setModifiedHours({});
-//     setHasUnsavedHoursChanges(false);
-
-//     toast.success(`Successfully saved ${successCount} hour entries!`, {
-//       autoClose: 3000,
-//     });
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be processed.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     console.error("Bulk update error:", err);
-//     toast.error(
-//       "Failed to save hours: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-hours-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-const handleSaveAll = async () => {
-  const hasHoursChanges = Object.keys(modifiedHours).length > 0;
-  const hasEmployeeChanges = Object.keys(editedEmployeeData).length > 0;
-  
-  if (!hasHoursChanges && !hasEmployeeChanges) {
-    toast.info("No changes to save.", { autoClose: 2000 });
-    return;
-  }
-
-  setIsLoading(true);
-  let successCount = 0;
-  let errorCount = 0;
-
-  try {
-    // Save employee data changes first
-    if (hasEmployeeChanges) {
-      for (const empIdx in editedEmployeeData) {
-        const emp = localEmployees[empIdx];
-        const editedData = editedEmployeeData[empIdx];
-
-        if (!emp || !emp.emple) {
-          errorCount++;
-          continue;
-        }
-
-        const payload = {
-          id: emp.emple.id || 0,
-          emplId: emp.emple.emplId,
-          firstName: emp.emple.firstName || "",
-          lastName: emp.emple.lastName || "",
-          type: emp.emple.type || "Employee",
-          isRev: editedData.isRev !== undefined ? editedData.isRev : emp.emple.isRev,
-          isBrd: editedData.isBrd !== undefined ? editedData.isBrd : emp.emple.isBrd,
-          plcGlcCode: (editedData.glcPlc || emp.emple.plcGlcCode || "")
-            .split("-")[0]
-            .substring(0, 20),
-          perHourRate: Number(editedData.perHourRate || emp.emple.perHourRate || 0),
-          status: emp.emple.status || "Act",
-          accId: editedData.acctId || emp.emple.accId || "",
-          orgId: editedData.orgId || emp.emple.orgId || "",
-          plId: planId,
-          plForecasts: emp.emple.plForecasts || [],
-        };
-
-        try {
-          await axios.put(`${backendUrl}/Employee/UpdateEmployee`, payload, {
-            headers: { "Content-Type": "application/json" },
-          });
-
-          // Update local state
-          setLocalEmployees((prev) => {
-            const updated = [...prev];
-            updated[empIdx] = {
-              ...updated[empIdx],
-              emple: {
-                ...updated[empIdx].emple,
-                ...payload,
-              },
-            };
-            return updated;
-          });
-
-          successCount++;
-        } catch (err) {
-          errorCount++;
-        }
-      }
+  //   const handleSaveAllHours = async () => {
+  //   if (Object.keys(modifiedHours).length === 0) {
+  //     toast.info("No changes to save.", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   const updates = [];
+  //   let successCount = 0;
+  //   let errorCount = 0;
+
+  //   try {
+  //     for (const key in modifiedHours) {
+  //       const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
+
+  //       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+  //       const emp = employee;
+  //       const monthHours = getMonthHours(emp);
+  //       const forecast = monthHours[uniqueKey];
+
+  //       if (!forecast || !forecast.forecastid) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       const currentDuration = sortedDurations.find(
+  //         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //       );
+
+  //       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       const payload = {
+  //         forecastedamt: forecast?.forecastedamt ?? 0,
+  //         forecastid: Number(forecast?.forecastid ?? 0),
+  //         projId: forecast?.projId ?? projectId ?? "",
+  //         plId: forecast?.plId ?? planId ?? 0,
+  //         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+  //         dctId: forecast?.dctId ?? 0,
+  //         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
+  //         year: forecast?.year ?? currentDuration?.year ?? 0,
+  //         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+  //         burden: forecast?.burden ?? 0,
+  //         ccffRevenue: forecast?.ccffRevenue ?? 0,
+  //         tnmRevenue: forecast?.tnmRevenue ?? 0,
+  //         cost: forecast?.cost ?? 0,
+  //         fringe: forecast?.fringe ?? 0,
+  //         overhead: forecast?.overhead ?? 0,
+  //         gna: forecast?.gna ?? 0,
+  //         ...(planType === "EAC"
+  //           ? { actualhours: Number(newNumericValue) || 0 }
+  //           : { forecastedhours: Number(newNumericValue) || 0 }),
+  //         createdat: forecast?.createdat ?? new Date().toISOString(),
+  //         updatedat: new Date().toISOString().split("T")[0],
+  //         displayText: forecast?.displayText ?? "",
+  //       };
+
+  //       const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //       updates.push(
+  //         axios.put(
+  //           `${backendUrl}/Forecast/UpdateForecastHours/${apiPlanType}`,
+  //           payload,
+  //           { headers: { "Content-Type": "application/json" } }
+  //         ).then(() => {
+  //           successCount++;
+  //           // Update local state
+  //           setLocalEmployees((prev) => {
+  //             const updated = [...prev];
+  //             if (
+  //               updated[empIdx] &&
+  //               updated[empIdx].emple &&
+  //               updated[empIdx].emple.plForecasts
+  //             ) {
+  //               const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+  //                 (f) => f.month === payload.month && f.year === payload.year
+  //               );
+  //               if (forecastIndex !== -1) {
+  //                 if (planType === "EAC") {
+  //                   updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
+  //                 } else {
+  //                   updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
+  //                 }
+  //               }
+  //             }
+  //             return updated;
+  //           });
+  //         }).catch(() => {
+  //           errorCount++;
+  //         })
+  //       );
+  //     }
+
+  //     await Promise.all(updates);
+
+  //     // Clear modified hours and reset flags
+  //     setModifiedHours({});
+  //     setHasUnsavedHoursChanges(false);
+
+  //     if (successCount > 0) {
+  //       toast.success(`Successfully saved ${successCount} hour entries!`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //     if (errorCount > 0) {
+  //       toast.warning(`${errorCount} entries could not be saved.`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //   } catch (err) {
+  //     toast.error(
+  //       "Failed to save hours: " + (err.response?.data?.message || err.message),
+  //       {
+  //         toastId: "save-hours-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleSaveAllHours = async () => {
+  //   if (Object.keys(modifiedHours).length === 0) {
+  //     toast.info("No changes to save.", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   const updates = [];
+  //   let successCount = 0;
+  //   let errorCount = 0;
+
+  //   try {
+  //     for (const key in modifiedHours) {
+  //       const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
+
+  //       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+  //       const emp = employee;
+  //       const monthHours = getMonthHours(emp);
+  //       const forecast = monthHours[uniqueKey];
+
+  //       if (!forecast || !forecast.forecastid) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       const currentDuration = sortedDurations.find(
+  //         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //       );
+
+  //       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       const payload = {
+  //         forecastedamt: forecast?.forecastedamt ?? 0,
+  //         forecastid: Number(forecast?.forecastid ?? 0),
+  //         projId: forecast?.projId ?? projectId ?? "",
+  //         plId: forecast?.plId ?? planId ?? 0,
+  //         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+  //         dctId: forecast?.dctId ?? 0,
+  //         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
+  //         year: forecast?.year ?? currentDuration?.year ?? 0,
+  //         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+  //         burden: forecast?.burden ?? 0,
+  //         ccffRevenue: forecast?.ccffRevenue ?? 0,
+  //         tnmRevenue: forecast?.tnmRevenue ?? 0,
+  //         cost: forecast?.cost ?? 0,
+  //         fringe: forecast?.fringe ?? 0,
+  //         overhead: forecast?.overhead ?? 0,
+  //         gna: forecast?.gna ?? 0,
+  //         ...(planType === "EAC"
+  //           ? { actualhours: Number(newNumericValue) || 0 }
+  //           : { forecastedhours: Number(newNumericValue) || 0 }),
+  //         createdat: forecast?.createdat ?? new Date().toISOString(),
+  //         updatedat: new Date().toISOString().split("T")[0],
+  //         displayText: forecast?.displayText ?? "",
+  //       };
+
+  //       const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //       updates.push(
+  //         axios.put(
+  //           `${backendUrl}/Forecast/UpdateForecastHours/${apiPlanType}`,
+  //           payload,
+  //           { headers: { "Content-Type": "application/json" } }
+  //         ).then(() => {
+  //           successCount++;
+  //           // Update local state
+  //           setLocalEmployees((prev) => {
+  //             const updated = [...prev];
+  //             if (
+  //               updated[empIdx] &&
+  //               updated[empIdx].emple &&
+  //               updated[empIdx].emple.plForecasts
+  //             ) {
+  //               const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+  //                 (f) => f.month === payload.month && f.year === payload.year
+  //               );
+  //               if (forecastIndex !== -1) {
+  //                 if (planType === "EAC") {
+  //                   updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
+  //                 } else {
+  //                   updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
+  //                 }
+  //               }
+  //             }
+  //             return updated;
+  //           });
+  //         }).catch(() => {
+  //           errorCount++;
+  //         })
+  //       );
+  //     }
+
+  //     await Promise.all(updates);
+
+  //     // Clear modified hours and reset flags
+  //     setModifiedHours({});
+  //     setHasUnsavedHoursChanges(false);
+
+  //     if (successCount > 0) {
+  //       toast.success(`Successfully saved ${successCount} hour entries!`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //     if (errorCount > 0) {
+  //       toast.warning(`${errorCount} entries could not be saved.`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //   } catch (err) {
+  //     toast.error(
+  //       "Failed to save hours: " + (err.response?.data?.message || err.message),
+  //       {
+  //         toastId: "save-hours-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleSaveAllEmployeeChanges = async () => {
+  //   if (Object.keys(editedEmployeeData).length === 0) {
+  //     toast.info("No employee changes to save.", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   let successCount = 0;
+  //   let errorCount = 0;
+
+  //   try {
+  //     for (const empIdx in editedEmployeeData) {
+  //       const emp = localEmployees[empIdx];
+  //       const editedData = editedEmployeeData[empIdx];
+
+  //       if (!emp || !emp.emple) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       const payload = {
+  //         id: emp.emple.id || 0,
+  //         emplId: emp.emple.emplId,
+  //         firstName: emp.emple.firstName || "",
+  //         lastName: emp.emple.lastName || "",
+  //         type: emp.emple.type || "Employee",
+  //         isRev: editedData.isRev !== undefined ? editedData.isRev : emp.emple.isRev,
+  //         isBrd: editedData.isBrd !== undefined ? editedData.isBrd : emp.emple.isBrd,
+  //         plcGlcCode: (editedData.glcPlc || emp.emple.plcGlcCode || "")
+  //           .split("-")[0]
+  //           .substring(0, 20),
+  //         perHourRate: Number(editedData.perHourRate || emp.emple.perHourRate || 0),
+  //         status: emp.emple.status || "Act",
+  //         accId: editedData.acctId || emp.emple.accId || "",
+  //         orgId: editedData.orgId || emp.emple.orgId || "",
+  //         plId: planId,
+  //         plForecasts: emp.emple.plForecasts || [],
+  //       };
+
+  //       try {
+  //         await axios.put(`${backendUrl}/Employee/UpdateEmployee`, payload, {
+  //           headers: { "Content-Type": "application/json" },
+  //         });
+
+  //         // Update local state
+  //         setLocalEmployees((prev) => {
+  //           const updated = [...prev];
+  //           updated[empIdx] = {
+  //             ...updated[empIdx],
+  //             emple: {
+  //               ...updated[empIdx].emple,
+  //               ...payload,
+  //             },
+  //           };
+  //           return updated;
+  //         });
+
+  //         successCount++;
+  //       } catch (err) {
+  //         console.error(`Failed to update employee ${emp.emple.emplId}:`, err);
+  //         errorCount++;
+  //       }
+  //     }
+
+  //     // Clear edited employee data and reset flags
+  //     setEditedEmployeeData({});
+  //     setHasUnsavedEmployeeChanges(false);
+
+  //     if (successCount > 0) {
+  //       toast.success(`Successfully updated ${successCount} employees!`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //     if (errorCount > 0) {
+  //       toast.warning(`${errorCount} employees could not be updated.`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //   } catch (err) {
+  //     toast.error(
+  //       "Failed to save employee data: " + (err.response?.data?.message || err.message),
+  //       {
+  //         toastId: "save-employee-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  // const handleSaveAllHours = async () => {
+  //   if (Object.keys(modifiedHours).length === 0) {
+  //     toast.info("No changes to save.", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   setIsLoading(true);
+  //   let successCount = 0;
+  //   let errorCount = 0;
+
+  //   try {
+  //     // Prepare bulk payload array
+  //     const bulkPayload = [];
+
+  //     for (const key in modifiedHours) {
+  //       const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
+
+  //       const newNumericValue = newValue === "" ? 0 : Number(newValue);
+  //       const emp = employee;
+  //       const monthHours = getMonthHours(emp);
+  //       const forecast = monthHours[uniqueKey];
+
+  //       if (!forecast || !forecast.forecastid) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       const currentDuration = sortedDurations.find(
+  //         (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //       );
+
+  //       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+  //         errorCount++;
+  //         continue;
+  //       }
+
+  //       // Create payload matching the bulk API structure
+  //       const payload = {
+  //         forecastedamt: forecast?.forecastedamt ?? 0,
+  //         actualamt: forecast?.actualamt ?? 0,
+  //         forecastid: Number(forecast?.forecastid ?? 0),
+  //         projId: forecast?.projId ?? projectId ?? "",
+  //         plId: forecast?.plId ?? planId ?? 0,
+  //         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+  //         dctId: forecast?.dctId ?? 0,
+  //         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
+  //         year: forecast?.year ?? currentDuration?.year ?? 0,
+  //         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+  //         fees: forecast?.fees ?? 0,
+  //         burden: forecast?.burden ?? 0,
+  //         ccffRevenue: forecast?.ccffRevenue ?? 0,
+  //         tnmRevenue: forecast?.tnmRevenue ?? 0,
+  //         revenue: forecast?.revenue ?? 0,
+  //         cost: forecast?.cost ?? 0,
+  //         forecastedCost: forecast?.forecastedCost ?? 0,
+  //         fringe: forecast?.fringe ?? 0,
+  //         overhead: forecast?.overhead ?? 0,
+  //         gna: forecast?.gna ?? 0,
+  //         materials: forecast?.materials ?? 0,
+  //         // Update hours based on plan type
+  //         ...(planType === "EAC"
+  //           ? {
+  //               actualhours: Number(newNumericValue) || 0,
+  //               forecastedhours: forecast?.forecastedhours ?? 0
+  //             }
+  //           : {
+  //               forecastedhours: Number(newNumericValue) || 0,
+  //               actualhours: forecast?.actualhours ?? 0
+  //             }),
+  //         createdat: forecast?.createdat ?? new Date().toISOString(),
+  //         updatedat: new Date().toISOString(),
+  //         displayText: forecast?.displayText ?? "",
+  //         acctId: emp?.emple?.accId ?? "",
+  //         orgId: emp?.emple?.orgId ?? "",
+  //         plc: emp?.emple?.plcGlcCode ?? "",
+  //         empleId: emp?.emple?.id ?? 0,
+  //         hrlyRate: emp?.emple?.perHourRate ?? 0,
+  //         effectDt: new Date().toISOString().split('T')[0],
+  //         emple: emp?.emple ? {
+  //           id: emp.emple.id ?? 0,
+  //           emplId: emp.emple.emplId ?? "",
+  //           orgId: emp.emple.orgId ?? "",
+  //           firstName: emp.emple.firstName ?? "",
+  //           lastName: emp.emple.lastName ?? "",
+  //           plcGlcCode: emp.emple.plcGlcCode ?? "",
+  //           perHourRate: emp.emple.perHourRate ?? 0,
+  //           salary: emp.emple.salary ?? 0,
+  //           accId: emp.emple.accId ?? "",
+  //           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
+  //           isRev: emp.emple.isRev ?? false,
+  //           isBrd: emp.emple.isBrd ?? false,
+  //           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+  //           type: emp.emple.type ?? "",
+  //           status: emp.emple.status ?? "",
+  //           plId: planId ?? 0,
+  //           isWarning: emp.emple.isWarning ?? false,
+  //           plForecasts: [],
+  //           organization: emp.emple.organization ?? null,
+  //           plProjectPlan: emp.emple.plProjectPlan ?? null
+  //         } : null
+  //       };
+
+  //       bulkPayload.push(payload);
+  //       successCount++; // Count valid entries
+  //     }
+
+  //     if (bulkPayload.length === 0) {
+  //       toast.warning("No valid entries to save.", { autoClose: 3000 });
+  //       return;
+  //     }
+
+  //     // Use correct bulk API endpoint
+  //     const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //     console.log("Calling bulk API:", `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`);
+  //     console.log("Payload:", bulkPayload);
+
+  //     const response = await axios.put(
+  //       `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`,
+  //       bulkPayload,
+  //       { headers: { "Content-Type": "application/json" } }
+  //     );
+
+  //     console.log("Bulk update response:", response.data);
+
+  //     // Update local state for all successful updates
+  //     setLocalEmployees((prev) => {
+  //       const updated = [...prev];
+
+  //       for (const key in modifiedHours) {
+  //         const { empIdx, uniqueKey, newValue } = modifiedHours[key];
+  //         const newNumericValue = newValue === "" ? 0 : Number(newValue);
+
+  //         if (
+  //           updated[empIdx] &&
+  //           updated[empIdx].emple &&
+  //           updated[empIdx].emple.plForecasts
+  //         ) {
+  //           const currentDuration = sortedDurations.find(
+  //             (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //           );
+
+  //           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
+  //             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
+  //           );
+
+  //           if (forecastIndex !== -1) {
+  //             if (planType === "EAC") {
+  //               updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
+  //             } else {
+  //               updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
+  //             }
+  //           }
+  //         }
+  //       }
+
+  //       return updated;
+  //     });
+
+  //     // Clear modified hours and reset flags
+  //     setModifiedHours({});
+  //     setHasUnsavedHoursChanges(false);
+
+  //     toast.success(`Successfully saved ${successCount} hour entries!`, {
+  //       autoClose: 3000,
+  //     });
+
+  //     if (errorCount > 0) {
+  //       toast.warning(`${errorCount} entries could not be processed.`, {
+  //         autoClose: 3000,
+  //       });
+  //     }
+
+  //   } catch (err) {
+  //     console.error("Bulk update error:", err);
+  //     toast.error(
+  //       "Failed to save hours: " + (err.response?.data?.message || err.message),
+  //       {
+  //         toastId: "save-hours-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleSaveAll = async () => {
+    const hasHoursChanges = Object.keys(modifiedHours).length > 0;
+    const hasEmployeeChanges = Object.keys(editedEmployeeData).length > 0;
+
+    if (!hasHoursChanges && !hasEmployeeChanges) {
+      toast.info("No changes to save.", { autoClose: 2000 });
+      return;
     }
 
-    // Save hours changes
-    if (hasHoursChanges) {
-      const bulkPayload = [];
-      
-      for (const key in modifiedHours) {
-        const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
-        
-        const newNumericValue = newValue === "" ? 0 : Number(newValue);
-        const emp = employee;
-        const monthHours = getMonthHours(emp);
-        const forecast = monthHours[uniqueKey];
+    setIsLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
 
-        if (!forecast || !forecast.forecastid) {
-          errorCount++;
-          continue;
+    try {
+      // Save employee data changes first
+      if (hasEmployeeChanges) {
+        for (const empIdx in editedEmployeeData) {
+          const emp = localEmployees[empIdx];
+          const editedData = editedEmployeeData[empIdx];
+
+          if (!emp || !emp.emple) {
+            errorCount++;
+            continue;
+          }
+
+          const payload = {
+            id: emp.emple.id || 0,
+            emplId: emp.emple.emplId,
+            firstName: emp.emple.firstName || "",
+            lastName: emp.emple.lastName || "",
+            type: emp.emple.type || "Employee",
+            isRev:
+              editedData.isRev !== undefined
+                ? editedData.isRev
+                : emp.emple.isRev,
+            isBrd:
+              editedData.isBrd !== undefined
+                ? editedData.isBrd
+                : emp.emple.isBrd,
+            plcGlcCode: (editedData.glcPlc || emp.emple.plcGlcCode || "")
+              .split("-")[0]
+              .substring(0, 20),
+            perHourRate: Number(
+              editedData.perHourRate || emp.emple.perHourRate || 0
+            ),
+            status: emp.emple.status || "Act",
+            accId: editedData.acctId || emp.emple.accId || "",
+            orgId: editedData.orgId || emp.emple.orgId || "",
+            plId: planId,
+            plForecasts: emp.emple.plForecasts || [],
+          };
+
+          try {
+            await axios.put(`${backendUrl}/Employee/UpdateEmployee`, payload, {
+              headers: { "Content-Type": "application/json" },
+            });
+
+            // Update local state
+            setLocalEmployees((prev) => {
+              const updated = [...prev];
+              updated[empIdx] = {
+                ...updated[empIdx],
+                emple: {
+                  ...updated[empIdx].emple,
+                  ...payload,
+                },
+              };
+              return updated;
+            });
+
+            successCount++;
+          } catch (err) {
+            errorCount++;
+          }
         }
-
-        const currentDuration = sortedDurations.find(
-          (d) => `${d.monthNo}_${d.year}` === uniqueKey
-        );
-
-        if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-          errorCount++;
-          continue;
-        }
-
-        const payload = {
-          forecastedamt: forecast?.forecastedamt ?? 0,
-          actualamt: forecast?.actualamt ?? 0,
-          forecastid: Number(forecast?.forecastid ?? 0),
-          projId: forecast?.projId ?? projectId ?? "",
-          plId: forecast?.plId ?? planId ?? 0,
-          emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-          dctId: forecast?.dctId ?? 0,
-          month: forecast?.month ?? currentDuration?.monthNo ?? 0,
-          year: forecast?.year ?? currentDuration?.year ?? 0,
-          totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-          fees: forecast?.fees ?? 0,
-          burden: forecast?.burden ?? 0,
-          ccffRevenue: forecast?.ccffRevenue ?? 0,
-          tnmRevenue: forecast?.tnmRevenue ?? 0,
-          revenue: forecast?.revenue ?? 0,
-          cost: forecast?.cost ?? 0,
-          forecastedCost: forecast?.forecastedCost ?? 0,
-          fringe: forecast?.fringe ?? 0,
-          overhead: forecast?.overhead ?? 0,
-          gna: forecast?.gna ?? 0,
-          materials: forecast?.materials ?? 0,
-          ...(planType === "EAC"
-            ? { 
-                actualhours: Number(newNumericValue) || 0,
-                forecastedhours: forecast?.forecastedhours ?? 0
-              }
-            : { 
-                forecastedhours: Number(newNumericValue) || 0,
-                actualhours: forecast?.actualhours ?? 0
-              }
-          ),
-          createdat: forecast?.createdat ?? new Date().toISOString(),
-          updatedat: new Date().toISOString(),
-          displayText: forecast?.displayText ?? "",
-          acctId: emp?.emple?.accId ?? "",
-          orgId: emp?.emple?.orgId ?? "",
-          plc: emp?.emple?.plcGlcCode ?? "",
-          empleId: emp?.emple?.id ?? 0,
-          hrlyRate: emp?.emple?.perHourRate ?? 0,
-          effectDt: new Date().toISOString().split("T")[0],
-          emple: emp?.emple ? {
-            id: emp.emple.id ?? 0,
-            emplId: emp.emple.emplId ?? "",
-            orgId: emp.emple.orgId ?? "",
-            firstName: emp.emple.firstName ?? "",
-            lastName: emp.emple.lastName ?? "",
-            plcGlcCode: emp.emple.plcGlcCode ?? "",
-            perHourRate: emp.emple.perHourRate ?? 0,
-            salary: emp.emple.salary ?? 0,
-            accId: emp.emple.accId ?? "",
-            hireDate: emp.emple.hireDate ?? new Date().toISOString().split("T")[0],
-            isRev: emp.emple.isRev ?? false,
-            isBrd: emp.emple.isBrd ?? false,
-            createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-            type: emp.emple.type ?? "",
-            status: emp.emple.status ?? "",
-            plId: planId ?? 0,
-            isWarning: emp.emple.isWarning ?? false,
-            plForecasts: [],
-            organization: emp.emple.organization ?? null,
-            plProjectPlan: emp.emple.plProjectPlan ?? null
-          } : null
-        };
-
-        bulkPayload.push(payload);
       }
 
-      if (bulkPayload.length > 0) {
-        const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-        
-        await axios.put(
-          `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`,
-          bulkPayload,
-          { headers: { "Content-Type": "application/json" } }
-        );
+      // Save hours changes
+      if (hasHoursChanges) {
+        const bulkPayload = [];
 
-        // Update local state for hours
-        setLocalEmployees((prev) => {
-          const updated = [...prev];
-          for (const key in modifiedHours) {
-            const { empIdx, uniqueKey, newValue } = modifiedHours[key];
-            const newNumericValue = newValue === "" ? 0 : Number(newValue);
-            
-            if (updated[empIdx] && updated[empIdx].emple && updated[empIdx].emple.plForecasts) {
-              const currentDuration = sortedDurations.find(
-                (d) => `${d.monthNo}_${d.year}` === uniqueKey
-              );
-              const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-                (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
-              );
-              if (forecastIndex !== -1) {
-                if (planType === "EAC") {
-                  updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newNumericValue;
-                } else {
-                  updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newNumericValue;
+        for (const key in modifiedHours) {
+          const { empIdx, uniqueKey, newValue, employee } = modifiedHours[key];
+
+          const newNumericValue = newValue === "" ? 0 : Number(newValue);
+          const emp = employee;
+          const monthHours = getMonthHours(emp);
+          const forecast = monthHours[uniqueKey];
+
+          if (!forecast || !forecast.forecastid) {
+            errorCount++;
+            continue;
+          }
+
+          const currentDuration = sortedDurations.find(
+            (d) => `${d.monthNo}_${d.year}` === uniqueKey
+          );
+
+          if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
+            errorCount++;
+            continue;
+          }
+
+          const payload = {
+            forecastedamt: forecast?.forecastedamt ?? 0,
+            actualamt: forecast?.actualamt ?? 0,
+            forecastid: Number(forecast?.forecastid ?? 0),
+            projId: forecast?.projId ?? projectId ?? "",
+            plId: forecast?.plId ?? planId ?? 0,
+            emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+            dctId: forecast?.dctId ?? 0,
+            month: forecast?.month ?? currentDuration?.monthNo ?? 0,
+            year: forecast?.year ?? currentDuration?.year ?? 0,
+            totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+            fees: forecast?.fees ?? 0,
+            burden: forecast?.burden ?? 0,
+            ccffRevenue: forecast?.ccffRevenue ?? 0,
+            tnmRevenue: forecast?.tnmRevenue ?? 0,
+            revenue: forecast?.revenue ?? 0,
+            cost: forecast?.cost ?? 0,
+            forecastedCost: forecast?.forecastedCost ?? 0,
+            fringe: forecast?.fringe ?? 0,
+            overhead: forecast?.overhead ?? 0,
+            gna: forecast?.gna ?? 0,
+            materials: forecast?.materials ?? 0,
+            ...(planType === "EAC"
+              ? {
+                  actualhours: Number(newNumericValue) || 0,
+                  forecastedhours: forecast?.forecastedhours ?? 0,
+                }
+              : {
+                  forecastedhours: Number(newNumericValue) || 0,
+                  actualhours: forecast?.actualhours ?? 0,
+                }),
+            createdat: forecast?.createdat ?? new Date().toISOString(),
+            updatedat: new Date().toISOString(),
+            displayText: forecast?.displayText ?? "",
+            acctId: emp?.emple?.accId ?? "",
+            orgId: emp?.emple?.orgId ?? "",
+            plc: emp?.emple?.plcGlcCode ?? "",
+            empleId: emp?.emple?.id ?? 0,
+            hrlyRate: emp?.emple?.perHourRate ?? 0,
+            effectDt: new Date().toISOString().split("T")[0],
+            emple: emp?.emple
+              ? {
+                  id: emp.emple.id ?? 0,
+                  emplId: emp.emple.emplId ?? "",
+                  orgId: emp.emple.orgId ?? "",
+                  firstName: emp.emple.firstName ?? "",
+                  lastName: emp.emple.lastName ?? "",
+                  plcGlcCode: emp.emple.plcGlcCode ?? "",
+                  perHourRate: emp.emple.perHourRate ?? 0,
+                  salary: emp.emple.salary ?? 0,
+                  accId: emp.emple.accId ?? "",
+                  hireDate:
+                    emp.emple.hireDate ??
+                    new Date().toISOString().split("T")[0],
+                  isRev: emp.emple.isRev ?? false,
+                  isBrd: emp.emple.isBrd ?? false,
+                  createdAt: emp.emple.createdAt ?? new Date().toISOString(),
+                  type: emp.emple.type ?? "",
+                  status: emp.emple.status ?? "",
+                  plId: planId ?? 0,
+                  isWarning: emp.emple.isWarning ?? false,
+                  plForecasts: [],
+                  organization: emp.emple.organization ?? null,
+                  plProjectPlan: emp.emple.plProjectPlan ?? null,
+                }
+              : null,
+          };
+
+          bulkPayload.push(payload);
+        }
+
+        if (bulkPayload.length > 0) {
+          const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+          await axios.put(
+            `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`,
+            bulkPayload,
+            { headers: { "Content-Type": "application/json" } }
+          );
+
+          // Update local state for hours
+          setLocalEmployees((prev) => {
+            const updated = [...prev];
+            for (const key in modifiedHours) {
+              const { empIdx, uniqueKey, newValue } = modifiedHours[key];
+              const newNumericValue = newValue === "" ? 0 : Number(newValue);
+
+              if (
+                updated[empIdx] &&
+                updated[empIdx].emple &&
+                updated[empIdx].emple.plForecasts
+              ) {
+                const currentDuration = sortedDurations.find(
+                  (d) => `${d.monthNo}_${d.year}` === uniqueKey
+                );
+                const forecastIndex = updated[
+                  empIdx
+                ].emple.plForecasts.findIndex(
+                  (f) =>
+                    f.month === currentDuration?.monthNo &&
+                    f.year === currentDuration?.year
+                );
+                if (forecastIndex !== -1) {
+                  if (planType === "EAC") {
+                    updated[empIdx].emple.plForecasts[
+                      forecastIndex
+                    ].actualhours = newNumericValue;
+                  } else {
+                    updated[empIdx].emple.plForecasts[
+                      forecastIndex
+                    ].forecastedhours = newNumericValue;
+                  }
                 }
               }
             }
-          }
-          return updated;
+            return updated;
+          });
+
+          successCount += bulkPayload.length;
+        }
+      }
+
+      // Clear all modified data and reset flags
+      setModifiedHours({});
+      setHasUnsavedHoursChanges(false);
+      setEditedEmployeeData({});
+      setHasUnsavedEmployeeChanges(false);
+
+      if (successCount > 0) {
+        const message =
+          hasHoursChanges && hasEmployeeChanges
+            ? `Successfully saved ${successCount} entries and employee updates!`
+            : hasHoursChanges
+            ? `Successfully saved hour entries!`
+            : `Successfully updated employees!`;
+
+        toast.success(message, { autoClose: 3000 });
+      }
+
+      if (errorCount > 0) {
+        toast.warning(`${errorCount} entries could not be saved.`, {
+          autoClose: 3000,
         });
-
-        successCount += bulkPayload.length;
       }
+    } catch (err) {
+      toast.error(
+        "Failed to save changes: " +
+          (err.response?.data?.message || err.message),
+        {
+          toastId: "save-all-error",
+          autoClose: 3000,
+        }
+      );
+    } finally {
+      setIsLoading(false);
     }
-
-    // Clear all modified data and reset flags
-    setModifiedHours({});
-    setHasUnsavedHoursChanges(false);
-    setEditedEmployeeData({});
-    setHasUnsavedEmployeeChanges(false);
-
-    if (successCount > 0) {
-      const message = hasHoursChanges && hasEmployeeChanges 
-        ? `Successfully saved ${successCount} entries and employee updates!`
-        : hasHoursChanges 
-        ? `Successfully saved hour entries!`
-        : `Successfully updated employees!`;
-      
-      toast.success(message, { autoClose: 3000 });
-    }
-
-    if (errorCount > 0) {
-      toast.warning(`${errorCount} entries could not be saved.`, {
-        autoClose: 3000,
-      });
-    }
-
-  } catch (err) {
-    toast.error(
-      "Failed to save changes: " + (err.response?.data?.message || err.message),
-      {
-        toastId: "save-all-error",
-        autoClose: 3000,
-      }
-    );
-  } finally {
-    setIsLoading(false);
-  }
-};
-
-
+  };
 
   const handleAccountInputChangeForUpdate = (value, actualEmpIdx) => {
     handleEmployeeDataChange(actualEmpIdx, "acctId", value);
@@ -3324,259 +3213,271 @@ const handleSaveAll = async () => {
   // };
 
   const handleSaveNewEntry = async () => {
-  if (!planId) {
-    toast.error("Plan ID is required to save a new entry.", {
-      autoClose: 3000,
-    });
-    return;
-  }
-
-  // Skip all validations if planType is NBBUD
-  if (planType !== "NBBUD") {
-    // Check for duplicate employee ID before validating anything else
-    const isDuplicate = localEmployees.some((emp) => {
-      if (!emp.emple) return false;
-
-      // For "Other" type, only check emplId (like KBD001)
-      if (newEntry.idType === "Other") {
-        return emp.emple.emplId === newEntry.id.trim();
-      }
-
-      // For other types, check both emplId and plcGlcCode
-      return (
-        emp.emple.emplId === newEntry.id.trim() &&
-        emp.emple.plcGlcCode === newEntry.plcGlcCode.trim()
-      );
-    });
-
-    if (isDuplicate) {
-      toast.error(
-        "Can't save entry with existing ID and PLC combination. Please use a different ID or PLC.",
-        {
-          toastId: "duplicate-save-error",
-          autoClose: 3000,
-        }
-      );
-      return;
-    }
-
-    // UPDATED VALIDATION LOGIC - Apply to ALL ID types except "Other"
-    if (newEntry.idType === "PLC") {
-      if (!newEntry.id || newEntry.id !== "PLC") {
-        toast.error("ID must be automatically set to 'PLC' for PLC type.", {
-          autoClose: 3000,
-        });
-        return;
-      }
-    } else if (newEntry.idType === "Other") {
-      // For Other type, just check that it's not empty (no further validation)
-      if (!newEntry.id.trim()) {
-        toast.error("ID is required.", { autoClose: 3000 });
-        return;
-      }
-    } else {
-      // For ALL other ID types (Employee, Vendor), validate against suggestions
-      if (!newEntry.id.trim()) {
-        toast.error("ID is required.", { autoClose: 3000 });
-        return;
-      }
-      
-      // MANDATORY validation against suggestions for Employee and Vendor types
-      if (employeeSuggestions.length > 0) {
-        const validEmployee = employeeSuggestions.find(
-          (emp) => emp.emplId === newEntry.id.trim()
-        );
-        if (!validEmployee) {
-          toast.error("Please enter a valid ID from the available list.", {
-            autoClose: 3000,
-          });
-          return;
-        }
-      } else {
-        // If no suggestions are loaded, don't allow saving for Employee/Vendor
-        toast.error("Employee suggestions not loaded. Please try again.", {
-          autoClose: 3000,
-        });
-        return;
-      }
-    }
-
-    if (!isValidAccount(newEntry.acctId)) {
-      toast.error("Please enter a valid Account from the available list.", {
+    if (!planId) {
+      toast.error("Plan ID is required to save a new entry.", {
         autoClose: 3000,
       });
       return;
     }
-    if (!isValidOrg(newEntry.orgId)) {
-      toast.error("Organization is required.", { autoClose: 3000 });
-      return;
-    }
-    // if (!isValidPlc(newEntry.plcGlcCode)) {
-    //   toast.error("Please enter a valid Plc from the available list.", {
-    //     autoClose: 3000,
-    //   });
-    //   return;
-    // }
-    // Enhanced PLC validation with detailed error checking
-// Enhanced PLC validation with exact matching
-if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
-  const exactPlcMatch = plcOptions.find(option => 
-    option.value.toLowerCase() === newEntry.plcGlcCode.toLowerCase().trim()
-  );
-  
-  if (!exactPlcMatch) {
-    toast.error("Please select a valid PLC from the available list. Typing custom values is not allowed.", {
-      autoClose: 5000,
-    });
-    return;
-  }
-}
 
+    // Skip all validations if planType is NBBUD
+    if (planType !== "NBBUD") {
+      // Check for duplicate employee ID before validating anything else
+      const isDuplicate = localEmployees.some((emp) => {
+        if (!emp.emple) return false;
 
-  }
-
-  setIsDurationLoading(true);
-  const payloadForecasts = durations.map((duration) => ({
-    ...(planType === "EAC"
-      ? {
-          actualhours:
-            Number(
-              newEntryPeriodHours[`${duration.monthNo}_${duration.year}`]
-            ) || 0,
+        // For "Other" type, only check emplId (like KBD001)
+        if (newEntry.idType === "Other") {
+          return emp.emple.emplId === newEntry.id.trim();
         }
-      : {
-          forecastedhours:
-            Number(
-              newEntryPeriodHours[`${duration.monthNo}_${duration.year}`]
-            ) || 0,
-        }),
-    projId: projectId,
-    plId: planId,
-    emplId: newEntry.id,
-    month: duration.monthNo,
-    year: duration.year,
-    acctId: newEntry.acctId,
-    orgId: newEntry.orgId,
-    plc: newEntry.plcGlcCode || "",
-    hrlyRate: Number(newEntry.perHourRate) || 0,
-    effectDt: null,
-    plEmployee: null,
-  }));
 
-  const payload = {
-    id: 0,
-    emplId: newEntry.id,
-    firstName: newEntry.firstName,
-    lastName: newEntry.lastName,
-    type: newEntry.idType,
-    isRev: newEntry.isRev,
-    isBrd: newEntry.isBrd,
-    plcGlcCode: (newEntry.plcGlcCode || "").substring(0, 20),
-    perHourRate: Number(newEntry.perHourRate) || 0,
-    status: newEntry.status || "Act",
-    accId: newEntry.acctId,
-    orgId: newEntry.orgId || "",
-    plId: planId,
-    plForecasts: payloadForecasts,
-  };
-
-  try {
-    await axios.post(`${backendUrl}/Employee/AddNewEmployee`, payload);
-    setSuccessMessageText("Entry saved successfully!");
-    setShowSuccessMessage(true);
-    setShowNewForm(false);
-    setNewEntry({
-      id: "",
-      firstName: "",
-      lastName: "",
-      isRev: false,
-      isBrd: false,
-      idType: "",
-      acctId: "",
-      orgId: "",
-      plcGlcCode: "",
-      perHourRate: "",
-      status: "Act",
-    });
-    setNewEntryPeriodHours({});
-    setEmployeeSuggestions([]);
-    setLaborAccounts([]);
-    setPlcOptions([]);
-    setPlcSearch("");
-    setAutoPopulatedPLC(false);
-    if (onSaveSuccess) {
-      onSaveSuccess();
-    }
-    fetchEmployees();
-  }
-  catch (err) {
-  setSuccessMessageText("Failed to save entry.");
-  setShowSuccessMessage(true);
-  
-  // Enhanced error message extraction
-  let detailedErrorMessage = "Failed to save new entry. ";
-  
-  if (err?.response?.data) {
-    const errorData = err.response.data;
-    
-    // Handle validation errors specifically
-    if (errorData.errors) {
-      const fieldErrors = [];
-      Object.keys(errorData.errors).forEach(field => {
-        const errors = errorData.errors[field];
-        if (Array.isArray(errors) && errors.length > 0) {
-          fieldErrors.push(`${field}: ${errors[0]}`);
-        }
+        // For other types, check both emplId and plcGlcCode
+        return (
+          emp.emple.emplId === newEntry.id.trim() &&
+          emp.emple.plcGlcCode === newEntry.plcGlcCode.trim()
+        );
       });
-      if (fieldErrors.length > 0) {
-        detailedErrorMessage += `Validation errors - ${fieldErrors.join(', ')}`;
+
+      if (isDuplicate) {
+        toast.error(
+          "Can't save entry with existing ID and PLC combination. Please use a different ID or PLC.",
+          {
+            toastId: "duplicate-save-error",
+            autoClose: 3000,
+          }
+        );
+        return;
       }
-    } else if (errorData.error) {
-      detailedErrorMessage += `Reason: ${errorData.error}`;
-    } else if (errorData.message) {
-      detailedErrorMessage += `Reason: ${errorData.message}`;
-    } else if (typeof errorData === 'string') {
-      detailedErrorMessage += `Reason: ${errorData}`;
-    } else {
-      // Check for specific field validation messages
-      const errorMessages = [];
-      if (errorData.ID) errorMessages.push(`ID: ${errorData.ID}`);
-      if (errorData.Account) errorMessages.push(`Account: ${errorData.Account}`);
-      if (errorData.Organization) errorMessages.push(`Organization: ${errorData.Organization}`);
-      if (errorData.PLC) errorMessages.push(`PLC: ${errorData.PLC}`);
-      
-      if (errorMessages.length > 0) {
-        detailedErrorMessage += `Please check - ${errorMessages.join(', ')}`;
+
+      // UPDATED VALIDATION LOGIC - Apply to ALL ID types except "Other"
+      if (newEntry.idType === "PLC") {
+        if (!newEntry.id || newEntry.id !== "PLC") {
+          toast.error("ID must be automatically set to 'PLC' for PLC type.", {
+            autoClose: 3000,
+          });
+          return;
+        }
+      } else if (newEntry.idType === "Other") {
+        // For Other type, just check that it's not empty (no further validation)
+        if (!newEntry.id.trim()) {
+          toast.error("ID is required.", { autoClose: 3000 });
+          return;
+        }
       } else {
-        detailedErrorMessage += `Server response: ${JSON.stringify(errorData)}`;
+        // For ALL other ID types (Employee, Vendor), validate against suggestions
+        if (!newEntry.id.trim()) {
+          toast.error("ID is required.", { autoClose: 3000 });
+          return;
+        }
+
+        // MANDATORY validation against suggestions for Employee and Vendor types
+        if (employeeSuggestions.length > 0) {
+          const validEmployee = employeeSuggestions.find(
+            (emp) => emp.emplId === newEntry.id.trim()
+          );
+          if (!validEmployee) {
+            toast.error("Please enter a valid ID from the available list.", {
+              autoClose: 3000,
+            });
+            return;
+          }
+        } else {
+          // If no suggestions are loaded, don't allow saving for Employee/Vendor
+          toast.error("Employee suggestions not loaded. Please try again.", {
+            autoClose: 3000,
+          });
+          return;
+        }
+      }
+
+      if (!isValidAccount(newEntry.acctId)) {
+        toast.error("Please enter a valid Account from the available list.", {
+          autoClose: 3000,
+        });
+        return;
+      }
+      if (!isValidOrg(newEntry.orgId)) {
+        toast.error("Organization is required.", { autoClose: 3000 });
+        return;
+      }
+      // if (!isValidPlc(newEntry.plcGlcCode)) {
+      //   toast.error("Please enter a valid Plc from the available list.", {
+      //     autoClose: 3000,
+      //   });
+      //   return;
+      // }
+      // Enhanced PLC validation with detailed error checking
+      // Enhanced PLC validation with exact matching
+      if (
+        planType !== "NBBUD" &&
+        newEntry.plcGlcCode &&
+        newEntry.plcGlcCode.trim() !== ""
+      ) {
+        const exactPlcMatch = plcOptions.find(
+          (option) =>
+            option.value.toLowerCase() ===
+            newEntry.plcGlcCode.toLowerCase().trim()
+        );
+
+        if (!exactPlcMatch) {
+          toast.error(
+            "Please select a valid PLC from the available list. Typing custom values is not allowed.",
+            {
+              autoClose: 5000,
+            }
+          );
+          return;
+        }
       }
     }
-  } else if (err?.message) {
-    detailedErrorMessage += `Reason: ${err.message}`;
-  } else {
-    detailedErrorMessage += "Unknown error occurred. Please check your input and try again.";
-  }
 
-  // Show detailed error in toast
-  toast.error(detailedErrorMessage, {
-    toastId: "save-entry-error",
-    autoClose: 7000, // Longer time for detailed messages
-  });
+    setIsDurationLoading(true);
+    const payloadForecasts = durations.map((duration) => ({
+      ...(planType === "EAC"
+        ? {
+            actualhours:
+              Number(
+                newEntryPeriodHours[`${duration.monthNo}_${duration.year}`]
+              ) || 0,
+          }
+        : {
+            forecastedhours:
+              Number(
+                newEntryPeriodHours[`${duration.monthNo}_${duration.year}`]
+              ) || 0,
+          }),
+      projId: projectId,
+      plId: planId,
+      emplId: newEntry.id,
+      month: duration.monthNo,
+      year: duration.year,
+      acctId: newEntry.acctId,
+      orgId: newEntry.orgId,
+      plc: newEntry.plcGlcCode || "",
+      hrlyRate: Number(newEntry.perHourRate) || 0,
+      effectDt: null,
+      plEmployee: null,
+    }));
 
-  // Log for debugging
-  console.error("Save new entry error:", {
-    error: err,
-    response: err?.response?.data,
-    status: err?.response?.status
-  });
-}
-  
-  finally {
-    setIsDurationLoading(false);
-    setTimeout(() => setShowSuccessMessage(false), 2000);
-  }
-};
+    const payload = {
+      id: 0,
+      emplId: newEntry.id,
+      firstName: newEntry.firstName,
+      lastName: newEntry.lastName,
+      type: newEntry.idType,
+      isRev: newEntry.isRev,
+      isBrd: newEntry.isBrd,
+      plcGlcCode: (newEntry.plcGlcCode || "").substring(0, 20),
+      perHourRate: Number(newEntry.perHourRate) || 0,
+      status: newEntry.status || "Act",
+      accId: newEntry.acctId,
+      orgId: newEntry.orgId || "",
+      plId: planId,
+      plForecasts: payloadForecasts,
+    };
 
+    try {
+      await axios.post(`${backendUrl}/Employee/AddNewEmployee`, payload);
+      setSuccessMessageText("Entry saved successfully!");
+      setShowSuccessMessage(true);
+      setShowNewForm(false);
+      setNewEntry({
+        id: "",
+        firstName: "",
+        lastName: "",
+        isRev: false,
+        isBrd: false,
+        idType: "",
+        acctId: "",
+        orgId: "",
+        plcGlcCode: "",
+        perHourRate: "",
+        status: "Act",
+      });
+      setNewEntryPeriodHours({});
+      setEmployeeSuggestions([]);
+      setLaborAccounts([]);
+      setPlcOptions([]);
+      setPlcSearch("");
+      setAutoPopulatedPLC(false);
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+      fetchEmployees();
+    } catch (err) {
+      setSuccessMessageText("Failed to save entry.");
+      setShowSuccessMessage(true);
+
+      // Enhanced error message extraction
+      let detailedErrorMessage = "Failed to save new entry. ";
+
+      if (err?.response?.data) {
+        const errorData = err.response.data;
+
+        // Handle validation errors specifically
+        if (errorData.errors) {
+          const fieldErrors = [];
+          Object.keys(errorData.errors).forEach((field) => {
+            const errors = errorData.errors[field];
+            if (Array.isArray(errors) && errors.length > 0) {
+              fieldErrors.push(`${field}: ${errors[0]}`);
+            }
+          });
+          if (fieldErrors.length > 0) {
+            detailedErrorMessage += `Validation errors - ${fieldErrors.join(
+              ", "
+            )}`;
+          }
+        } else if (errorData.error) {
+          detailedErrorMessage += `Reason: ${errorData.error}`;
+        } else if (errorData.message) {
+          detailedErrorMessage += `Reason: ${errorData.message}`;
+        } else if (typeof errorData === "string") {
+          detailedErrorMessage += `Reason: ${errorData}`;
+        } else {
+          // Check for specific field validation messages
+          const errorMessages = [];
+          if (errorData.ID) errorMessages.push(`ID: ${errorData.ID}`);
+          if (errorData.Account)
+            errorMessages.push(`Account: ${errorData.Account}`);
+          if (errorData.Organization)
+            errorMessages.push(`Organization: ${errorData.Organization}`);
+          if (errorData.PLC) errorMessages.push(`PLC: ${errorData.PLC}`);
+
+          if (errorMessages.length > 0) {
+            detailedErrorMessage += `Please check - ${errorMessages.join(
+              ", "
+            )}`;
+          } else {
+            detailedErrorMessage += `Server response: ${JSON.stringify(
+              errorData
+            )}`;
+          }
+        }
+      } else if (err?.message) {
+        detailedErrorMessage += `Reason: ${err.message}`;
+      } else {
+        detailedErrorMessage +=
+          "Unknown error occurred. Please check your input and try again.";
+      }
+
+      // Show detailed error in toast
+      toast.error(detailedErrorMessage, {
+        toastId: "save-entry-error",
+        autoClose: 7000, // Longer time for detailed messages
+      });
+
+      // Log for debugging
+      console.error("Save new entry error:", {
+        error: err,
+        response: err?.response?.data,
+        status: err?.response?.status,
+      });
+    } finally {
+      setIsDurationLoading(false);
+      setTimeout(() => setShowSuccessMessage(false), 2000);
+    }
+  };
 
   // const handleFindReplace = async () => {
   //   if (
@@ -3795,272 +3696,278 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
   //     setReplaceScope("all");
   //   }
   // };
-  
+
   const handleFindReplace = async () => {
-  if (
-    !isEditable ||
-    findValue === "" ||
-    (replaceScope === "row" && selectedRowIndex === null) ||
-    (replaceScope === "column" && selectedColumnKey === null)
-  ) {
-    toast.warn("Please select a valid scope and enter a value to find.", {
-      toastId: "find-replace-warning",
-      autoClose: 3000,
-    });
-    return;
-  }
-
-  setIsLoading(true);
-  let replacementsCount = 0;
-  let skippedCount = 0;
-
-  try {
-    // Prepare bulk payload array
-    const bulkPayload = [];
-    const updatedInputValues = { ...inputValues };
-
-    for (const empIdx in localEmployees) {
-      const emp = localEmployees[empIdx];
-      const actualEmpIdx = parseInt(empIdx, 10);
-
-      if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) {
-        continue;
-      }
-
-      for (const duration of sortedDurations) {
-        const uniqueKey = `${duration.monthNo}_${duration.year}`;
-
-        if (replaceScope === "column" && uniqueKey !== selectedColumnKey) {
-          continue;
-        }
-
-        if (!isMonthEditable(duration, closedPeriod, planType)) {
-          continue;
-        }
-
-        const currentInputKey = `${actualEmpIdx}_${uniqueKey}`;
-        let displayedValue;
-        if (inputValues[currentInputKey] !== undefined) {
-          displayedValue = String(inputValues[currentInputKey]);
-        } else {
-          const monthHours = getMonthHours(emp);
-          const forecast = monthHours[uniqueKey];
-          if (forecast && forecast.value !== undefined) {
-            displayedValue = String(forecast.value);
-          } else {
-            displayedValue = "0";
-          }
-        }
-
-        const findValueTrimmed = findValue.trim();
-        const displayedValueTrimmed = displayedValue.trim();
-
-        function isZeroLike(val) {
-          if (val === undefined || val === null) return true;
-          if (typeof val === "number") return val === 0;
-          if (typeof val === "string") {
-            const trimmed = val.trim();
-            return (
-              trimmed === "" ||
-              trimmed === "0" ||
-              trimmed === "0.0" ||
-              trimmed === "0.00" ||
-              (!isNaN(Number(trimmed)) && Number(trimmed) === 0)
-            );
-          }
-          return false;
-        }
-
-        let isMatch = false;
-        if (
-          !isNaN(Number(findValueTrimmed)) &&
-          Number(findValueTrimmed) === 0
-        ) {
-          isMatch = isZeroLike(displayedValueTrimmed);
-        } else {
-          isMatch = displayedValueTrimmed === findValueTrimmed;
-          if (!isMatch) {
-            const findNum = parseFloat(findValueTrimmed);
-            const displayNum = parseFloat(displayedValueTrimmed);
-            if (!isNaN(findNum) && !isNaN(displayNum)) {
-              isMatch = findNum === displayNum;
-            }
-          }
-        }
-
-        if (isMatch) {
-          const newValue = replaceValue.trim();
-          const newNumericValue = newValue === "" ? 0 : Number(newValue);
-          const monthHours = getMonthHours(emp);
-          const forecast = monthHours[uniqueKey];
-
-          if (!forecast || !forecast.forecastid) {
-            skippedCount++;
-            continue;
-          }
-
-          if (displayedValueTrimmed !== newValue) {
-            updatedInputValues[currentInputKey] = newValue;
-            replacementsCount++;
-
-            // Create payload matching the bulk API structure from handleSaveAllHours
-            const payload = {
-              forecastedamt: forecast?.forecastedamt ?? 0,
-              actualamt: forecast?.actualamt ?? 0,
-              forecastid: Number(forecast?.forecastid ?? 0),
-              projId: forecast?.projId ?? projectId ?? "",
-              plId: forecast?.plId ?? planId ?? 0,
-              emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-              dctId: forecast?.dctId ?? 0,
-              month: forecast?.month ?? duration?.monthNo ?? 0,
-              year: forecast?.year ?? duration?.year ?? 0,
-              totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-              fees: forecast?.fees ?? 0,
-              burden: forecast?.burden ?? 0,
-              ccffRevenue: forecast?.ccffRevenue ?? 0,
-              tnmRevenue: forecast?.tnmRevenue ?? 0,
-              revenue: forecast?.revenue ?? 0,
-              cost: forecast?.cost ?? 0,
-              forecastedCost: forecast?.forecastedCost ?? 0,
-              fringe: forecast?.fringe ?? 0,
-              overhead: forecast?.overhead ?? 0,
-              gna: forecast?.gna ?? 0,
-              materials: forecast?.materials ?? 0,
-              // Update hours based on plan type
-              ...(planType === "EAC"
-                ? { 
-                    actualhours: Number(newNumericValue) || 0,
-                    forecastedhours: forecast?.forecastedhours ?? 0
-                  }
-                : { 
-                    forecastedhours: Number(newNumericValue) || 0,
-                    actualhours: forecast?.actualhours ?? 0
-                  }),
-              createdat: forecast?.createdat ?? new Date().toISOString(),
-              updatedat: new Date().toISOString(),
-              displayText: forecast?.displayText ?? "",
-              acctId: emp?.emple?.accId ?? "",
-              orgId: emp?.emple?.orgId ?? "",
-              plc: emp?.emple?.plcGlcCode ?? "",
-              empleId: emp?.emple?.id ?? 0,
-              hrlyRate: emp?.emple?.perHourRate ?? 0,
-              effectDt: new Date().toISOString().split('T')[0],
-              emple: emp?.emple ? {
-                id: emp.emple.id ?? 0,
-                emplId: emp.emple.emplId ?? "",
-                orgId: emp.emple.orgId ?? "",
-                firstName: emp.emple.firstName ?? "",
-                lastName: emp.emple.lastName ?? "",
-                plcGlcCode: emp.emple.plcGlcCode ?? "",
-                perHourRate: emp.emple.perHourRate ?? 0,
-                salary: emp.emple.salary ?? 0,
-                accId: emp.emple.accId ?? "",
-                hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
-                isRev: emp.emple.isRev ?? false,
-                isBrd: emp.emple.isBrd ?? false,
-                createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-                type: emp.emple.type ?? "",
-                status: emp.emple.status ?? "",
-                plId: planId ?? 0,
-                isWarning: emp.emple.isWarning ?? false,
-                plForecasts: [],
-                organization: emp.emple.organization ?? null,
-                plProjectPlan: emp.emple.plProjectPlan ?? null
-              } : null
-            };
-
-            bulkPayload.push(payload);
-          }
-        }
-      }
-    }
-
-    if (bulkPayload.length === 0) {
-      if (replacementsCount === 0 && skippedCount === 0) {
-        toast.info("No cells replaced.", { autoClose: 2000 });
-      }
+    if (
+      !isEditable ||
+      findValue === "" ||
+      (replaceScope === "row" && selectedRowIndex === null) ||
+      (replaceScope === "column" && selectedColumnKey === null)
+    ) {
+      toast.warn("Please select a valid scope and enter a value to find.", {
+        toastId: "find-replace-warning",
+        autoClose: 3000,
+      });
       return;
     }
 
-    // Update input values for UI consistency
-    setInputValues(updatedInputValues);
+    setIsLoading(true);
+    let replacementsCount = 0;
+    let skippedCount = 0;
 
-    // Use correct bulk API endpoint matching handleSaveAllHours
-    const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-    
-    console.log("Calling bulk find/replace API:", `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`);
-    console.log("Payload:", bulkPayload);
-    
-    const response = await axios.put(
-      `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`,
-      bulkPayload,
-      { headers: { "Content-Type": "application/json" } }
-    );
+    try {
+      // Prepare bulk payload array
+      const bulkPayload = [];
+      const updatedInputValues = { ...inputValues };
 
-    console.log("Bulk find/replace response:", response.data);
+      for (const empIdx in localEmployees) {
+        const emp = localEmployees[empIdx];
+        const actualEmpIdx = parseInt(empIdx, 10);
 
-    // Update local state for all successful updates matching handleSaveAllHours pattern
-    setLocalEmployees((prev) => {
-      const updated = [...prev];
-      
-      for (const empIdx in updated) {
-        const emp = updated[empIdx];
+        if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) {
+          continue;
+        }
+
         for (const duration of sortedDurations) {
           const uniqueKey = `${duration.monthNo}_${duration.year}`;
-          const currentInputKey = `${empIdx}_${uniqueKey}`;
-          if (updatedInputValues[currentInputKey] !== undefined) {
-            if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
-              const forecastIndex = emp.emple.plForecasts.findIndex(
-                (f) => f.month === duration.monthNo && f.year === duration.year
+
+          if (replaceScope === "column" && uniqueKey !== selectedColumnKey) {
+            continue;
+          }
+
+          if (!isMonthEditable(duration, closedPeriod, planType)) {
+            continue;
+          }
+
+          const currentInputKey = `${actualEmpIdx}_${uniqueKey}`;
+          let displayedValue;
+          if (inputValues[currentInputKey] !== undefined) {
+            displayedValue = String(inputValues[currentInputKey]);
+          } else {
+            const monthHours = getMonthHours(emp);
+            const forecast = monthHours[uniqueKey];
+            if (forecast && forecast.value !== undefined) {
+              displayedValue = String(forecast.value);
+            } else {
+              displayedValue = "0";
+            }
+          }
+
+          const findValueTrimmed = findValue.trim();
+          const displayedValueTrimmed = displayedValue.trim();
+
+          function isZeroLike(val) {
+            if (val === undefined || val === null) return true;
+            if (typeof val === "number") return val === 0;
+            if (typeof val === "string") {
+              const trimmed = val.trim();
+              return (
+                trimmed === "" ||
+                trimmed === "0" ||
+                trimmed === "0.0" ||
+                trimmed === "0.00" ||
+                (!isNaN(Number(trimmed)) && Number(trimmed) === 0)
               );
-              
-              if (forecastIndex !== -1) {
-                const newValue = parseFloat(updatedInputValues[currentInputKey]) || 0;
-                if (planType === "EAC") {
-                  updated[empIdx].emple.plForecasts[forecastIndex].actualhours = newValue;
-                } else {
-                  updated[empIdx].emple.plForecasts[forecastIndex].forecastedhours = newValue;
+            }
+            return false;
+          }
+
+          let isMatch = false;
+          if (
+            !isNaN(Number(findValueTrimmed)) &&
+            Number(findValueTrimmed) === 0
+          ) {
+            isMatch = isZeroLike(displayedValueTrimmed);
+          } else {
+            isMatch = displayedValueTrimmed === findValueTrimmed;
+            if (!isMatch) {
+              const findNum = parseFloat(findValueTrimmed);
+              const displayNum = parseFloat(displayedValueTrimmed);
+              if (!isNaN(findNum) && !isNaN(displayNum)) {
+                isMatch = findNum === displayNum;
+              }
+            }
+          }
+
+          if (isMatch) {
+            const newValue = replaceValue.trim();
+            const newNumericValue = newValue === "" ? 0 : Number(newValue);
+            const monthHours = getMonthHours(emp);
+            const forecast = monthHours[uniqueKey];
+
+            if (!forecast || !forecast.forecastid) {
+              skippedCount++;
+              continue;
+            }
+
+            if (displayedValueTrimmed !== newValue) {
+              updatedInputValues[currentInputKey] = newValue;
+              replacementsCount++;
+
+              // Create payload matching the bulk API structure from handleSaveAllHours
+              const payload = {
+                forecastedamt: forecast?.forecastedamt ?? 0,
+                actualamt: forecast?.actualamt ?? 0,
+                forecastid: Number(forecast?.forecastid ?? 0),
+                projId: forecast?.projId ?? projectId ?? "",
+                plId: forecast?.plId ?? planId ?? 0,
+                emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
+                dctId: forecast?.dctId ?? 0,
+                month: forecast?.month ?? duration?.monthNo ?? 0,
+                year: forecast?.year ?? duration?.year ?? 0,
+                totalBurdenCost: forecast?.totalBurdenCost ?? 0,
+                fees: forecast?.fees ?? 0,
+                burden: forecast?.burden ?? 0,
+                ccffRevenue: forecast?.ccffRevenue ?? 0,
+                tnmRevenue: forecast?.tnmRevenue ?? 0,
+                revenue: forecast?.revenue ?? 0,
+                cost: forecast?.cost ?? 0,
+                forecastedCost: forecast?.forecastedCost ?? 0,
+                fringe: forecast?.fringe ?? 0,
+                overhead: forecast?.overhead ?? 0,
+                gna: forecast?.gna ?? 0,
+                materials: forecast?.materials ?? 0,
+                // Update hours based on plan type
+                ...(planType === "EAC"
+                  ? {
+                      actualhours: Number(newNumericValue) || 0,
+                      forecastedhours: forecast?.forecastedhours ?? 0,
+                    }
+                  : {
+                      forecastedhours: Number(newNumericValue) || 0,
+                      actualhours: forecast?.actualhours ?? 0,
+                    }),
+                createdat: forecast?.createdat ?? new Date().toISOString(),
+                updatedat: new Date().toISOString(),
+                displayText: forecast?.displayText ?? "",
+                acctId: emp?.emple?.accId ?? "",
+                orgId: emp?.emple?.orgId ?? "",
+                plc: emp?.emple?.plcGlcCode ?? "",
+                empleId: emp?.emple?.id ?? 0,
+                hrlyRate: emp?.emple?.perHourRate ?? 0,
+                effectDt: new Date().toISOString().split("T")[0],
+                emple: emp?.emple
+                  ? {
+                      id: emp.emple.id ?? 0,
+                      emplId: emp.emple.emplId ?? "",
+                      orgId: emp.emple.orgId ?? "",
+                      firstName: emp.emple.firstName ?? "",
+                      lastName: emp.emple.lastName ?? "",
+                      plcGlcCode: emp.emple.plcGlcCode ?? "",
+                      perHourRate: emp.emple.perHourRate ?? 0,
+                      salary: emp.emple.salary ?? 0,
+                      accId: emp.emple.accId ?? "",
+                      hireDate:
+                        emp.emple.hireDate ??
+                        new Date().toISOString().split("T")[0],
+                      isRev: emp.emple.isRev ?? false,
+                      isBrd: emp.emple.isBrd ?? false,
+                      createdAt:
+                        emp.emple.createdAt ?? new Date().toISOString(),
+                      type: emp.emple.type ?? "",
+                      status: emp.emple.status ?? "",
+                      plId: planId ?? 0,
+                      isWarning: emp.emple.isWarning ?? false,
+                      plForecasts: [],
+                      organization: emp.emple.organization ?? null,
+                      plProjectPlan: emp.emple.plProjectPlan ?? null,
+                    }
+                  : null,
+              };
+
+              bulkPayload.push(payload);
+            }
+          }
+        }
+      }
+
+      if (bulkPayload.length === 0) {
+        if (replacementsCount === 0 && skippedCount === 0) {
+          toast.info("No cells replaced.", { autoClose: 2000 });
+        }
+        return;
+      }
+
+      // Update input values for UI consistency
+      setInputValues(updatedInputValues);
+
+      // Use correct bulk API endpoint matching handleSaveAllHours
+      const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+      const response = await axios.put(
+        `${backendUrl}/Forecast/BulkUpdateForecastHours/${apiPlanType}`,
+        bulkPayload,
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      // Update local state for all successful updates matching handleSaveAllHours pattern
+      setLocalEmployees((prev) => {
+        const updated = [...prev];
+
+        for (const empIdx in updated) {
+          const emp = updated[empIdx];
+          for (const duration of sortedDurations) {
+            const uniqueKey = `${duration.monthNo}_${duration.year}`;
+            const currentInputKey = `${empIdx}_${uniqueKey}`;
+            if (updatedInputValues[currentInputKey] !== undefined) {
+              if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
+                const forecastIndex = emp.emple.plForecasts.findIndex(
+                  (f) =>
+                    f.month === duration.monthNo && f.year === duration.year
+                );
+
+                if (forecastIndex !== -1) {
+                  const newValue =
+                    parseFloat(updatedInputValues[currentInputKey]) || 0;
+                  if (planType === "EAC") {
+                    updated[empIdx].emple.plForecasts[
+                      forecastIndex
+                    ].actualhours = newValue;
+                  } else {
+                    updated[empIdx].emple.plForecasts[
+                      forecastIndex
+                    ].forecastedhours = newValue;
+                  }
                 }
               }
             }
           }
         }
-      }
-      
-      return updated;
-    });
 
-    if (replacementsCount > 0) {
-      toast.success(`Successfully replaced ${replacementsCount} cells.`, {
-        autoClose: 2000,
+        return updated;
       });
-    }
 
-    if (skippedCount > 0) {
-      toast.warning(`${skippedCount} entries could not be processed.`, {
-        autoClose: 3000,
-      });
-    }
-
-  } catch (err) {
-    console.error("Bulk find/replace error:", err);
-    toast.error(
-      "Failed to replace values: " + (err.response?.data?.message || err.message),
-      {
-        toastId: "replace-error",
-        autoClose: 3000,
+      if (replacementsCount > 0) {
+        toast.success(`Successfully replaced ${replacementsCount} cells.`, {
+          autoClose: 2000,
+        });
       }
-    );
-  } finally {
-    setIsLoading(false);
-    setShowFindReplace(false);
-    setFindValue("");
-    setReplaceValue("");
-    setSelectedRowIndex(null);
-    setSelectedColumnKey(null);
-    setReplaceScope("all");
-  }
-};
+
+      if (skippedCount > 0) {
+        toast.warning(`${skippedCount} entries could not be processed.`, {
+          autoClose: 3000,
+        });
+      }
+    } catch (err) {
+      console.error("Bulk find/replace error:", err);
+      toast.error(
+        "Failed to replace values: " +
+          (err.response?.data?.message || err.message),
+        {
+          toastId: "replace-error",
+          autoClose: 3000,
+        }
+      );
+    } finally {
+      setIsLoading(false);
+      setShowFindReplace(false);
+      setFindValue("");
+      setReplaceValue("");
+      setSelectedRowIndex(null);
+      setSelectedColumnKey(null);
+      setReplaceScope("all");
+    }
+  };
 
   const handleRowClick = (actualEmpIdx) => {
     if (!isEditable) return;
@@ -4126,26 +4033,35 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
   //   const numericHours = parseFloat(hours) || 0;
   //   return numericHours > duration.workingHours;
   // };
-//   const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
-//   const duration = sortedDurations.find(
-//     (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//   );
-//   if (!duration || !duration.workingHours) return false;
+  //   const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
+  //   const duration = sortedDurations.find(
+  //     (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //   );
+  //   if (!duration || !duration.workingHours) return false;
 
-//   const numericHours = parseFloat(hours) || 0;
-//   // Change this to use available hours * 2
-//   const maxAllowedHours = duration.workingHours * 2; // Available hours * 2
-//   return numericHours > maxAllowedHours;
-// };
-  
- const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
-  const duration = sortedDurations.find(
-    (d) => `${d.monthNo}_${d.year}` === uniqueKey
-  );
+  //   const numericHours = parseFloat(hours) || 0;
+  //   // Change this to use available hours * 2
+  //   const maxAllowedHours = duration.workingHours * 2; // Available hours * 2
+  //   return numericHours > maxAllowedHours;
+  // };
+
+  // const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
+  //   const duration = sortedDurations.find(
+  //     (d) => `${d.monthNo}_${d.year}` === uniqueKey
+  //   );
+  //   if (!duration || !duration.workingHours) return false;
+  //   const numericHours = parseFloat(hours) || 0;
+
+  //   const maxAllowedHours = duration.workingHours * 2;
+  //   return numericHours > maxAllowedHours;
+  // };
+
+  const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
+  const duration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
   if (!duration || !duration.workingHours) return false;
-  const numericHours = parseFloat(hours) || 0;
   
-  // Use available hours * 2 for all ID types including "Other"
+  const numericHours = parseFloat(hours) || 0;
+  // Use available hours * 2 for ALL ID types including "Other"
   const maxAllowedHours = duration.workingHours * 2;
   return numericHours > maxAllowedHours;
 };
@@ -4160,16 +4076,16 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
   };
 
   const checkAccountInvalid = (value, updateOptions) => {
-    if (planType === "NBBUD") return false; // No warnings for NBBUD
-    if (!value || value.trim() === "") return true; // Empty is invalid
+    if (planType === "NBBUD") return false;
+    if (!value || value.trim() === "") return true;
     return !updateOptions.some((opt) => opt.id === value.trim());
   };
 
   const checkOrgInvalid = (value, updateOptions) => {
-    if (planType === "NBBUD") return false; // No warnings for NBBUD
-    if (!value || value.trim() === "") return true; // Empty is invalid
+    if (planType === "NBBUD") return false;
+    if (!value || value.trim() === "") return true;
     const trimmed = value.toString().trim();
-    if (!/^[\d.]+$/.test(trimmed)) return true; // Not numeric
+    if (!/^[\d.]+$/.test(trimmed)) return true;
     return !updateOptions.some((opt) => opt.value.toString() === trimmed);
   };
 
@@ -4228,31 +4144,69 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
             </button>
           )}
 
-          {/* Single Save Button for both hours and employee changes */}
-{status === "In Progress" && (hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) && (
-  <button
-    onClick={handleSaveAll}
-    disabled={isLoading}
-    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
-  >
-    {isLoading ? (
-      <>
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-        Saving...
-      </>
-    ) : (
-      <>
-        Save Changes ({Object.keys(modifiedHours).length + Object.keys(editedEmployeeData).length})
-      </>
-    )}
-  </button>
-)}
+          {/* {status === "In Progress" &&
+            (hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) && (
+              <button
+                onClick={handleSaveAll}
+                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Save Changes (
+                    {Object.keys(modifiedHours).length +
+                      Object.keys(editedEmployeeData).length}
+                    )
+                  </>
+                )}
+              </button>
+            )} */}
 
+            {status === "In Progress" &&
+  (hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) && (
+    <div className="flex gap-2">
+      <button
+        onClick={handleSaveAll}
+        disabled={isLoading}
+        className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+      >
+        {isLoading ? (
+          <>
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            Saving...
+          </>
+        ) : (
+          <>
+            Save Changes (
+            {Object.keys(modifiedHours).length +
+              Object.keys(editedEmployeeData).length})
+          </>
+        )}
+      </button>
+      
+      {/* Cancel Button */}
+      <button
+        onClick={() => {
+          // Clear all unsaved changes
+          setModifiedHours({});
+          setEditedEmployeeData({});
+          setInputValues({});
+          setHasUnsavedHoursChanges(false);
+          setHasUnsavedEmployeeChanges(false);
+          toast.info("Changes cancelled", { autoClose: 2000 });
+        }}
+        className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+      >
+        Cancel
+      </button>
+    </div>
+  )}
 
-          
-
-
-         
 
           {isEditable && (
             <>
@@ -4553,7 +4507,7 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
                         // list={
                         //   planType === "NBBUD" ? undefined : "employee-id-list"
                         // }
-                         list="employee-id-list"
+                        list="employee-id-list"
                         placeholder={
                           newEntry.idType === "PLC"
                             ? "Not required for PLC"
@@ -4893,6 +4847,7 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
                         type="text"
                         name="status"
                         value={newEntry.status}
+                        disabled={newEntry.idType === "Other"}
                         onChange={(e) =>
                           setNewEntry({ ...newEntry, status: e.target.value })
                         }
@@ -4944,19 +4899,30 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
                         placeholder={isEditingNewEntry ? "" : "**"}
                         onFocus={() => setIsEditingNewEntry(true)}
                         onBlur={() => setIsEditingNewEntry(false)}
-                        onChange={(e) =>
-                          isFieldEditable &&
-                          setNewEntry({
-                            ...newEntry,
-                            perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
-                          })
-                        }
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          !isFieldEditable
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        disabled={!isFieldEditable}
+                        // onChange={(e) =>
+                        //   isFieldEditable &&
+                        //   setNewEntry({
+                        //     ...newEntry,
+                        //     perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
+                        //   })
+                        // }
+                        // className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                        //   !isFieldEditable
+                        //     ? "bg-gray-100 cursor-not-allowed"
+                        //     : ""
+                        // }`}
+                        // disabled={!isFieldEditable}
+                          onChange={(e) => {
+    const isFieldEditable = !(newEntry.idType === "Employee" || newEntry.idType === "Vendor");
+    if (isFieldEditable) {
+      setNewEntry(prev => ({...prev, perHourRate: e.target.value.replace(/[^0-9.]/g, "")}));
+    }
+  }}
+  disabled={newEntry.idType === "Employee" || newEntry.idType === "Vendor"} // Disable for Employee and Vendor
+  className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+    (newEntry.idType === "Employee" || newEntry.idType === "Vendor") ? "bg-gray-100 cursor-not-allowed" : ""
+  }`}
+ 
                       />
                     </td>
 
@@ -5495,89 +5461,140 @@ if (planType !== "NBBUD" && newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !=
                       lineHeight: "normal",
                     }}
                   >
-{sortedDurations.map((duration) => {
-  const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  const value = newEntryPeriodHours[uniqueKey] || 0; // ← Use newEntryPeriodHours for new form
-  const isInputEditable = isEditable && isMonthEditable(duration, closedPeriod, planType);
-  
-  return (
-    <td key={`new-entry-${uniqueKey}`}>
-      <input
-        type="text"
-        inputMode="numeric"
-        className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
-          !isInputEditable
-            ? "cursor-not-allowed text-gray-400"
-            : "text-gray-700"
-        }`}
-        value={value}
-        onChange={(e) =>
-          setNewEntryPeriodHours((prev) => ({
-            ...prev,
-            [uniqueKey]: e.target.value.replace(/[^0-9.]/g, "")
-          }))
-        }
-        disabled={!isInputEditable}
-        placeholder="Enter Hours"
-      />
-    </td>
-  );
-})}
+                    {sortedDurations.map((duration) => {
+                      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                      const value = newEntryPeriodHours[uniqueKey] || 0; // ← Use newEntryPeriodHours for new form
+                      const isInputEditable =
+                        isEditable &&
+                        isMonthEditable(duration, closedPeriod, planType);
 
+                      return (
+                        <td key={`new-entry-${uniqueKey}`}>
+                          {/* <input
+                            type="text"
+                            inputMode="numeric"
+                            className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+                              !isInputEditable
+                                ? "cursor-not-allowed text-gray-400"
+                                : "text-gray-700"
+                            }`}
+                            value={value}
+                            onChange={(e) =>
+                              setNewEntryPeriodHours((prev) => ({
+                                ...prev,
+                                [uniqueKey]: e.target.value.replace(
+                                  /[^0-9.]/g,
+                                  ""
+                                ),
+                              }))
+                            }
+                            disabled={!isInputEditable}
+                            placeholder="Enter Hours"
+                          /> */}
+                          <input
+  type="text"
+  inputMode="numeric"
+  className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+    !isInputEditable
+      ? "cursor-not-allowed text-gray-400"
+      : "text-gray-700"
+  }`}
+  value={value}
+  onChange={(e) => {
+    let inputValue = e.target.value.replace(/[^0-9.]/g, "");
+    
+    // Allow empty string (for backspace to clear)
+    if (inputValue === "") {
+      setNewEntryPeriodHours((prev) => ({
+        ...prev,
+        [uniqueKey]: "",
+      }));
+      return;
+    }
+    
+    // Get available hours for this duration
+    const currentDuration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
+    const maxAllowedHours = currentDuration ? currentDuration.workingHours * 2 : Infinity;
+    const numericValue = parseFloat(inputValue) || 0;
+    
+    // Prevent input if exceeds limit
+    if (numericValue > maxAllowedHours) {
+      toast.error(`Hours cannot exceed more than available hours`, {
+        autoClose: 3000,
+      });
+      return; // Don't update the state
+    }
+    
+    setNewEntryPeriodHours((prev) => ({
+      ...prev,
+      [uniqueKey]: inputValue,
+    }));
+  }}
+  disabled={!isInputEditable}
+  placeholder="0"
+/>
 
-
-
+                        </td>
+                      );
+                    })}
                   </tr>
                 )}
-             {localEmployees
-  .filter((_, idx) => !hiddenRows[idx])
-  .map((emp, idx) => {
-    const actualEmpIdx = localEmployees.findIndex((e) => e === emp);
-    const monthHours = getMonthHours(emp);
-    
-    return (
-      <tr 
-        key={`hours-${actualEmpIdx}`} 
-        className="whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200"
-        style={{ height: `${ROW_HEIGHT_DEFAULT}px`, lineHeight: "normal" }}
-      >
-        {sortedDurations.map((duration) => {
-          // const actualEmpIdx = 0;
-          const uniqueKey = `${duration.monthNo}_${duration.year}`;
-          const forecast = monthHours[uniqueKey];
-          const value = inputValues[`${actualEmpIdx}_${uniqueKey}`] ?? forecast?.value ?? 0;
-          const isInputEditable = isEditable && isMonthEditable(duration, closedPeriod, planType);
-          
-          return (
-            <td key={`hours-${actualEmpIdx}-${uniqueKey}`}>
-              <input
-                type="text"
-                inputMode="numeric"
-                className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
-                  !isInputEditable
-                    ? "cursor-not-allowed text-gray-400"
-                    : "text-gray-700"
-                }`}
-                value={value}
-                onChange={(e) =>
-                  handleInputChange(
-                    actualEmpIdx,
-                    uniqueKey,
-                    e.target.value.replace(/[^0-9.]/g, "")
-                  )
-                }
-                disabled={!isInputEditable}
-                placeholder="Enter Hours"
-              />
-            </td>
-          );
-        })}
-      </tr>
-    );
-  })}
+                {localEmployees
+                  .filter((_, idx) => !hiddenRows[idx])
+                  .map((emp, idx) => {
+                    const actualEmpIdx = localEmployees.findIndex(
+                      (e) => e === emp
+                    );
+                    const monthHours = getMonthHours(emp);
 
+                    return (
+                      <tr
+                        key={`hours-${actualEmpIdx}`}
+                        className="whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200"
+                        style={{
+                          height: `${ROW_HEIGHT_DEFAULT}px`,
+                          lineHeight: "normal",
+                        }}
+                      >
+                        {sortedDurations.map((duration) => {
+                          // const actualEmpIdx = 0;
+                          const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                          const forecast = monthHours[uniqueKey];
+                          const value =
+                            inputValues[`${actualEmpIdx}_${uniqueKey}`] ??
+                            forecast?.value ??
+                            0;
+                          const isInputEditable =
+                            isEditable &&
+                            isMonthEditable(duration, closedPeriod, planType);
 
-
+                          return (
+                            <td key={`hours-${actualEmpIdx}-${uniqueKey}`}>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+                                  !isInputEditable
+                                    ? "cursor-not-allowed text-gray-400"
+                                    : "text-gray-700"
+                                }`}
+                                value={value}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    actualEmpIdx,
+                                    uniqueKey,
+                                    e.target.value.replace(/[^0-9.]/g, "")
+                                  )
+                                }
+                                disabled={!isInputEditable}
+                                placeholder="Enter Hours"
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </div>
