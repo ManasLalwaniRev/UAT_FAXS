@@ -865,23 +865,60 @@ const ProjectHoursDetails = ({
     }
   };
 
+  // const handlePlcInputChangeForUpdate = (value, actualEmpIdx) => {
+  //   handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  //   setPlcSearch(value);
+
+  //   // Always filter from the original plcOptions, not updatePlcOptions
+  //   if (value.length >= 1) {
+  //     const filtered = plcOptions.filter(
+  //       (option) =>
+  //         option.value.toLowerCase().includes(value.toLowerCase()) ||
+  //         option.label.toLowerCase().includes(value.toLowerCase())
+  //     );
+  //     setUpdatePlcOptions(filtered);
+  //   } else {
+  //     // Reset to all available PLC options when input is empty
+  //     setUpdatePlcOptions(plcOptions);
+  //   }
+  // };
+  
   const handlePlcInputChangeForUpdate = (value, actualEmpIdx) => {
+  if (planType === "NBBUD") {
     handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
     setPlcSearch(value);
+    return;
+  }
 
-    // Always filter from the original plcOptions, not updatePlcOptions
-    if (value.length >= 1) {
-      const filtered = plcOptions.filter(
-        (option) =>
-          option.value.toLowerCase().includes(value.toLowerCase()) ||
-          option.label.toLowerCase().includes(value.toLowerCase())
-      );
-      setUpdatePlcOptions(filtered);
-    } else {
-      // Reset to all available PLC options when input is empty
-      setUpdatePlcOptions(plcOptions);
-    }
-  };
+  // Only allow empty value or values that start with available PLC options
+  const isValidInput = value === "" || plcOptions.some((option) =>
+    option.value.toLowerCase().startsWith(value.toLowerCase())
+  );
+
+  if (!isValidInput) {
+    // Don't update state if input doesn't match any PLC option
+    toast.warning("Only values from the PLC suggestions are allowed", {
+      autoClose: 2000,
+    });
+    return;
+  }
+
+  handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  setPlcSearch(value);
+
+  // Always filter from the original plcOptions
+  if (value.length >= 1) {
+    const filtered = plcOptions.filter(
+      (option) =>
+        option.value.toLowerCase().includes(value.toLowerCase()) ||
+        option.label.toLowerCase().includes(value.toLowerCase())
+    );
+    setUpdatePlcOptions(filtered);
+  } else {
+    // Reset to all available PLC options when input is empty
+    setUpdatePlcOptions(plcOptions);
+  }
+};
 
   const handleOrgInputChange = (value) => {
     const numericValue = value.replace(/[^0-9.]/g, "");
@@ -978,42 +1015,82 @@ const ProjectHoursDetails = ({
   //   }
   // };
 
+  // const handlePlcInputChange = (value) => {
+  //   if (planType === "NBBUD") {
+  //     setPlcSearch(value);
+  //     setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+  //     return;
+  //   }
+
+  //   // Only allow typing if the value matches available PLC options
+  //   const isValidInput =
+  //     plcOptions.some((option) =>
+  //       option.value.toLowerCase().startsWith(value.toLowerCase())
+  //     ) || value === "";
+
+  //   if (!isValidInput && value.length > 0) {
+  //     // Don't update if the input doesn't match any PLC option
+  //     return;
+  //   }
+
+  //   setPlcSearch(value);
+  //   setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+
+  //   // Filter PLC options
+  //   if (value.length >= 1) {
+  //     const filtered = plcOptions.filter((option) =>
+  //       option.value.toLowerCase().startsWith(value.toLowerCase())
+  //     );
+  //     setFilteredPlcOptions(filtered);
+  //   } else {
+  //     setFilteredPlcOptions(plcOptions);
+  //   }
+
+  //   // Reset auto-populated flag when user manually types
+  //   if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+  //     setAutoPopulatedPLC(false);
+  //   }
+  // };
+
   const handlePlcInputChange = (value) => {
-    if (planType === "NBBUD") {
-      setPlcSearch(value);
-      setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
-      return;
-    }
-
-    // Only allow typing if the value matches available PLC options
-    const isValidInput =
-      plcOptions.some((option) =>
-        option.value.toLowerCase().startsWith(value.toLowerCase())
-      ) || value === "";
-
-    if (!isValidInput && value.length > 0) {
-      // Don't update if the input doesn't match any PLC option
-      return;
-    }
-
+  if (planType === "NBBUD") {
     setPlcSearch(value);
     setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+    return;
+  }
 
-    // Filter PLC options
-    if (value.length >= 1) {
-      const filtered = plcOptions.filter((option) =>
-        option.value.toLowerCase().startsWith(value.toLowerCase())
-      );
-      setFilteredPlcOptions(filtered);
-    } else {
-      setFilteredPlcOptions(plcOptions);
-    }
+  // Only allow empty value or values that start with available PLC options
+  const isValidInput = value === "" || plcOptions.some((option) =>
+    option.value.toLowerCase().startsWith(value.toLowerCase())
+  );
 
-    // Reset auto-populated flag when user manually types
-    if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
-      setAutoPopulatedPLC(false);
-    }
-  };
+  if (!isValidInput) {
+    // Don't update state if input doesn't match any PLC option
+    toast.warning("Only values from the PLC suggestions are allowed", {
+      autoClose: 2000,
+    });
+    return;
+  }
+
+  setPlcSearch(value);
+  setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+
+  // Filter PLC options
+  if (value.length >= 1) {
+    const filtered = plcOptions.filter((option) =>
+      option.value.toLowerCase().startsWith(value.toLowerCase())
+    );
+    setFilteredPlcOptions(filtered);
+  } else {
+    setFilteredPlcOptions(plcOptions);
+  }
+
+  // Reset auto-populated flag when user manually types
+  if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+    setAutoPopulatedPLC(false);
+  }
+};
+
 
   const handleAccountBlur = (val) => {
     if (planType === "NBBUD") return; // Add this line
@@ -3308,27 +3385,52 @@ const ProjectHoursDetails = ({
       // }
       // Enhanced PLC validation with detailed error checking
       // Enhanced PLC validation with exact matching
-      if (
-        planType !== "NBBUD" &&
-        newEntry.plcGlcCode &&
-        newEntry.plcGlcCode.trim() !== ""
-      ) {
-        const exactPlcMatch = plcOptions.find(
-          (option) =>
-            option.value.toLowerCase() ===
-            newEntry.plcGlcCode.toLowerCase().trim()
-        );
+      // if (
+      //   planType !== "NBBUD" &&
+      //   newEntry.plcGlcCode &&
+      //   newEntry.plcGlcCode.trim() !== ""
+      // ) {
+      //   const exactPlcMatch = plcOptions.find(
+      //     (option) =>
+      //       option.value.toLowerCase() ===
+      //       newEntry.plcGlcCode.toLowerCase().trim()
+      //   );
 
-        if (!exactPlcMatch) {
-          toast.error(
-            "Please select a valid PLC from the available list. Typing custom values is not allowed.",
-            {
-              autoClose: 5000,
-            }
-          );
-          return;
-        }
+      //   if (!exactPlcMatch) {
+      //     toast.error(
+      //       "Please select a valid PLC from the available list. Typing custom values is not allowed.",
+      //       {
+      //         autoClose: 5000,
+      //       }
+      //     );
+      //     return;
+      //   }
+      // }
+
+      if (!newEntry.plcGlcCode || !newEntry.plcGlcCode.trim()) {
+      toast.error("PLC is required and cannot be empty.", {
+        autoClose: 3000,
+      });
+      return;
+    }
+      // Enhanced PLC validation - must match exactly from suggestions
+if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
+  const exactPlcMatch = plcOptions.find(
+    (option) =>
+      option.value.toLowerCase() === newEntry.plcGlcCode.toLowerCase().trim()
+  );
+
+  if (!exactPlcMatch) {
+    toast.error(
+      "PLC must be selected from the available suggestions. Custom values are not allowed.",
+      {
+        autoClose: 4000,
       }
+    );
+    return;
+  }
+}
+
     }
 
     setIsDurationLoading(true);
@@ -3479,224 +3581,7 @@ const ProjectHoursDetails = ({
     }
   };
 
-  // const handleFindReplace = async () => {
-  //   if (
-  //     !isEditable ||
-  //     findValue === "" ||
-  //     (replaceScope === "row" && selectedRowIndex === null) ||
-  //     (replaceScope === "column" && selectedColumnKey === null)
-  //   ) {
-  //     toast.warn("Please select a valid scope and enter a value to find.", {
-  //       toastId: "find-replace-warning",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-
-  //   const updates = [];
-  //   const updatedInputValues = { ...inputValues };
-  //   let replacementsCount = 0;
-  //   let skippedCount = 0;
-
-  //   for (const empIdx in localEmployees) {
-  //     const emp = localEmployees[empIdx];
-  //     const actualEmpIdx = parseInt(empIdx, 10);
-
-  //     if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) {
-  //       continue;
-  //     }
-
-  //     for (const duration of sortedDurations) {
-  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
-
-  //       if (replaceScope === "column" && uniqueKey !== selectedColumnKey) {
-  //         continue;
-  //       }
-
-  //       if (!isMonthEditable(duration, closedPeriod, planType)) {
-  //         continue;
-  //       }
-
-  //       const currentInputKey = `${actualEmpIdx}_${uniqueKey}`;
-  //       let displayedValue;
-  //       if (inputValues[currentInputKey] !== undefined) {
-  //         displayedValue = String(inputValues[currentInputKey]);
-  //       } else {
-  //         const monthHours = getMonthHours(emp);
-  //         const forecast = monthHours[uniqueKey];
-  //         if (forecast && forecast.value !== undefined) {
-  //           displayedValue = String(forecast.value);
-  //         } else {
-  //           displayedValue = "0";
-  //         }
-  //       }
-
-  //       const findValueTrimmed = findValue.trim();
-  //       const displayedValueTrimmed = displayedValue.trim();
-
-  //       function isZeroLike(val) {
-  //         if (val === undefined || val === null) return true;
-  //         if (typeof val === "number") return val === 0;
-  //         if (typeof val === "string") {
-  //           const trimmed = val.trim();
-  //           return (
-  //             trimmed === "" ||
-  //             trimmed === "0" ||
-  //             trimmed === "0.0" ||
-  //             trimmed === "0.00" ||
-  //             (!isNaN(Number(trimmed)) && Number(trimmed) === 0)
-  //           );
-  //         }
-  //         return false;
-  //       }
-
-  //       let isMatch = false;
-  //       if (
-  //         !isNaN(Number(findValueTrimmed)) &&
-  //         Number(findValueTrimmed) === 0
-  //       ) {
-  //         isMatch = isZeroLike(displayedValueTrimmed);
-  //       } else {
-  //         isMatch = displayedValueTrimmed === findValueTrimmed;
-  //         if (!isMatch) {
-  //           const findNum = parseFloat(findValueTrimmed);
-  //           const displayNum = parseFloat(displayedValueTrimmed);
-  //           if (!isNaN(findNum) && !isNaN(displayNum)) {
-  //             isMatch = findNum === displayNum;
-  //           }
-  //         }
-  //       }
-
-  //       if (isMatch) {
-  //         const newValue = replaceValue.trim();
-  //         const newNumericValue =
-  //           newValue === "" ? 0 : parseFloat(newValue) || 0;
-  //         const forecast = getMonthHours(emp)[uniqueKey];
-
-  //         if (forecast && forecast.forecastid) {
-  //           if (displayedValueTrimmed !== newValue) {
-  //             updatedInputValues[currentInputKey] = newValue;
-  //             replacementsCount++;
-  //             const payload = {
-  //               forecastedamt: forecast.forecastedamt ?? 0,
-  //               forecastid: Number(forecast.forecastid),
-  //               projId: forecast.projId,
-  //               plId: forecast.plId,
-  //               emplId: forecast.emplId,
-  //               dctId: forecast.dctId ?? 0,
-  //               month: forecast.month,
-  //               year: forecast.year,
-  //               totalBurdenCost: forecast.totalBurdenCost ?? 0,
-  //               burden: forecast.burden ?? 0,
-  //               ccffRevenue: forecast.ccffRevenue ?? 0,
-  //               tnmRevenue: forecast.tnmRevenue ?? 0,
-  //               cost: forecast.cost ?? 0,
-  //               fringe: forecast.fringe ?? 0,
-  //               overhead: forecast.overhead ?? 0,
-  //               gna: forecast.gna ?? 0,
-  //               [planType === "EAC" ? "actualhours" : "forecastedhours"]:
-  //                 newNumericValue,
-  //               updatedat: new Date().toISOString().split("T")[0],
-  //               displayText: forecast.displayText ?? "",
-  //             };
-
-  //             const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-
-  //             updates.push(
-  //               axios
-  //                 .put(
-  //                   `${backendUrl}/Forecast/UpdateForecastHours/${apiPlanType}`,
-  //                   payload,
-  //                   { headers: { "Content-Type": "application/json" } }
-  //                 )
-  //                 .catch((err) => {
-  //                   // console.error(
-  //                   //   "Failed update for payload:",
-  //                   //   payload,
-  //                   //   err?.response?.data || err.message
-  //                   // );
-  //                 })
-  //             );
-  //           }
-  //         } else {
-  //           // console.log(
-  //           //   `Skipping cell without forecast: employee ${emp.emple?.emplId} for ${duration.monthNo}/${duration.year}`
-  //           // );
-  //           skippedCount++;
-  //         }
-  //       }
-  //     }
-  //   }
-
-  //   // console.log(
-  //   //   `Total replacements to make: ${replacementsCount}, Skipped: ${skippedCount}`
-  //   // );
-
-  //   setInputValues(updatedInputValues);
-  //   try {
-  //     if (updates.length > 0) {
-  //       await Promise.all(updates);
-  //     }
-  //     setLocalEmployees((prev) => {
-  //       const updated = [...prev];
-  //       for (const empIdx in updated) {
-  //         const emp = updated[empIdx];
-  //         for (const duration of sortedDurations) {
-  //           const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //           const currentInputKey = `${empIdx}_${uniqueKey}`;
-  //           if (updatedInputValues[currentInputKey] !== undefined) {
-  //             if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
-  //               const forecast = emp.emple.plForecasts.find(
-  //                 (f) =>
-  //                   f.month === duration.monthNo && f.year === duration.year
-  //               );
-  //               if (forecast) {
-  //                 const newValue =
-  //                   parseFloat(updatedInputValues[currentInputKey]) || 0;
-  //                 if (planType === "EAC") {
-  //                   forecast.actualhours = newValue;
-  //                 } else {
-  //                   forecast.forecastedhours = newValue;
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //       return updated;
-  //     });
-
-  //     if (replacementsCount > 0) {
-  //       toast.success(`Successfully replaced ${replacementsCount} cells.`, {
-  //         autoClose: 2000,
-  //       });
-  //     }
-
-  //     if (replacementsCount === 0 && skippedCount === 0) {
-  //       toast.info("No cells replaced.", { autoClose: 2000 });
-  //     }
-  //   } catch (err) {
-  //     toast.error(
-  //       "Failed to replace values: " +
-  //         (err.response?.data?.message || err.message),
-  //       {
-  //         toastId: "replace-error",
-  //         autoClose: 3000,
-  //       }
-  //     );
-  //   } finally {
-  //     setIsLoading(false);
-  //     setShowFindReplace(false);
-  //     setFindValue("");
-  //     setReplaceValue("");
-  //     setSelectedRowIndex(null);
-  //     setSelectedColumnKey(null);
-  //     setReplaceScope("all");
-  //   }
-  // };
-
+  
   const handleFindReplace = async () => {
     if (
       !isEditable ||
@@ -4745,7 +4630,7 @@ const ProjectHoursDetails = ({
                     </td>
 
                     <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
+                      {/* <input
                         type="text"
                         name="plcGlcCode"
                         value={newEntry.plcGlcCode}
@@ -4781,7 +4666,33 @@ const ProjectHoursDetails = ({
                         }`}
                         list="plc-list"
                         placeholder="Enter Plc"
-                      />
+                      /> */}
+                      <input
+  type="text"
+  name="plcGlcCode"
+  value={plcSearch}
+  onChange={(e) => handlePlcInputChange(e.target.value)}
+  onBlur={(e) => {
+    if (planType === "NBBUD") return;
+    const val = e.target.value.trim();
+    
+    if (val !== "" && !plcOptions.some(option => 
+      option.value.toLowerCase() === val.toLowerCase())) {
+      toast.error("PLC must be selected from the available suggestions.", {
+        autoClose: 3000,
+      });
+      // Clear invalid input
+      setPlcSearch("");
+      setNewEntry(prev => ({...prev, plcGlcCode: ""}));
+    }
+  }}
+  disabled={newEntry.idType === ""}
+  className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+  list="plc-list"
+  placeholder="Enter or select PLC"
+  autoComplete="off"
+/>
+
                       <datalist id="plc-list">
                         {filteredPlcOptions.map((plc, index) => (
                           <option
@@ -5242,26 +5153,31 @@ const ProjectHoursDetails = ({
                                   actualEmpIdx
                                 )
                               }
-                              onBlur={(e) => {
-                                if (planType === "NBBUD") return; // Add this line
-                                const val = e.target.value;
-                                const originalValue = row.glcPlc;
+                             onBlur={(e) => {
+  if (planType === "NBBUD") return;
+  const val = e.target.value.trim();
+  const originalValue = row.glcPlc;
 
-                                if (
-                                  val !== originalValue &&
-                                  val &&
-                                  !isValidPlcForUpdate(val, updatePlcOptions)
-                                ) {
-                                  toast.error(
-                                    "Please enter a valid PLC from the available list.",
-                                    {
-                                      autoClose: 3000,
-                                    }
-                                  );
-                                } else {
-                                  // handleEmployeeDataBlur(actualEmpIdx, emp);
-                                }
-                              }}
+  // Only validate if value has changed and is not empty
+  if (val !== originalValue && val !== "") {
+    const exactPlcMatch = plcOptions.find(
+      (option) => option.value.toLowerCase() === val.toLowerCase()
+    );
+    
+    if (!exactPlcMatch) {
+      toast.error(
+        "PLC must be selected from the available suggestions. Custom values are not allowed.",
+        {
+          autoClose: 4000,
+        }
+      );
+      // Reset to original value
+      handleEmployeeDataChange(actualEmpIdx, "glcPlc", originalValue);
+      setPlcSearch(originalValue);
+    }
+  }
+}}
+
                               className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
                               list={`plc-list-${actualEmpIdx}`}
                               placeholder="Enter PLC"
