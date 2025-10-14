@@ -1576,6 +1576,41 @@ const ProjectHoursDetails = ({
     return monthHours;
   };
 
+  // Calculate column totals for each month
+const calculateColumnTotals = () => {
+  const columnTotals = {};
+  
+  sortedDurations.forEach(duration => {
+    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+    let total = 0;
+    
+    // Sum hours from existing employees
+    localEmployees.forEach((emp, idx) => {
+      if (hiddenRows[idx]) return; // Skip hidden rows
+      
+      const inputValue = inputValues[`${idx}_${uniqueKey}`];
+      const monthHours = getMonthHours(emp);
+      const forecastValue = monthHours[uniqueKey]?.value;
+      const value = inputValue !== undefined && inputValue !== "" 
+        ? inputValue 
+        : forecastValue;
+      
+      total += (value && !isNaN(value) ? Number(value) : 0);
+    });
+    
+    // Add hours from new entry form if visible
+    if (showNewForm) {
+      const newEntryValue = newEntryPeriodHours[uniqueKey];
+      total += (newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0);
+    }
+    
+    columnTotals[uniqueKey] = total;
+  });
+  
+  return columnTotals;
+};
+
+
  
   //   if (!isEditable) return;
   //   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
@@ -5319,9 +5354,18 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                         <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                           {row.total}
                         </td>
+                        
                       </tr>
                     );
                   })}
+                  {/* <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
+              <td 
+                className="border border-gray-300 px-1.5 py-0.5 text-xs font-bold bg-gray-200 text-center" 
+                colSpan={EMPLOYEE_COLUMNS.length}
+              >
+                Total Hours:
+              </td>
+            </tr> */}
               </tbody>
             </table>
           </div>
@@ -5367,6 +5411,7 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                   })}
                 </tr>
               </thead>
+              
               <tbody>
                 {showNewForm && (
                   <tr
@@ -5511,6 +5556,24 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                       </tr>
                     );
                   })}
+                   <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
+                {(() => {
+                  const columnTotals = calculateColumnTotals();
+                  return sortedDurations.map((duration) => {
+                    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                    const total = columnTotals[uniqueKey] || 0;
+                    
+                    return (
+                      <td
+                        key={`total-${uniqueKey}`}
+                        className="border border-gray-300 px-1.5 py-0.5 text-center text-xs font-bold bg-gray-200"
+                      >
+                        {total.toFixed(2)}
+                      </td>
+                    );
+                  });
+                })()}
+              </tr>
               </tbody>
             </table>
           </div>
