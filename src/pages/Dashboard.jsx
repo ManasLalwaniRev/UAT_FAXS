@@ -594,7 +594,7 @@ const Dashboard = () => {
             element={<MaintainFiscalYearPeriods />}
           />
         </Routes>
-        {currentUserRole === "admin" && <ChatBot />}
+        {/* {currentUserRole === "admin" && <ChatBot />} */}
       </div>
     </>
   );
