@@ -9,6 +9,7 @@ const EMPLOYEE_COLUMNS = [
   { key: "emplId", label: "ID" },
   { key: "name", label: "Name" },
   { key: "acctId", label: "Account" },
+  { key: "acctName", label: "Account Name" }, // ADD THIS LINE
   { key: "orgId", label: "Organization" },
   { key: "isRev", label: "Rev" },
   { key: "isBrd", label: "Brd" },
@@ -91,6 +92,7 @@ const ProjectAmountsTable = ({
   const [employeeNonLaborAccounts, setEmployeeNonLaborAccounts] = useState([]);
   const [subContractorNonLaborAccounts, setSubContractorNonLaborAccounts] =
     useState([]);
+  const [accountOptionsWithNames, setAccountOptionsWithNames] = useState([]);
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [modifiedAmounts, setModifiedAmounts] = useState({});
   const [hasUnsavedAmountChanges, setHasUnsavedAmountChanges] = useState(false);
@@ -207,6 +209,56 @@ const [hasUnsavedFieldChanges, setHasUnsavedFieldChanges] = useState(false);
   setEmployeeNonLaborAccounts([]);
   setSubContractorNonLaborAccounts([]);
 }, [planId, projectId]); // Reset when planId or projectId changes
+
+// Add this useEffect to initialize account names on component mount
+useEffect(() => {
+  const initializeAccountNames = async () => {
+    if (!projectId || !planType) return;
+    
+    try {
+      const response = await axios.get(
+        `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
+      );
+      const data = Array.isArray(response.data) ? response.data[0] : response.data;
+
+      // Collect ALL account types with names for existing employees
+      let allAccountsWithNames = [];
+
+      if (data.employeeNonLaborAccounts && Array.isArray(data.employeeNonLaborAccounts)) {
+        const employeeAccountsWithNames = data.employeeNonLaborAccounts.map((account) => ({
+          id: account.accountId || account,
+          name: account.acctName || account.accountId || String(account),
+        }));
+        allAccountsWithNames.push(...employeeAccountsWithNames);
+      }
+
+      if (data.subContractorNonLaborAccounts && Array.isArray(data.subContractorNonLaborAccounts)) {
+        const subAccountsWithNames = data.subContractorNonLaborAccounts.map((account) => ({
+          id: account.accountId || account,
+          name: account.acctName || account.accountId || String(account),
+        }));
+        allAccountsWithNames.push(...subAccountsWithNames);
+      }
+
+      // Remove duplicates
+      const uniqueAccountsWithNamesMap = new Map();
+      allAccountsWithNames.forEach((acc) => {
+        if (acc.id && !uniqueAccountsWithNamesMap.has(acc.id)) {
+          uniqueAccountsWithNamesMap.set(acc.id, { id: acc.id, name: acc.name });
+        }
+      });
+      const uniqueAccountsWithNames = Array.from(uniqueAccountsWithNamesMap.values());
+
+      setAccountOptionsWithNames(uniqueAccountsWithNames);
+    } catch (err) {
+      console.error("Failed to initialize account names:", err);
+      setAccountOptionsWithNames([]);
+    }
+  };
+
+  initializeAccountNames();
+}, [projectId, planType]);
+
 
 
   const syncScroll = (sourceRef, targetRef) => {
@@ -723,6 +775,9 @@ const [hasUnsavedFieldChanges, setHasUnsavedFieldChanges] = useState(false);
         });
         const uniqueSubAccounts = Array.from(uniqueSubMap.values());
         setSubContractorNonLaborAccounts(uniqueSubAccounts);
+
+        let allAccountsWithNames = [...uniqueEmployeeAccounts, ...uniqueSubAccounts];
+setAccountOptionsWithNames(allAccountsWithNames);
       } catch (err) {
         // console.error("Error fetching non-labor accounts:", err);
         setEmployeeNonLaborAccounts([]);
@@ -1091,45 +1146,90 @@ const [hasUnsavedFieldChanges, setHasUnsavedFieldChanges] = useState(false);
     }
   };
 
-  const getEmployeeRow = (emp, idx) => {
-    const monthAmounts = getMonthAmounts(emp);
-    const totalAmount = sortedDurations.reduce((sum, duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      const inputValue = inputValues[`${idx}_${uniqueKey}`];
-      const forecastValue = monthAmounts[uniqueKey]?.value;
-      const value =
-        inputValue !== undefined && inputValue !== ""
-          ? inputValue
-          : forecastValue;
-      return sum + (value && !isNaN(value) ? Number(value) : 0);
-    }, 0);
+  // const getEmployeeRow = (emp, idx) => {
+  //   const monthAmounts = getMonthAmounts(emp);
+  //   const totalAmount = sortedDurations.reduce((sum, duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //     const forecastValue = monthAmounts[uniqueKey]?.value;
+  //     const value =
+  //       inputValue !== undefined && inputValue !== ""
+  //         ? inputValue
+  //         : forecastValue;
+  //     return sum + (value && !isNaN(value) ? Number(value) : 0);
+  //   }, 0);
 
-    return {
-      idType: emp.emple.type || "Employee",
-      emplId: emp.emple.emplId || "-",
-      name:
-        emp.emple.category || emp.emple.firstName || emp.emple.lastName
-          ? emp.emple.category ||
-            `${emp.emple.lastName || ""}${
-              emp.emple.firstName && emp.emple.lastName ? ", " : ""
-            }${emp.emple.firstName || ""}`
-          : "-",
-      acctId: emp.emple.accId || "-",
-      orgId: emp.emple.orgId || "-",
-      isRev: emp.emple.isRev ? (
-        <span className="text-green-600 font-sm text-xl">✓</span>
-      ) : (
-        "-"
-      ),
-      isBrd: emp.emple.isBrd ? (
-        <span className="text-green-600 font-sm text-xl">✓</span>
-      ) : (
-        "-"
-      ),
-      status: emp.emple.status || "Act",
-      total: totalAmount.toFixed(2) || "-",
-    };
+  //   return {
+  //     idType: emp.emple.type || "Employee",
+  //     emplId: emp.emple.emplId || "-",
+  //     name:
+  //       emp.emple.category || emp.emple.firstName || emp.emple.lastName
+  //         ? emp.emple.category ||
+  //           `${emp.emple.lastName || ""}${
+  //             emp.emple.firstName && emp.emple.lastName ? ", " : ""
+  //           }${emp.emple.firstName || ""}`
+  //         : "-",
+  //     acctId: emp.emple.accId || "-",
+  //     orgId: emp.emple.orgId || "-",
+  //     isRev: emp.emple.isRev ? (
+  //       <span className="text-green-600 font-sm text-xl">✓</span>
+  //     ) : (
+  //       "-"
+  //     ),
+  //     isBrd: emp.emple.isBrd ? (
+  //       <span className="text-green-600 font-sm text-xl">✓</span>
+  //     ) : (
+  //       "-"
+  //     ),
+  //     status: emp.emple.status || "Act",
+  //     total: totalAmount.toFixed(2) || "-",
+  //   };
+  // };
+  
+  const getEmployeeRow = (emp, idx) => {
+  const monthAmounts = getMonthAmounts(emp);
+  const totalAmount = sortedDurations.reduce((sum, duration) => {
+    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+    const inputValue = inputValues[`${idx}_${uniqueKey}`];
+    const forecastValue = monthAmounts[uniqueKey]?.value;
+    const value =
+      inputValue !== undefined && inputValue !== ""
+        ? inputValue
+        : forecastValue;
+    return sum + (value && !isNaN(value) ? Number(value) : 0);
+  }, 0);
+
+  return {
+    idType: emp.emple.type || "Employee",
+    emplId: emp.emple.emplId || "-",
+    name:
+      emp.emple.category || emp.emple.firstName || emp.emple.lastName
+        ? emp.emple.category ||
+          `${emp.emple.lastName || ""}${
+            emp.emple.firstName && emp.emple.lastName ? ", " : ""
+          }${emp.emple.firstName || ""}`
+        : "-",
+    acctId: emp.emple.accId || "-",
+    acctName: (() => {
+      const accountId = emp.emple.accId || "-";
+      const accountWithName = accountOptionsWithNames.find(acc => acc.id === accountId);
+      return accountWithName ? accountWithName.name : "-";
+    })(), // ADD THIS FIELD
+    orgId: emp.emple.orgId || "-",
+    isRev: emp.emple.isRev ? (
+      <span className="text-green-600 font-sm text-xl">✓</span>
+    ) : (
+      "-"
+    ),
+    isBrd: emp.emple.isBrd ? (
+      <span className="text-green-600 font-sm text-xl">✓</span>
+    ) : (
+      "-"
+    ),
+    status: emp.emple.status || "Act",
+    total: totalAmount.toFixed(2) || "-",
   };
+};
 
   const getMonthAmounts = (emp) => {
     const monthAmounts = {};
@@ -2490,6 +2590,31 @@ const handleCancelFieldChanges = () => {
   setEditingRowIndex(null);
   setHasUnsavedFieldChanges(false);
   toast.info("Field changes cancelled.", { autoClose: 1500 });
+};
+
+// Combined cancel handler for both amounts and field changes
+const handleCancelAllChanges = () => {
+  // Cancel amount changes
+  if (hasUnsavedAmountChanges) {
+    setModifiedAmounts({});
+    setInputValues({});
+    setHasUnsavedAmountChanges(false);
+  }
+  
+  // Cancel field changes
+  if (hasUnsavedFieldChanges) {
+    if (editingRowIndex !== null) {
+      setEditedRowData(prev => {
+        const newData = { ...prev };
+        delete newData[editingRowIndex];
+        return newData;
+      });
+      setEditingRowIndex(null);
+    }
+    setHasUnsavedFieldChanges(false);
+  }
+  
+  toast.info("All changes cancelled.", { autoClose: 1500 });
 };
 
 
@@ -4710,7 +4835,7 @@ const calculateColumnTotals = () => {
   )}
   
   {/* Combined Save button for both amounts and field changes */}
-  {(hasUnsavedAmountChanges || hasUnsavedFieldChanges) && (
+  {/* {(hasUnsavedAmountChanges || hasUnsavedFieldChanges) && (
     <button
       onClick={handleSaveAllChanges}
       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
@@ -4718,17 +4843,29 @@ const calculateColumnTotals = () => {
     >
       {isLoading ? "Saving..." : "Save"}
     </button>
-  )}
-  
-  {/* Cancel button for field changes */}
-  {hasUnsavedFieldChanges && (
+  )} */}
+  {/* Combined Save and Cancel buttons for both amounts and field changes */}
+{(hasUnsavedAmountChanges || hasUnsavedFieldChanges) && (
+  <>
     <button
-      onClick={handleCancelFieldChanges}
+      onClick={handleSaveAllChanges}
+      className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+      disabled={isLoading}
+    >
+      {isLoading ? "Saving..." : `Save Changes (${Object.keys(modifiedAmounts).length + (hasUnsavedFieldChanges ? 1 : 0)})`}
+    </button>
+    <button
+      onClick={handleCancelAllChanges}
       className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+      disabled={isLoading}
     >
       Cancel
     </button>
-  )}
+  </>
+)}
+
+  
+  
 </div>
 
       </div>
@@ -5064,6 +5201,19 @@ const calculateColumnTotals = () => {
                           })}
                         </datalist> */}
                     </td>
+                    {/* ADD THIS NEW TD FOR ACCOUNT NAME */}
+<td className="border border-gray-300 px-1.5 py-0.5">
+  <input
+    type="text"
+    value={(() => {
+      const accountWithName = accountOptionsWithNames.find(acc => acc.id === newEntry.acctId);
+      return accountWithName ? accountWithName.name : "";
+    })()}
+    readOnly
+    className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+    placeholder="Account Name (auto-filled)"
+  />
+</td>
                     <td className="border border-gray-300 px-1.5 py-0.5">
                       {" "}
                       {/* Changed px-2 to px-1.5 */}
@@ -5476,6 +5626,14 @@ const calculateColumnTotals = () => {
                       </tr>
                     );
                   })}
+                  {/* <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
+  <td 
+    className="border border-gray-300 px-1.5 py-0.5 text-xs font-bold bg-gray-200 text-center" 
+    colSpan={EMPLOYEE_COLUMNS.length}
+  >
+    Total Hours:
+  </td>
+</tr> */}
               </tbody>
             </table>
           </div>

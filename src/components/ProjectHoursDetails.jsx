@@ -11,6 +11,7 @@ const EMPLOYEE_COLUMNS = [
   { key: "warning", label: "Warning" },
   { key: "name", label: "Name" },
   { key: "acctId", label: "Account" },
+   { key: "acctName", label: "Account Name" }, // ADD THIS LINE
   { key: "orgId", label: "Organization" },
   { key: "glcPlc", label: "Plc" },
   { key: "isRev", label: "Rev" },
@@ -103,6 +104,7 @@ const ProjectHoursDetails = ({
   const [orgSearch, setOrgSearch] = useState("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [filteredPlcOptions, setFilteredPlcOptions] = useState([]);
+  const [accountOptionsWithNames, setAccountOptionsWithNames] = useState([]);
   // NEW STATE VARIABLES FOR SAVE FUNCTIONALITY
   const [modifiedHours, setModifiedHours] = useState({});
   const [hasUnsavedHoursChanges, setHasUnsavedHoursChanges] = useState(false);
@@ -498,6 +500,48 @@ const ProjectHoursDetails = ({
               allAccounts.push(...employeeAccounts);
             }
 
+            // ADD THIS - Store accounts with names for updates
+let allAccountsWithNames = [];
+
+if (data.employeeLaborAccounts && Array.isArray(data.employeeLaborAccounts)) {
+  const employeeAccountsWithNames = data.employeeLaborAccounts.map((account) => ({
+    id: account.accountId,
+    name: account.acctName,
+    type: "employee",
+  }));
+  allAccountsWithNames.push(...employeeAccountsWithNames);
+}
+
+if (data.sunContractorLaborAccounts && Array.isArray(data.sunContractorLaborAccounts)) {
+  const vendorAccountsWithNames = data.sunContractorLaborAccounts.map((account) => ({
+    id: account.accountId,
+    name: account.acctName,
+    type: "vendor",
+  }));
+  allAccountsWithNames.push(...vendorAccountsWithNames);
+}
+
+if (data.otherDirectCostLaborAccounts && Array.isArray(data.otherDirectCostLaborAccounts)) {
+  const otherAccountsWithNames = data.otherDirectCostLaborAccounts.map((account) => ({
+    id: account.accountId,
+    name: account.acctName,
+    type: "other",
+  }));
+  allAccountsWithNames.push(...otherAccountsWithNames);
+}
+
+// Remove duplicates from accountsWithNames too
+const uniqueAccountsWithNamesMap = new Map();
+allAccountsWithNames.forEach((acc) => {
+  if (acc.id && !uniqueAccountsWithNamesMap.has(acc.id)) {
+    uniqueAccountsWithNamesMap.set(acc.id, { id: acc.id, name: acc.name });
+  }
+});
+const uniqueAccountsWithNames = Array.from(uniqueAccountsWithNamesMap.values());
+
+// Add this line where you set the other update options:
+setAccountOptionsWithNames(uniqueAccountsWithNames);
+
             // Vendor accounts
             if (
               data.sunContractorLaborAccounts &&
@@ -645,6 +689,8 @@ const ProjectHoursDetails = ({
           : response.data;
 
         let accounts = [];
+        let accountsWithNames = []; // ADD THIS
+
 
         if (newEntry.idType === "PLC") {
           // Combine both employee and vendor accounts for PLC
@@ -661,37 +707,91 @@ const ProjectHoursDetails = ({
             : [];
 
           accounts = [...employeeAccounts, ...vendorAccounts];
+
+          // ADD THIS - Store accounts with names
+      const employeeAccountsWithNames = Array.isArray(data.employeeLaborAccounts)
+        ? data.employeeLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+      
+      const vendorAccountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+        ? data.sunContractorLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+
+      accountsWithNames = [...employeeAccountsWithNames, ...vendorAccountsWithNames];
         } else if (newEntry.idType === "Employee") {
           accounts = Array.isArray(data.employeeLaborAccounts)
             ? data.employeeLaborAccounts.map((account) => ({
                 id: account.accountId,
               }))
             : [];
+
+            // ADD THIS
+      accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+        ? data.employeeLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
         } else if (newEntry.idType === "Vendor") {
           accounts = Array.isArray(data.sunContractorLaborAccounts)
             ? data.sunContractorLaborAccounts.map((account) => ({
                 id: account.accountId,
               }))
             : [];
+
+            // ADD THIS
+      accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+        ? data.sunContractorLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
         } else if (newEntry.idType === "Other") {
           accounts = Array.isArray(data.otherDirectCostLaborAccounts)
             ? data.otherDirectCostLaborAccounts.map((account) => ({
                 id: account.accountId,
               }))
             : [];
+
+             // ADD THIS
+      accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+        ? data.otherDirectCostLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+
         } else {
           accounts = [];
+          accountsWithNames = []; // ADD THIS
         }
 
         // Remove duplicates
         const uniqueAccountsMap = new Map();
+        const uniqueAccountsWithNamesMap = new Map(); // ADD THIS
         accounts.forEach((acc) => {
           if (acc.id && !uniqueAccountsMap.has(acc.id)) {
             uniqueAccountsMap.set(acc.id, acc);
           }
         });
+
+         // ADD THIS
+    accountsWithNames.forEach((acc) => {
+      if (acc.id && !uniqueAccountsWithNamesMap.has(acc.id)) {
+        uniqueAccountsWithNamesMap.set(acc.id, acc);
+      }
+    });
         const uniqueAccounts = Array.from(uniqueAccountsMap.values());
+        const uniqueAccountsWithNames = Array.from(uniqueAccountsWithNamesMap.values()); // ADD THIS
+
         setLaborAccounts(uniqueAccounts);
+        setAccountOptionsWithNames(uniqueAccountsWithNames); // ADD THIS
 
         // Rest of your existing code for PLC options and organization...
         if (data.plc && Array.isArray(data.plc)) {
@@ -718,6 +818,7 @@ const ProjectHoursDetails = ({
       } catch (err) {
         // console.error("Error fetching labor accounts:", err);
         setLaborAccounts([]);
+        setAccountOptionsWithNames([]); // ADD THIS
         setPlcOptions([]);
         setFilteredPlcOptions([]);
         toast.error("Failed to fetch labor accounts", {
@@ -753,6 +854,63 @@ const ProjectHoursDetails = ({
       setFilteredPlcOptions(plcOptions);
     }
   }, [plcOptions]);
+
+  useEffect(() => {
+  const initializeAccountNames = async () => {
+    if (!projectId || !planType) return;
+    
+    try {
+      const response = await axios.get(
+        `${backendUrl}/Project/GetAllProjectByProjId/${projectId}/${planType}`
+      );
+      const data = Array.isArray(response.data) ? response.data[0] : response.data;
+
+      // Collect ALL account types with names for existing employees
+      let allAccountsWithNames = [];
+
+      if (data.employeeLaborAccounts && Array.isArray(data.employeeLaborAccounts)) {
+        const employeeAccountsWithNames = data.employeeLaborAccounts.map((account) => ({
+          id: account.accountId,
+          name: account.acctName,
+        }));
+        allAccountsWithNames.push(...employeeAccountsWithNames);
+      }
+
+      if (data.sunContractorLaborAccounts && Array.isArray(data.sunContractorLaborAccounts)) {
+        const vendorAccountsWithNames = data.sunContractorLaborAccounts.map((account) => ({
+          id: account.accountId,
+          name: account.acctName,
+        }));
+        allAccountsWithNames.push(...vendorAccountsWithNames);
+      }
+
+      if (data.otherDirectCostLaborAccounts && Array.isArray(data.otherDirectCostLaborAccounts)) {
+        const otherAccountsWithNames = data.otherDirectCostLaborAccounts.map((account) => ({
+          id: account.accountId,
+          name: account.acctName,
+        }));
+        allAccountsWithNames.push(...otherAccountsWithNames);
+      }
+
+      // Remove duplicates
+      const uniqueAccountsWithNamesMap = new Map();
+      allAccountsWithNames.forEach((acc) => {
+        if (acc.id && !uniqueAccountsWithNamesMap.has(acc.id)) {
+          uniqueAccountsWithNamesMap.set(acc.id, { id: acc.id, name: acc.name });
+        }
+      });
+      const uniqueAccountsWithNames = Array.from(uniqueAccountsWithNamesMap.values());
+
+      setAccountOptionsWithNames(uniqueAccountsWithNames);
+    } catch (err) {
+      console.error("Failed to initialize account names:", err);
+      setAccountOptionsWithNames([]);
+    }
+  };
+
+  initializeAccountNames();
+}, [projectId, planType]); // Trigger when projectId or planType changes
+
 
  
   const handleEmployeeDataChange = (empIdx, field, value) => {
@@ -1448,118 +1606,360 @@ const ProjectHoursDetails = ({
   //   };
   // };
 
-  const getEmployeeRow = (emp, idx) => {
-    if (!emp || !emp.emple) {
-      return {
-        idType: "-",
-        emplId: "-",
-        name: "-",
-        acctId: "-",
-        orgId: "-",
-        glcPlc: "-",
-        isRev: "-",
-        isBrd: "-",
-        status: "-",
-        perHourRate: "0",
-        total: "0",
-        warning: false,
-      };
-    }
+//   const getEmployeeRow = (emp, idx) => {
+//     if (!emp || !emp.emple) {
+//       return {
+//         idType: "-",
+//         emplId: "-",
+//         name: "-",
+//         acctId: "-",
+//         acctName: "-", // ADD THIS LINE
+//         orgId: "-",
+//         glcPlc: "-",
+//         isRev: "-",
+//         isBrd: "-",
+//         status: "-",
+//         perHourRate: "0",
+//         total: "0",
+//         warning: false,
+//       };
+//     }
 
-    const monthHours = getMonthHours(emp);
-    const totalHours = sortedDurations.reduce((sum, duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      const inputValue = inputValues[`${idx}_${uniqueKey}`];
-      const forecastValue = monthHours[uniqueKey]?.value;
-      const value =
-        inputValue !== undefined && inputValue !== ""
-          ? inputValue
-          : forecastValue;
-      return sum + (value && !isNaN(value) ? Number(value) : 0);
-    }, 0);
+//     const monthHours = getMonthHours(emp);
+//     const totalHours = sortedDurations.reduce((sum, duration) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//       const forecastValue = monthHours[uniqueKey]?.value;
+//       const value =
+//         inputValue !== undefined && inputValue !== ""
+//           ? inputValue
+//           : forecastValue;
+//       return sum + (value && !isNaN(value) ? Number(value) : 0);
+//     }, 0);
 
-    // CHECK FOR ANY LOCAL WARNINGS FOR THIS SPECIFIC EMPLOYEE
-    const emplId = emp.emple.emplId;
-    const plcCode = emp.emple.plcGlcCode || "";
+//     // CHECK FOR ANY LOCAL WARNINGS FOR THIS SPECIFIC EMPLOYEE
+//     const emplId = emp.emple.emplId;
+//     const plcCode = emp.emple.plcGlcCode || "";
 
-    // Check hours warnings (existing logic)
-    const hasHoursWarning = sortedDurations.some((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      const warningKey = generateWarningKey(emplId, plcCode, uniqueKey);
-      return localWarnings[warningKey];
-    });
+//     // Check hours warnings (existing logic)
+//     const hasHoursWarning = sortedDurations.some((duration) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const warningKey = generateWarningKey(emplId, plcCode, uniqueKey);
+//       return localWarnings[warningKey];
+//     });
 
-    // CHECK FOR ACCOUNT/ORG FIELD WARNINGS
-    const accountWarningKey = generateFieldWarningKey(
-      emplId,
-      "account",
-      emp.emple.accId
-    );
-    const orgWarningKey = generateFieldWarningKey(
-      emplId,
-      "organization",
-      emp.emple.orgId
-    );
-    const hasAccountWarning = localWarnings[accountWarningKey];
-    const hasOrgWarning = localWarnings[orgWarningKey];
+//     // CHECK FOR ACCOUNT/ORG FIELD WARNINGS
+//     const accountWarningKey = generateFieldWarningKey(
+//       emplId,
+//       "account",
+//       emp.emple.accId
+//     );
+//     const orgWarningKey = generateFieldWarningKey(
+//       emplId,
+//       "organization",
+//       emp.emple.orgId
+//     );
+//     const hasAccountWarning = localWarnings[accountWarningKey];
+//     const hasOrgWarning = localWarnings[orgWarningKey];
 
-    // Combine all warning types
-    const warningValue =
-      emp.isWarning ||
-      emp.emple?.isWarning ||
-      hasHoursWarning ||
-      hasAccountWarning ||
-      hasOrgWarning ||
-      false;
+//     // Combine all warning types
+//     const warningValue =
+//       emp.isWarning ||
+//       emp.emple?.isWarning ||
+//       hasHoursWarning ||
+//       hasAccountWarning ||
+//       hasOrgWarning ||
+//       false;
 
+//     return {
+//       idType:
+//         ID_TYPE_OPTIONS.find(
+//           (opt) => opt.value === (emp.emple.type || "Employee")
+//         )?.label ||
+//         emp.emple.type ||
+//         "Employee",
+//       emplId: emp.emple.emplId,
+//       warning: Boolean(warningValue), // This will now include all warning types
+
+//       name:
+//         emp.emple.idType === "Vendor"
+//           ? emp.emple.lastName || emp.emple.firstName || "-"
+//           : `${emp.emple.firstName || ""} ${emp.emple.lastName || ""}`.trim() ||
+//             "-",
+//       acctId:
+//         emp.emple.accId ||
+//         (laborAccounts.length > 0 ? laborAccounts[0].id : "-"),
+//       acctName: (() => {
+//   const accountId = emp.emple.accId || (laborAccounts.length > 0 ? laborAccounts[0].id : "-");
+//   const accountWithName = accountOptionsWithNames.find(acc => acc.id === accountId);
+//   return accountWithName ? accountWithName.name : "-";
+// })(),
+//       orgId: emp.emple.orgId || "-",
+//       glcPlc: (() => {
+//         const plcCode = emp.emple.plcGlcCode || "";
+//         if (!plcCode) return "-";
+
+//         const plcOption =
+//           plcOptions.find((option) => option.value === plcCode) ||
+//           updatePlcOptions.find((option) => option.value === plcCode);
+
+//         return plcOption ? plcOption.label : plcCode;
+//       })(),
+
+//       isRev: emp.emple.isRev ? (
+//         <span className="text-green-600 font-sm text-lg">✓</span>
+//       ) : (
+//         "-"
+//       ),
+//       isBrd: emp.emple.isBrd ? (
+//         <span className="text-green-600 font-sm text-lg">✓</span>
+//       ) : (
+//         "-"
+//       ),
+//       status: emp.emple.status || "Act",
+//       perHourRate:
+//         emp.emple.perHourRate !== undefined && emp.emple.perHourRate !== null
+//           ? Number(emp.emple.perHourRate).toFixed(2)
+//           : "0",
+//       total: totalHours.toFixed(2) || "-",
+//     };
+//   };
+
+// const getEmployeeRow = (emp, idx) => {
+//   if (!emp || !emp.emple) {
+//     return {
+//       idType: "-",
+//       emplId: "-",
+//       warning: false,
+//       name: "-",
+//       acctId: "-",
+//       acctName: "-", // ADD THIS LINE
+//       orgId: "-",
+//       glcPlc: "-",
+//       isRev: "-",
+//       isBrd: "-",
+//       status: "-",
+//       perHourRate: "0",
+//       total: "0",
+//     };
+//   }
+
+//   const monthHours = getMonthHours(emp);
+//   const totalHours = sortedDurations.reduce((sum, duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//     const forecastValue = monthHours[uniqueKey]?.value;
+//     const value =
+//       inputValue !== undefined && inputValue !== ""
+//         ? inputValue
+//         : forecastValue;
+//     return sum + (value && !isNaN(value) ? Number(value) : 0);
+//   }, 0);
+
+//   // CHECK FOR ANY LOCAL WARNINGS FOR THIS SPECIFIC EMPLOYEE
+//   const emplId = emp.emple.emplId;
+//   const plcCode = emp.emple.plcGlcCode || "";
+
+//   // Check hours warnings (existing logic)
+//   const hasHoursWarning = sortedDurations.some((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     const warningKey = generateWarningKey(emplId, plcCode, uniqueKey);
+//     return localWarnings[warningKey];
+//   });
+
+//   // CHECK FOR ACCOUNT/ORG FIELD WARNINGS
+//   const accountWarningKey = generateFieldWarningKey(
+//     emplId,
+//     "account",
+//     emp.emple.accId
+//   );
+//   const orgWarningKey = generateFieldWarningKey(
+//     emplId,
+//     "organization",
+//     emp.emple.orgId
+//   );
+//   const hasAccountWarning = localWarnings[accountWarningKey];
+//   const hasOrgWarning = localWarnings[orgWarningKey];
+
+//   // Combine all warning types
+//   const warningValue =
+//     emp.isWarning ||
+//     emp.emple?.isWarning ||
+//     hasHoursWarning ||
+//     hasAccountWarning ||
+//     hasOrgWarning ||
+//     false;
+
+//   return {
+//     idType:
+//       ID_TYPE_OPTIONS.find(
+//         (opt) => opt.value === (emp.emple.type || "Employee")
+//       )?.label ||
+//       emp.emple.type ||
+//       "Employee",
+//     emplId: emp.emple.emplId,
+//     warning: Boolean(warningValue),
+//     name:
+//       emp.emple.idType === "Vendor"
+//         ? emp.emple.lastName || emp.emple.firstName || "-"
+//         : `${emp.emple.firstName || ""} ${emp.emple.lastName || ""}`.trim() ||
+//           "-",
+//     acctId:
+//       emp.emple.accId ||
+//       (laborAccounts.length > 0 ? laborAccounts[0].id : "-"),
+//     acctName: (() => {
+//       const accountId = emp.emple.accId || (laborAccounts.length > 0 ? laborAccounts[0].id : "-");
+//       const accountWithName = accountOptionsWithNames.find(acc => acc.id === accountId);
+//       return accountWithName ? accountWithName.name : "-";
+//     })(),
+//     orgId: emp.emple.orgId || "-",
+//     glcPlc: (() => {
+//       const plcCode = emp.emple.plcGlcCode || "";
+//       if (!plcCode) return "-";
+
+//       const plcOption =
+//         plcOptions.find((option) => option.value === plcCode) ||
+//         updatePlcOptions.find((option) => option.value === plcCode);
+
+//       return plcOption ? plcOption.label : plcCode;
+//     })(),
+//     isRev: emp.emple.isRev ? (
+//       <span className="text-green-600 font-sm text-lg">✓</span>
+//     ) : (
+//       "-"
+//     ),
+//     isBrd: emp.emple.isBrd ? (
+//       <span className="text-green-600 font-sm text-lg">✓</span>
+//     ) : (
+//       "-"
+//     ),
+//     status: emp.emple.status || "Act",
+//     perHourRate:
+//       emp.emple.perHourRate !== undefined && emp.emple.perHourRate !== null
+//         ? Number(emp.emple.perHourRate).toFixed(2)
+//         : "0",
+//     total: totalHours.toFixed(2) || "-",
+//   };
+// };
+
+const getEmployeeRow = (emp, idx) => {
+  if (!emp || !emp.emple) {
     return {
-      idType:
-        ID_TYPE_OPTIONS.find(
-          (opt) => opt.value === (emp.emple.type || "Employee")
-        )?.label ||
-        emp.emple.type ||
-        "Employee",
-      emplId: emp.emple.emplId,
-      warning: Boolean(warningValue), // This will now include all warning types
-
-      name:
-        emp.emple.idType === "Vendor"
-          ? emp.emple.lastName || emp.emple.firstName || "-"
-          : `${emp.emple.firstName || ""} ${emp.emple.lastName || ""}`.trim() ||
-            "-",
-      acctId:
-        emp.emple.accId ||
-        (laborAccounts.length > 0 ? laborAccounts[0].id : "-"),
-      orgId: emp.emple.orgId || "-",
-      glcPlc: (() => {
-        const plcCode = emp.emple.plcGlcCode || "";
-        if (!plcCode) return "-";
-
-        const plcOption =
-          plcOptions.find((option) => option.value === plcCode) ||
-          updatePlcOptions.find((option) => option.value === plcCode);
-
-        return plcOption ? plcOption.label : plcCode;
-      })(),
-
-      isRev: emp.emple.isRev ? (
-        <span className="text-green-600 font-sm text-lg">✓</span>
-      ) : (
-        "-"
-      ),
-      isBrd: emp.emple.isBrd ? (
-        <span className="text-green-600 font-sm text-lg">✓</span>
-      ) : (
-        "-"
-      ),
-      status: emp.emple.status || "Act",
-      perHourRate:
-        emp.emple.perHourRate !== undefined && emp.emple.perHourRate !== null
-          ? Number(emp.emple.perHourRate).toFixed(2)
-          : "0",
-      total: totalHours.toFixed(2) || "-",
+      idType: "-",
+      emplId: "-",
+      warning: false,
+      name: "-",
+      acctId: "-",
+      acctName: "-", // ADD THIS LINE
+      orgId: "-",
+      glcPlc: "-",
+      isRev: "-",
+      isBrd: "-",
+      status: "-",
+      perHourRate: "0",
+      total: "0",
     };
+  }
+
+  const monthHours = getMonthHours(emp);
+  const totalHours = sortedDurations.reduce((sum, duration) => {
+    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+    const inputValue = inputValues[`${idx}_${uniqueKey}`];
+    const forecastValue = monthHours[uniqueKey]?.value;
+    const value =
+      inputValue !== undefined && inputValue !== ""
+        ? inputValue
+        : forecastValue;
+    return sum + (value && !isNaN(value) ? Number(value) : 0);
+  }, 0);
+
+  // CHECK FOR ANY LOCAL WARNINGS FOR THIS SPECIFIC EMPLOYEE
+  const emplId = emp.emple.emplId;
+  const plcCode = emp.emple.plcGlcCode || "";
+
+  // Check hours warnings (existing logic)
+  const hasHoursWarning = sortedDurations.some((duration) => {
+    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+    const warningKey = generateWarningKey(emplId, plcCode, uniqueKey);
+    return localWarnings[warningKey];
+  });
+
+  // CHECK FOR ACCOUNT/ORG FIELD WARNINGS
+  const accountWarningKey = generateFieldWarningKey(
+    emplId,
+    "account",
+    emp.emple.accId
+  );
+  const orgWarningKey = generateFieldWarningKey(
+    emplId,
+    "organization",
+    emp.emple.orgId
+  );
+  const hasAccountWarning = localWarnings[accountWarningKey];
+  const hasOrgWarning = localWarnings[orgWarningKey];
+
+  // Combine all warning types
+  const warningValue =
+    emp.isWarning ||
+    emp.emple?.isWarning ||
+    hasHoursWarning ||
+    hasAccountWarning ||
+    hasOrgWarning ||
+    false;
+
+  return {
+    idType:
+      ID_TYPE_OPTIONS.find(
+        (opt) => opt.value === (emp.emple.type || "Employee")
+      )?.label ||
+      emp.emple.type ||
+      "Employee",
+    emplId: emp.emple.emplId,
+    warning: Boolean(warningValue),
+    name:
+      emp.emple.idType === "Vendor"
+        ? emp.emple.lastName || emp.emple.firstName || "-"
+        : `${emp.emple.firstName || ""} ${emp.emple.lastName || ""}`.trim() ||
+          "-",
+    acctId:
+      emp.emple.accId ||
+      (laborAccounts.length > 0 ? laborAccounts[0].id : "-"),
+    acctName: (() => {
+      const accountId = emp.emple.accId || (laborAccounts.length > 0 ? laborAccounts[0].id : "-");
+      const accountWithName = accountOptionsWithNames.find(acc => acc.id === accountId);
+      return accountWithName ? accountWithName.name : "-";
+    })(),
+    orgId: emp.emple.orgId || "-",
+    glcPlc: (() => {
+      const plcCode = emp.emple.plcGlcCode || "";
+      if (!plcCode) return "-";
+
+      const plcOption =
+        plcOptions.find((option) => option.value === plcCode) ||
+        updatePlcOptions.find((option) => option.value === plcCode);
+
+      return plcOption ? plcOption.label : plcCode;
+    })(),
+    isRev: emp.emple.isRev ? (
+      <span className="text-green-600 font-sm text-lg">✓</span>
+    ) : (
+      "-"
+    ),
+    isBrd: emp.emple.isBrd ? (
+      <span className="text-green-600 font-sm text-lg">✓</span>
+    ) : (
+      "-"
+    ),
+    status: emp.emple.status || "Act",
+    perHourRate:
+      emp.emple.perHourRate !== undefined && emp.emple.perHourRate !== null
+        ? Number(emp.emple.perHourRate).toFixed(2)
+        : "0",
+    total: totalHours.toFixed(2) || "-",
   };
+};
+
+
 
   const getMonthHours = (emp) => {
     const monthHours = {};
@@ -4621,6 +5021,19 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                         ))}
                       </datalist>
                     </td>
+                    {/* ADD THIS NEW TD FOR ACCOUNT NAME IN NEW ENTRY FORM */}
+<td className="border border-gray-300 px-1.5 py-0.5">
+  <input
+    type="text"
+    value={(() => {
+      const accountWithName = accountOptionsWithNames.find(acc => acc.id === newEntry.acctId);
+      return accountWithName ? accountWithName.name : "";
+    })()}
+    readOnly
+    className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+    placeholder="Account Name (auto-filled)"
+  />
+</td>
                     {/* <td className="border border-gray-300 px-1.5 py-0.5">
                         <input
                           type="text"
@@ -5023,6 +5436,11 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                           </datalist>
                         </td>
 
+                        {/* ADD THIS MISSING TD FOR ACCOUNT NAME */}
+<td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
+  {row.acctName}
+</td>
+
                         {/* <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                             {isBudPlan && isEditable ? (
                               <input
@@ -5358,14 +5776,14 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                       </tr>
                     );
                   })}
-                  {/* <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
-              <td 
-                className="border border-gray-300 px-1.5 py-0.5 text-xs font-bold bg-gray-200 text-center" 
-                colSpan={EMPLOYEE_COLUMNS.length}
-              >
-                Total Hours:
-              </td>
-            </tr> */}
+                 {/* <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
+  <td 
+    className="border border-gray-300 px-1.5 py-0.5 text-xs font-bold bg-gray-200 text-center" 
+    colSpan={EMPLOYEE_COLUMNS.length}
+  >
+    Total Hours:
+  </td>
+</tr> */}
               </tbody>
             </table>
           </div>
@@ -5452,7 +5870,7 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                             disabled={!isInputEditable}
                             placeholder="Enter Hours"
                           /> */}
-                          <input
+                          {/* <input
   type="text"
   inputMode="numeric"
   className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
@@ -5493,7 +5911,104 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
   }}
   disabled={!isInputEditable}
   placeholder="0"
+/> */}
+
+{/* <input
+  type="text"
+  inputMode="numeric"
+  className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+    !isInputEditable
+      ? "cursor-not-allowed text-gray-400"
+      : "text-gray-700"
+  }`}
+  value={value}
+  onChange={(e) => {
+    let inputValue = e.target.value.replace(/[^0-9.]/g, "");
+    
+    // Get available hours for validation
+    const currentDuration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
+    if (currentDuration && currentDuration.workingHours && inputValue !== "") {
+      const maxAllowedHours = currentDuration.workingHours * 2;
+      const numericValue = parseFloat(inputValue) || 0;
+      
+      // Prevent input if exceeds limit
+      if (numericValue > maxAllowedHours) {
+        toast.error(`Hours cannot exceed more than available hours`, {
+          autoClose: 3000,
+        });
+        return; // Don't update the state
+      }
+    }
+    
+    setNewEntryPeriodHours((prev) => ({
+      ...prev,
+      [uniqueKey]: inputValue, // This will now allow empty string
+    }));
+  }}
+  disabled={!isInputEditable}
+  placeholder="" // Change placeholder to empty string
+/> */}
+<input
+  type="text"
+  inputMode="numeric"
+  className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+    !isInputEditable
+      ? "cursor-not-allowed text-gray-400"
+      : "text-gray-700"
+  }`}
+  value={value || ""} // Ensure empty string when undefined/null
+  onChange={(e) => {
+    const inputValue = e.target.value;
+    
+    // Allow completely empty input (for clearing with backspace)
+    if (inputValue === "") {
+      setNewEntryPeriodHours((prev) => ({
+        ...prev,
+        [uniqueKey]: "",
+      }));
+      return;
+    }
+    
+    // Only allow numeric input with decimal
+    if (!/^[0-9]*\.?[0-9]*$/.test(inputValue)) {
+      return; // Don't update if not numeric
+    }
+    
+    // Get available hours for validation
+    const currentDuration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
+    if (currentDuration && currentDuration.workingHours) {
+      const maxAllowedHours = currentDuration.workingHours * 2;
+      const numericValue = parseFloat(inputValue) || 0;
+      
+      // Prevent input if exceeds limit
+      if (numericValue > maxAllowedHours) {
+        toast.error(`Hours cannot exceed more than available hours`, {
+          autoClose: 3000,
+        });
+        return; // Don't update the state
+      }
+    }
+    
+    setNewEntryPeriodHours((prev) => ({
+      ...prev,
+      [uniqueKey]: inputValue,
+    }));
+  }}
+  onKeyDown={(e) => {
+    // Allow backspace to completely clear the field
+    if (e.key === "Backspace" && (value === "0" || value === "")) {
+      e.preventDefault();
+      setNewEntryPeriodHours((prev) => ({
+        ...prev,
+        [uniqueKey]: "",
+      }));
+    }
+  }}
+  disabled={!isInputEditable}
+  placeholder="Enter Hours"
 />
+
+
 
                         </td>
                       );
@@ -5564,6 +6079,7 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                     const total = columnTotals[uniqueKey] || 0;
                     
                     return (
+                      
                       <td
                         key={`total-${uniqueKey}`}
                         className="border border-gray-300 px-1.5 py-0.5 text-center text-xs font-bold bg-gray-200"
