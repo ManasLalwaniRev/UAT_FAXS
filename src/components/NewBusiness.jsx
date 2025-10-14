@@ -168,6 +168,7 @@ const FormField = ({ label, children }) => (
 // };
 
 // Component to display all existing project plans data in a table
+
 const SavedBusinessTableDisplay = ({
   allBusinessBudgets,
   onNewBusiness,
@@ -887,7 +888,6 @@ const NewBusiness = ({ onClose, onSaveSuccess }) => {
           }
         );
         console.log("AddProjectPlan API response:", response.data);
-
         toast.success("Budget details saved successfully!");
       }
 
@@ -924,7 +924,7 @@ const NewBusiness = ({ onClose, onSaveSuccess }) => {
       const errorMessage =
         error.response?.data?.message ||
         error.message ||
-        "Failed to save/update budget details.";
+        "Failed to save/update budget details. ID exits or check all fields.";
       toast.error(`Error: ${errorMessage}`);
     }
   };
@@ -939,6 +939,7 @@ const NewBusiness = ({ onClose, onSaveSuccess }) => {
         const response = await axios.delete(
           `${backendUrl}/DeleteNewBusiness/${budgetId}`
         );
+
         toast.success(`Business Budget ID ${budgetId} deleted successfully!`);
         // After deletion, return to form view
         setAllBusinessBudgets([]); // Clear table data
@@ -1033,15 +1034,15 @@ const NewBusiness = ({ onClose, onSaveSuccess }) => {
 
   return (
     <div className="p-2 sm:p-4 space-y-6 text-[11px] sm:text-xs text-gray-800 font-sans max-w-4xl mx-auto">
-      <ToastContainer
-        position="top-right"
+      {/* <ToastContainer
+        position="top-right mt-15"
         autoClose={3000}
         hideProgressBar={false}
         closeOnClick
         pauseOnHover
         draggable
         closeButton
-      />
+      /> */}
 
       {viewMode === "form" && (
         // New Business Budget Form

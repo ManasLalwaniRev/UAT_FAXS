@@ -66,10 +66,21 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
     }
   };
 
+  // useEffect(() => {
+  //   fetchRevenueData();
+  //   setOrgId(selectedPlan?.orgId || "");
+
+  // }, [selectedPlan, revenueAccount]);
   useEffect(() => {
     fetchRevenueData();
     setOrgId(selectedPlan?.orgId || "");
-  }, [selectedPlan, revenueAccount]);
+    setAcctId(
+      selectedPlan?.revenueAccount ||
+        selectedPlan?.acctId ||
+        setupData?.revAcctId ||
+        ""
+    );
+  }, [selectedPlan, revenueAccount, setupData]);
 
   const handleInputChange = (index, field, value) => {
     const updatedPeriods = periods.map((period, i) => {
@@ -109,11 +120,23 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
         const data = Array.isArray(response.data)
           ? response.data[0]
           : response.data;
+        // if (data) {
+        //   setUseFixedRevenue(!!data.overrideRevAmtFl);
+        //   setOverrideAdjustments(!!data.useBillBurdenRates);
+        //   setSetupData(data);
+        //   // setAcctId(data.revAcctId || "");
+        //   setAcctId(selectedPlan?.revenueAccount || "");
+        // }
         if (data) {
           setUseFixedRevenue(!!data.overrideRevAmtFl);
           setOverrideAdjustments(!!data.useBillBurdenRates);
           setSetupData(data);
-          setAcctId(data.revAcctId || "");
+          setAcctId(
+            selectedPlan?.revenueAccount ||
+              selectedPlan?.acctId ||
+              data.revAcctId ||
+              ""
+          );
         }
       } catch (error) {
         // Optionally show a toast or just log
