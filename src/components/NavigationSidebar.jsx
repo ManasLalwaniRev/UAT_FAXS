@@ -196,7 +196,7 @@ const NavigationSidebar = () => {
     setIsSidebarOpen(false);
   };
 
-  <TopBar name={userName} onLogout={handleLogout} />;
+  // <TopBar name={userName} onLogout={handleLogout} />;
   return (
     <div className="flex min-h-screen font-inter">
       <button
@@ -216,7 +216,7 @@ const NavigationSidebar = () => {
         } md:translate-x-0 md:static md:w-48 z-40 flex flex-col`} // Added flex flex-col
       >
         {/* Header */}
-        <div className="flex justify-between items-center mb-2 sm:mb-4">
+        {/* <div className="flex justify-between items-center mb-2 sm:mb-4">
           <h2 className="text-base sm:text-lg md:text-2xl tracking-wide">
             R-AI
           </h2>
@@ -226,7 +226,7 @@ const NavigationSidebar = () => {
           >
             <X className="w-4 h-4" />
           </button>
-        </div>
+        </div> */}
 
         {/* Menu Content - Added flex-1 to take up remaining space */}
         <div className="flex-1 overflow-y-auto">
@@ -470,7 +470,7 @@ const NavigationSidebar = () => {
         </div>
 
         {/* LOGOUT BUTTON AT THE BOTTOM */}
-        <div className="mt-auto pt-4 border-t border-gray-700">
+        <div className="mt-auto pt-4 border-t border-gray-700 pb-10">
           {/* <button
             className="flex items-center gap-2 text-xs sm:text-sm px-2 py-2 w-full rounded-md hover:bg-gray-700 transition-colors duration-150 cursor-pointer"
             onClick={handleLogout}
@@ -479,7 +479,7 @@ const NavigationSidebar = () => {
             Logout
           </button> */}
           {/* Version number fixed at bottom right */}
-          <div className="fixed bottom-2 right-2 text-xs text-white font-mono select-none pointer-events-none">
+          <div className="fixed bottom-2 right-2 text-xs text-white font-mono select-none pointer-events-none pb-10">
             v{appVersion}
           </div>
         </div>

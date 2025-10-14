@@ -689,7 +689,11 @@ const ProjectPlanTable = ({
           setIsActionLoading(false);
           return;
         }
-        await refreshPlans();
+        // await refreshPlans();
+        setPlans(plans.filter((p, i) => i !== idx));
+        if (selectedPlan?.plId === plan.plId) {
+          onPlanSelect(null); // Deselect if deleted plan selected
+        }
       } else if (
         action === "Create Budget" ||
         action === "Create Blank Budget" ||
@@ -734,13 +738,19 @@ const ProjectPlanTable = ({
               : "EAC"
           }...`
         );
-        await axios.post(
+        const response = await axios.post(
           `${backendUrl}/Project/AddProjectPlan?type=${
             action === "Create Blank Budget" ? "blank" : "actual"
           }`,
           payloadTemplate
         );
-        await refreshPlans();
+        const createdPlan = response.data;
+        await refreshPlans(); // refresh
+        setTimeout(() => {
+          onPlanSelect(createdPlan);
+          // Optionally, scroll table to this plan row by ID
+        }, 100);
+        // setPlans([...plans, createdPlan]);
         toast.success(
           `${
             action === "Create Budget"

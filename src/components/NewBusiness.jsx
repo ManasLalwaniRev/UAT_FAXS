@@ -887,7 +887,6 @@ const NewBusiness = ({ onClose, onSaveSuccess }) => {
           }
         );
         console.log("AddProjectPlan API response:", response.data);
-
         toast.success("Budget details saved successfully!");
       }
 
@@ -1034,7 +1033,7 @@ const NewBusiness = ({ onClose, onSaveSuccess }) => {
   return (
     <div className="p-2 sm:p-4 space-y-6 text-[11px] sm:text-xs text-gray-800 font-sans max-w-4xl mx-auto">
       <ToastContainer
-        position="top-right"
+        position="top-right mt-15"
         autoClose={3000}
         hideProgressBar={false}
         closeOnClick

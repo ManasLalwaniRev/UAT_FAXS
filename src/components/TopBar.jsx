@@ -2,7 +2,10 @@ import React from "react";
 
 function TopBar({ name, onLogout }) {
   return (
-    <div className="w-full sticky top-0 z-30 flex items-center justify-between px-8 py-4 bg-gradient">
+    <div className="w-full sticky top-0 z-30 flex items-center justify-between px-2 py-1 bg-gradient">
+      <h2 className="text-base sm:text-lg md:text-2xl tracking-wide text-white">
+        R-AI
+      </h2>
       <div className="flex items-center gap-4">
         {/* <span className="text-xl font-semibold text-white">{name}</span> */}
       </div>
