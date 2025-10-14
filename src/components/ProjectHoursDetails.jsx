@@ -2169,7 +2169,7 @@ const calculateColumnTotals = () => {
     
     // Prevent input if exceeds limit
     if (numericValue > maxAllowedHours) {
-      toast.error(`Hours cannot exceed more than available hours `, {
+      toast.error(`Hours cannot exceed more than available hours * 2 `, {
         autoClose: 3000,
       });
       return; // Don't update the state
@@ -2205,6 +2205,9 @@ const calculateColumnTotals = () => {
     });
   }
 };
+
+
+
 
 
   const handleEmployeeDataBlur = async (empIdx, emp) => {
@@ -4376,14 +4379,24 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
   //   return numericHours > maxAllowedHours;
   // };
 
-  const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
+//   const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
+//   const duration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
+//   if (!duration || !duration.workingHours) return false;
+  
+//   const numericHours = parseFloat(hours) || 0;
+//   // Use available hours * 2 for ALL ID types including "Other"
+//   const maxAllowedHours = duration.workingHours * 2;
+//   return numericHours > maxAllowedHours;
+// };
+  
+ const checkHoursExceedLimit = (empIdx, uniqueKey, hours) => {
   const duration = sortedDurations.find(d => `${d.monthNo}_${d.year}` === uniqueKey);
   if (!duration || !duration.workingHours) return false;
   
   const numericHours = parseFloat(hours) || 0;
-  // Use available hours * 2 for ALL ID types including "Other"
-  const maxAllowedHours = duration.workingHours * 2;
-  return numericHours > maxAllowedHours;
+  // CHANGE: Use just available hours for WARNING COLUMN
+  const availableHours = duration.workingHours;
+  return numericHours > availableHours;
 };
 
 
@@ -5732,7 +5745,7 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                             row.perHourRate
                           )}
                         </td> */}
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
+                        {/* <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                           {isBudPlan && isEditable ? (
                             <input
                               type="password"
@@ -5767,7 +5780,79 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
                           ) : (
                             "**"
                           )}
-                        </td>
+                        </td> */}
+                        {/* <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
+  {isBudPlan && isEditable && 
+   emp.emple.type !== "Employee" && 
+   emp.emple.type !== "Vendor" ? (
+    <input
+      type="password"
+      value={
+        editingPerHourRateIdx === actualEmpIdx
+          ? editedData.perHourRate !== undefined
+            ? editedData.perHourRate
+            : row.perHourRate
+          : ""
+      }
+      placeholder={
+        editingPerHourRateIdx === actualEmpIdx
+          ? ""
+          : "**"
+      }
+      onFocus={() =>
+        setEditingPerHourRateIdx(actualEmpIdx)
+      }
+      onChange={(e) =>
+        handleEmployeeDataChange(
+          actualEmpIdx,
+          "perHourRate",
+          e.target.value.replace(/[^0-9.]/g, "")
+        )
+      }
+      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+    />
+  ) : (
+    "**"
+  )}
+</td> */}
+<td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
+  {isBudPlan && isEditable && 
+   emp.emple.type !== "Employee" && 
+   emp.emple.type !== "Vendor Employee" && 
+   emp.emple.type !== "Vendor" ? (
+    <input
+      type="password"
+      value={
+        editingPerHourRateIdx === actualEmpIdx
+          ? editedData.perHourRate !== undefined
+            ? editedData.perHourRate
+            : row.perHourRate
+          : ""
+      }
+      placeholder={
+        editingPerHourRateIdx === actualEmpIdx
+          ? ""
+          : "**"
+      }
+      onFocus={() =>
+        setEditingPerHourRateIdx(actualEmpIdx)
+      }
+      onChange={(e) =>
+        handleEmployeeDataChange(
+          actualEmpIdx,
+          "perHourRate",
+          e.target.value.replace(/[^0-9.]/g, "")
+        )
+      }
+      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+      disabled={false}
+    />
+  ) : (
+    <span className="text-gray-400 cursor-not-allowed">**</span>
+  )}
+</td>
+
+
 
                         <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
                           {row.total}
@@ -5982,7 +6067,7 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
       
       // Prevent input if exceeds limit
       if (numericValue > maxAllowedHours) {
-        toast.error(`Hours cannot exceed more than available hours`, {
+        toast.error(`Hours cannot exceed more than available hours * 2`, {
           autoClose: 3000,
         });
         return; // Don't update the state
@@ -6007,6 +6092,8 @@ if (newEntry.plcGlcCode && newEntry.plcGlcCode.trim() !== "") {
   disabled={!isInputEditable}
   placeholder="Enter Hours"
 />
+
+
 
 
 
