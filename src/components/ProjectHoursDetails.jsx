@@ -120,6 +120,22 @@ const ProjectHoursDetails = ({
   const [localWarnings, setLocalWarnings] = useState({});
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [showCopyButton, setShowCopyButton] = useState(false);
+  const [hasClipboardData, setHasClipboardData] = useState(false);
+  const [copiedRowsData, setCopiedRowsData] = useState([]);
+  const [newEntries, setNewEntries] = useState([]); // Array of new entries
+const [newEntryPeriodHoursArray, setNewEntryPeriodHoursArray] = useState([]); // Array of period hours
+const [copiedMonthMetadata, setCopiedMonthMetadata] = useState([]);
+// Add this state at the top with other useState
+const [hasUnsavedPastedChanges, setHasUnsavedPastedChanges] = useState(false);
+
+
+const [pastedEntrySuggestions, setPastedEntrySuggestions] = useState({}); // Track suggestions per entry
+const [pastedEntryAccounts, setPastedEntryAccounts] = useState({}); // Track accounts per entry
+const [pastedEntryOrgs, setPastedEntryOrgs] = useState({}); // Track orgs per entry
+const [pastedEntryPlcs, setPastedEntryPlcs] = useState({}); // Track PLCs per entry
+
+
+
 
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
@@ -159,6 +175,46 @@ const ProjectHoursDetails = ({
 
   const isFieldEditable =
     planType === "BUD" || planType === "EAC" || planType === "NBBUD";
+
+  // Add a new empty entry form
+const addNewEntryForm = () => {
+  const newEntry = {
+    id: '',
+    firstName: '',
+    lastName: '',
+    isRev: false,
+    isBrd: false,
+    idType: '',
+    acctId: '',
+    orgId: '',
+    plcGlcCode: '',
+    perHourRate: '',
+    status: 'Act',
+  };
+  setNewEntries(prev => [...prev, newEntry]);
+  setNewEntryPeriodHoursArray(prev => [...prev, {}]);
+};
+
+// Remove an entry form
+const removeNewEntryForm = (index) => {
+  setNewEntries(prev => prev.filter((_, i) => i !== index));
+  setNewEntryPeriodHoursArray(prev => prev.filter((_, i) => i !== index));
+};
+
+// Update a specific entry
+const updateNewEntry = (index, updates) => {
+  setNewEntries(prev => prev.map((entry, i) => 
+    i === index ? { ...entry, ...updates } : entry
+  ));
+};
+
+// Update period hours for a specific entry
+const updateNewEntryPeriodHours = (index, periodHours) => {
+  setNewEntryPeriodHoursArray(prev => prev.map((hours, i) => 
+    i === index ? { ...hours, ...periodHours } : hours
+  ));
+};
+
 
   // Clear all fields when ID type changes
   useEffect(() => {
@@ -200,6 +256,7 @@ const ProjectHoursDetails = ({
   useEffect(() => {
     if (planId) {
       setShowNewForm(false);
+      resetNewEntryForm(); // Use the reset function
       setNewEntry({
         id: "",
         firstName: "",
@@ -1510,304 +1567,3814 @@ const ProjectHoursDetails = ({
   };
 
   // Function to copy selected rows data
-  const handleCopySelectedRows = () => {
-    if (selectedRows.size === 0) {
-      toast.info("No rows selected to copy.", { autoClose: 2000 });
-      return;
-    }
+  // const handleCopySelectedRows = () => {
+  //   if (selectedRows.size === 0) {
+  //     toast.info("No rows selected to copy.", { autoClose: 2000 });
+  //     return;
+  //   }
 
-    const sortedDurations = durations.sort((a, b) => {
+  //   const sortedDurations = durations.sort((a, b) => {
+  //     if (a.year !== b.year) return a.year - b.year;
+  //     return a.monthNo - b.monthNo;
+  //   });
+
+  //   // Create header row WITHOUT warning and total columns
+  //   const headers = [
+  //     "ID Type",
+  //     "ID",
+  //     "Name",
+  //     "Account",
+  //     "Account Name",
+  //     "Organization",
+  //     "PLC",
+  //     "Rev",
+  //     "Brd",
+  //     "Status",
+  //     "Hour Rate",
+  //     // Removed "Warning" and "Total" from headers
+  //   ];
+
+  //   // Add month headers
+  //   sortedDurations.forEach((duration) => {
+  //     const monthName = new Date(
+  //       duration.year,
+  //       duration.monthNo - 1
+  //     ).toLocaleDateString("en-US", {
+  //       month: "short",
+  //       year: "2-digit",
+  //     });
+  //     headers.push(monthName);
+  //   });
+
+  //   const copyData = [headers];
+
+  //   // Process selected rows
+  //   selectedRows.forEach((rowIndex) => {
+  //     if (rowIndex === "new-entry" && showNewForm) {
+  //       // Handle new entry row WITHOUT warning and total
+  //       const newEntryData = [
+  //         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label ||
+  //           newEntry.idType,
+  //         newEntry.id,
+  //         // Removed warning column
+  //         newEntry.idType === "PLC"
+  //           ? newEntry.firstName || ""
+  //           : newEntry.idType === "Vendor"
+  //           ? newEntry.lastName || newEntry.firstName || ""
+  //           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+  //         newEntry.acctId,
+  //         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)
+  //           ?.name || "-",
+  //         newEntry.orgId,
+  //         newEntry.plcGlcCode,
+  //         newEntry.isRev ? "✓" : "-",
+  //         newEntry.isBrd ? "✓" : "-",
+  //         newEntry.status,
+  //         newEntry.perHourRate,
+  //         // Removed total column
+  //       ];
+
+  //       // Add month values for new entry
+  //       sortedDurations.forEach((duration) => {
+  //         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+  //         newEntryData.push(value);
+  //       });
+
+  //       copyData.push(newEntryData);
+  //     } else {
+  //       // Handle existing employee rows WITHOUT warning and total
+  //       const emp = localEmployees[rowIndex];
+  //       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+  //         const employeeRow = getEmployeeRow(emp, rowIndex);
+  //         const rowData = [
+  //           employeeRow.idType,
+  //           employeeRow.emplId,
+  //           // Removed warning column
+  //           employeeRow.name,
+  //           employeeRow.acctId,
+  //           employeeRow.acctName,
+  //           employeeRow.orgId,
+  //           employeeRow.glcPlc,
+  //           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+  //           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+  //           employeeRow.status,
+  //           employeeRow.perHourRate,
+  //           // Removed total column
+  //         ];
+
+  //         // Add month values
+  //         sortedDurations.forEach((duration) => {
+  //           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+  //           const monthHours = getMonthHours(emp);
+  //           const forecastValue = monthHours[uniqueKey]?.value;
+  //           const value =
+  //             inputValue !== undefined && inputValue !== ""
+  //               ? inputValue
+  //               : forecastValue || "0.00";
+  //           rowData.push(value);
+  //         });
+
+  //         copyData.push(rowData);
+  //       }
+  //     }
+  //   });
+
+  //   // Convert to tab-separated values for Excel compatibility
+  //   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+  //   // Copy to clipboard
+  //   navigator.clipboard
+  //     .writeText(tsvContent)
+  //     .then(() => {
+  //       toast.success(
+  //         `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+  //         {
+  //           autoClose: 3000,
+  //         }
+  //       );
+  //       // Clear selection after copying
+  //       setSelectedRows(new Set());
+  //       setShowCopyButton(false);
+  //     })
+  //     .catch((err) => {
+  //       console.error("Failed to copy to clipboard:", err);
+  //       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+  //     });
+  // };
+//   const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   // Create header row WITHOUT warning and total columns
+//   const headers = [
+//     "ID Type",
+//     "ID",
+//     "Name",
+//     "Account",
+//     "Account Name",
+//     "Organization",
+//     "PLC",
+//     "Rev",
+//     "Brd",
+//     "Status",
+//     "Hour Rate",
+//   ];
+
+//   // Add month headers
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+
+//   // Process selected rows
+//   selectedRows.forEach((rowIndex) => {
+//     if (rowIndex === "new-entry" && showNewForm) {
+//       const newEntryData = [
+//         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label ||
+//           newEntry.idType,
+//         newEntry.id,
+//         newEntry.idType === "PLC"
+//           ? newEntry.firstName || ""
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+//         newEntry.acctId,
+//         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)
+//           ?.name || "-",
+//         newEntry.orgId,
+//         newEntry.plcGlcCode,
+//         newEntry.isRev ? "✓" : "-",
+//         newEntry.isBrd ? "✓" : "-",
+//         newEntry.status,
+//         newEntry.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+//         newEntryData.push(value);
+//       });
+
+//       copyData.push(newEntryData);
+//     } else {
+//       const emp = localEmployees[rowIndex];
+//       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//         const employeeRow = getEmployeeRow(emp, rowIndex);
+//         const rowData = [
+//           employeeRow.idType,
+//           employeeRow.emplId,
+//           employeeRow.name,
+//           employeeRow.acctId,
+//           employeeRow.acctName,
+//           employeeRow.orgId,
+//           employeeRow.glcPlc,
+//           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//           employeeRow.status,
+//           employeeRow.perHourRate,
+//         ];
+
+//         sortedDurations.forEach((duration) => {
+//           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//           const monthHours = getMonthHours(emp);
+//           const forecastValue = monthHours[uniqueKey]?.value;
+//           const value =
+//             inputValue !== undefined && inputValue !== ""
+//               ? inputValue
+//               : forecastValue || "0.00";
+//           rowData.push(value);
+//         });
+
+//         copyData.push(rowData);
+//       }
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       // console.log("COPY SUCCESS - Setting hasClipboardData to TRUE");
+//       // toast.success(
+//       //   `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//       //   {
+//       //     autoClose: 3000,
+//       //   }
+//       // );
+      
+//       // // IMPORTANT: Enable the paste button after copying
+//       // setHasClipboardData(true);
+//       //  console.log("hasClipboardData state updated"); 
+      
+//       // // Clear selection after copying
+//       // setSelectedRows(new Set());
+//       // setShowCopyButton(false);
+//       console.log("COPY SUCCESS - Setting hasClipboardData to TRUE");
+    
+//     toast.success(
+//       `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//       { autoClose: 3000 }
+//     );
+    
+//     // Force state update with functional setter
+//     setHasClipboardData(() => true);
+    
+//     console.log("hasClipboardData state updated");
+    
+//     // Clear selection after copying
+//     setSelectedRows(new Set());
+//     setShowCopyButton(false);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy to clipboard:", err);
+//       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type",
+//     "ID",
+//     "Name",
+//     "Account",
+//     "Account Name",
+//     "Organization",
+//     "PLC",
+//     "Rev",
+//     "Brd",
+//     "Status",
+//     "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+
+//   selectedRows.forEach((rowIndex) => {
+//     if (rowIndex === "new-entry" && showNewForm) {
+//       const newEntryData = [
+//         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label ||
+//           newEntry.idType,
+//         newEntry.id,
+//         newEntry.idType === "PLC"
+//           ? newEntry.firstName || ""
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+//         newEntry.acctId,
+//         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)
+//           ?.name || "-",
+//         newEntry.orgId,
+//         newEntry.plcGlcCode,
+//         newEntry.isRev ? "✓" : "-",
+//         newEntry.isBrd ? "✓" : "-",
+//         newEntry.status,
+//         newEntry.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+//         newEntryData.push(value);
+//       });
+
+//       copyData.push(newEntryData);
+//     } else {
+//       const emp = localEmployees[rowIndex];
+//       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//         const employeeRow = getEmployeeRow(emp, rowIndex);
+//         const rowData = [
+//           employeeRow.idType,
+//           employeeRow.emplId,
+//           employeeRow.name,
+//           employeeRow.acctId,
+//           employeeRow.acctName,
+//           employeeRow.orgId,
+//           employeeRow.glcPlc,
+//           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//           employeeRow.status,
+//           employeeRow.perHourRate,
+//         ];
+
+//         sortedDurations.forEach((duration) => {
+//           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//           const monthHours = getMonthHours(emp);
+//           const forecastValue = monthHours[uniqueKey]?.value;
+//           const value =
+//             inputValue !== undefined && inputValue !== ""
+//               ? inputValue
+//               : forecastValue || "0.00";
+//           rowData.push(value);
+//         });
+
+//         copyData.push(rowData);
+//       }
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("COPY SUCCESS - Setting hasClipboardData to TRUE");
+    
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // Set clipboard data FIRST before clearing selection
+//       setHasClipboardData(true);
+      
+//       console.log("hasClipboardData state updated");
+      
+//       // Clear selection AFTER setting clipboard data
+//       setTimeout(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       }, 100);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy to clipboard:", err);
+//       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = []; // NEW: Store structured data
+
+//   selectedRows.forEach((rowIndex) => {
+//     if (rowIndex === "new-entry" && showNewForm) {
+//       const newEntryData = [
+//         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label || newEntry.idType,
+//         newEntry.id,
+//         newEntry.idType === "PLC"
+//           ? newEntry.firstName || ""
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+//         newEntry.acctId,
+//         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)?.name || "-",
+//         newEntry.orgId,
+//         newEntry.plcGlcCode,
+//         newEntry.isRev ? "✓" : "-",
+//         newEntry.isBrd ? "✓" : "-",
+//         newEntry.status,
+//         newEntry.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+//         newEntryData.push(value);
+//       });
+
+//       copyData.push(newEntryData);
+//       structuredData.push(newEntryData); // NEW: Store for later use
+//     } else {
+//       const emp = localEmployees[rowIndex];
+//       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//         const employeeRow = getEmployeeRow(emp, rowIndex);
+//         const rowData = [
+//           employeeRow.idType,
+//           employeeRow.emplId,
+//           employeeRow.name,
+//           employeeRow.acctId,
+//           employeeRow.acctName,
+//           employeeRow.orgId,
+//           employeeRow.glcPlc,
+//           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//           employeeRow.status,
+//           employeeRow.perHourRate,
+//         ];
+
+//         sortedDurations.forEach((duration) => {
+//           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//           const monthHours = getMonthHours(emp);
+//           const forecastValue = monthHours[uniqueKey]?.value;
+//           const value =
+//             inputValue !== undefined && inputValue !== ""
+//               ? inputValue
+//               : forecastValue || "0.00";
+//           rowData.push(value);
+//         });
+
+//         copyData.push(rowData);
+//         structuredData.push(rowData); // NEW: Store for later use
+//       }
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("COPY SUCCESS - Setting hasClipboardData to TRUE");
+      
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // NEW: Store both clipboard flag AND structured data
+//       setHasClipboardData(true);
+//       setCopiedRowsData(structuredData);
+      
+//       console.log("hasClipboardData state updated, rows stored:", structuredData.length);
+      
+//       setTimeout(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       }, 100);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy to clipboard:", err);
+//       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = []; // Store structured data for paste
+
+//   selectedRows.forEach((rowIndex) => {
+//     if (rowIndex === "new-entry" && showNewForm) {
+//       const newEntryData = [
+//         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label || newEntry.idType,
+//         newEntry.id,
+//         newEntry.idType === "PLC"
+//           ? newEntry.firstName || ""
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+//         newEntry.acctId,
+//         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)?.name || "-",
+//         newEntry.orgId,
+//         newEntry.plcGlcCode,
+//         newEntry.isRev ? "✓" : "-",
+//         newEntry.isBrd ? "✓" : "-",
+//         newEntry.status,
+//         newEntry.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+//         newEntryData.push(value);
+//       });
+
+//       copyData.push(newEntryData);
+//       structuredData.push(newEntryData);
+//     } else {
+//       const emp = localEmployees[rowIndex];
+//       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//         const employeeRow = getEmployeeRow(emp, rowIndex);
+//         const rowData = [
+//           employeeRow.idType,
+//           employeeRow.emplId,
+//           employeeRow.name,
+//           employeeRow.acctId,
+//           employeeRow.acctName,
+//           employeeRow.orgId,
+//           employeeRow.glcPlc,
+//           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//           employeeRow.status,
+//           employeeRow.perHourRate,
+//         ];
+
+//         sortedDurations.forEach((duration) => {
+//           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//           const monthHours = getMonthHours(emp);
+//           const forecastValue = monthHours[uniqueKey]?.value;
+//           const value =
+//             inputValue !== undefined && inputValue !== ""
+//               ? inputValue
+//               : forecastValue || "0.00";
+//           rowData.push(value);
+//         });
+
+//         copyData.push(rowData);
+//         structuredData.push(rowData);
+//       }
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("COPY SUCCESS - Setting hasClipboardData to TRUE");
+      
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // Store both clipboard flag AND structured data
+//       setHasClipboardData(true);
+//       setCopiedRowsData(structuredData);
+      
+//       console.log("hasClipboardData state updated, rows stored:", structuredData.length);
+      
+//       setTimeout(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       }, 100);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy to clipboard:", err);
+//       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     if (rowIndex === "new-entry" && showNewForm) {
+//       const newEntryData = [
+//         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label || newEntry.idType,
+//         newEntry.id,
+//         newEntry.idType === "PLC"
+//           ? newEntry.firstName || ""
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+//         newEntry.acctId,
+//         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)?.name || "-",
+//         newEntry.orgId,
+//         newEntry.plcGlcCode,
+//         newEntry.isRev ? "✓" : "-",
+//         newEntry.isBrd ? "✓" : "-",
+//         newEntry.status,
+//         newEntry.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+//         newEntryData.push(value);
+//       });
+
+//       copyData.push(newEntryData);
+//       structuredData.push(newEntryData);
+//     } else {
+//       const emp = localEmployees[rowIndex];
+//       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//         const employeeRow = getEmployeeRow(emp, rowIndex);
+//         const rowData = [
+//           employeeRow.idType,
+//           employeeRow.emplId,
+//           employeeRow.name,
+//           employeeRow.acctId,
+//           employeeRow.acctName,
+//           employeeRow.orgId,
+//           employeeRow.glcPlc,
+//           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//           employeeRow.status,
+//           employeeRow.perHourRate,
+//         ];
+
+//         sortedDurations.forEach((duration) => {
+//           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//           const monthHours = getMonthHours(emp);
+//           const forecastValue = monthHours[uniqueKey]?.value;
+//           const value =
+//             inputValue !== undefined && inputValue !== ""
+//               ? inputValue
+//               : forecastValue || "0.00";
+//           rowData.push(value);
+//         });
+
+//         copyData.push(rowData);
+//         structuredData.push(rowData);
+//       }
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("COPY SUCCESS - Setting hasClipboardData to TRUE");
+//       console.log("Rows to be stored:", structuredData.length);
+      
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // CRITICAL FIX: Store clipboard data BEFORE clearing selection
+//       // Use separate batched state updates
+//       setCopiedRowsData(structuredData);
+//       setHasClipboardData(true);
+      
+//       console.log("hasClipboardData set to true, structuredData:", structuredData.length);
+      
+//       // Clear selection AFTER a delay to ensure state updates complete
+//       setTimeout(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//         console.log("Selection cleared, but paste button should stay enabled");
+//       }, 150);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy to clipboard:", err);
+//       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     if (rowIndex === "new-entry" && showNewForm) {
+//       const newEntryData = [
+//         ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label || newEntry.idType,
+//         newEntry.id,
+//         newEntry.idType === "PLC"
+//           ? newEntry.firstName || ""
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
+//         newEntry.acctId,
+//         accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)?.name || "-",
+//         newEntry.orgId,
+//         newEntry.plcGlcCode,
+//         newEntry.isRev ? "✓" : "-",
+//         newEntry.isBrd ? "✓" : "-",
+//         newEntry.status,
+//         newEntry.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const value = newEntryPeriodHours[uniqueKey] || "0.00";
+//         newEntryData.push(value);
+//       });
+
+//       copyData.push(newEntryData);
+//       structuredData.push(newEntryData);
+//     } else {
+//       const emp = localEmployees[rowIndex];
+//       if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//         const employeeRow = getEmployeeRow(emp, rowIndex);
+//         const rowData = [
+//           employeeRow.idType,
+//           employeeRow.emplId,
+//           employeeRow.name,
+//           employeeRow.acctId,
+//           employeeRow.acctName,
+//           employeeRow.orgId,
+//           employeeRow.glcPlc,
+//           typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//           typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//           employeeRow.status,
+//           employeeRow.perHourRate,
+//         ];
+
+//         sortedDurations.forEach((duration) => {
+//           const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//           const monthHours = getMonthHours(emp);
+//           const forecastValue = monthHours[uniqueKey]?.value;
+//           const value =
+//             inputValue !== undefined && inputValue !== ""
+//               ? inputValue
+//               : forecastValue || "0.00";
+//           rowData.push(value);
+//         });
+
+//         copyData.push(rowData);
+//         structuredData.push(rowData);
+//       }
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("COPY SUCCESS - Setting clipboard data");
+//       console.log("Rows copied:", structuredData.length);
+      
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // CRITICAL FIX: Set clipboard data states FIRST, synchronously
+//       setCopiedRowsData(structuredData);
+//       setHasClipboardData(true);
+      
+//       console.log("Clipboard states set - paste button should now be enabled");
+      
+//       // CRITICAL: Clear selection in a separate setTimeout AFTER states are set
+//       // This ensures hasClipboardData stays true
+//       setTimeout(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//         console.log("Selection cleared, but clipboard data preserved");
+//       }, 200);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy to clipboard:", err);
+//       toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = localEmployees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         employeeRow.glcPlc,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//         employeeRow.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value =
+//           inputValue !== undefined && inputValue !== ""
+//             ? inputValue
+//             : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("✅ COPY SUCCESS");
+//       console.log("📊 Rows copied:", structuredData.length);
+      
+//       // CRITICAL: Set states SYNCHRONOUSLY before any setTimeout
+//       setCopiedRowsData(structuredData);
+//       setHasClipboardData(true);
+      
+//       console.log("✅ hasClipboardData set to TRUE");
+//       console.log("✅ Paste button should NOW be enabled");
+      
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} row(s)!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // Clear selection AFTER states are set (separate microtask)
+//       setTimeout(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       }, 50);
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = localEmployees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         employeeRow.glcPlc,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//         employeeRow.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value =
+//           inputValue !== undefined && inputValue !== ""
+//             ? inputValue
+//             : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("✅ COPY SUCCESS");
+      
+//       // CRITICAL: Set clipboard states FIRST - Don't use setTimeout here!
+//       setCopiedRowsData(structuredData);
+//       setHasClipboardData(true);
+      
+//       console.log("✅ Paste button should NOW be enabled");
+//       console.log("Rows copied:", structuredData.length);
+      
+//       toast.success(
+//         `Successfully copied ${selectedRows.size} rows!`,
+//         { autoClose: 3000 }
+//       );
+      
+//       // CRITICAL: Use requestAnimationFrame instead of setTimeout
+//       // This ensures clipboard states are fully set before clearing selection
+//       requestAnimationFrame(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//         console.log("Selection cleared, clipboard data preserved");
+//       });
+//     })
+//     .catch((err) => {
+//       console.error("Failed to copy:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type", "ID", "Name", "Account", "Account Name",
+//     "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate",
+//   ];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", {
+//       month: "short",
+//       year: "2-digit",
+//     });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = localEmployees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         employeeRow.glcPlc,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//         employeeRow.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value =
+//           inputValue !== undefined && inputValue !== ""
+//             ? inputValue
+//             : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       console.log("✅ COPY SUCCESS");
+      
+//       // CRITICAL: Set states IMMEDIATELY and SYNCHRONOUSLY
+//       setCopiedRowsData(structuredData);
+//       setHasClipboardData(true);
+      
+//       console.log("✅ Paste button ENABLED");
+//       console.log("Rows copied:", structuredData.length);
+      
+//       toast.success(`Copied ${structuredData.length} rows!`, { autoClose: 3000 });
+      
+//       // CRITICAL: Use requestAnimationFrame to clear selection AFTER render
+//       requestAnimationFrame(() => {
+//         requestAnimationFrame(() => {
+//           setSelectedRows(new Set());
+//           setShowCopyButton(false);
+//         });
+//       });
+//     })
+//     .catch((err) => {
+//       console.error("Copy failed:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = ["ID Type", "ID", "Name", "Account", "Account Name", "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate"];
+  
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(duration.year, duration.monthNo - 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = localEmployees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         employeeRow.glcPlc,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//         employeeRow.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard.writeText(tsvContent)
+//   .then(() => {
+//   toast.success(`Successfully copied ${selectedRows.size} rows to clipboard!`, { autoClose: 3000 });
+  
+//   // CRITICAL: Set states immediately
+//   setHasClipboardData(true);
+//   setCopiedRowsData(structuredData);
+  
+//   // Clear selection after a delay
+//   setTimeout(() => {
+//     setSelectedRows(new Set());
+//     setShowCopyButton(false);
+//   }, 100);
+// })
+// .catch((err) => {
+//     console.error("Copy failed:", err);
+//     toast.error("Failed to copy data.", { autoClose: 3000 });
+//   });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = ["ID Type", "ID", "Name", "Account", "Account Name", "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate"];
+  
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(duration.year, duration.monthNo - 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = localEmployees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         employeeRow.glcPlc,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//         employeeRow.perHourRate,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard.writeText(tsvContent).then(() => {
+//     console.log("✅ COPY SUCCESS");
+    
+//     // CRITICAL FIX: Set states in batch, force re-render
+//     setCopiedRowsData(() => structuredData);
+//     setHasClipboardData(() => true);
+    
+//     console.log("✅ Paste button ENABLED");
+//     console.log("Rows copied:", structuredData.length);
+    
+//     toast.success(`Copied ${structuredData.length} rows!`, { autoClose: 3000 });
+    
+//     // Clear selection using microtask
+//     Promise.resolve().then(() => {
+//       setSelectedRows(new Set());
+//       setShowCopyButton(false);
+//     });
+//   }).catch((err) => {
+//     console.error("Copy failed:", err);
+//     // toast.error(Failed to copy data.", { autoClose: 3000 });
+//   });
+// };
+
+const handleCopySelectedRows = () => {
+  if (selectedRows.size === 0) {
+    toast.info("No rows selected to copy.", { autoClose: 2000 });
+    return;
+  }
+
+  const sortedDurations = durations.sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.monthNo - b.monthNo;
+  });
+
+  const headers = [
+    "ID Type", "ID", "Name", "Account", "Account Name", 
+    "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate"
+  ];
+  
+  // Store month metadata for matching during paste
+  const monthMetadata = [];
+  
+  sortedDurations.forEach((duration) => {
+    const monthName = new Date(duration.year, duration.monthNo - 1)
+      .toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+    headers.push(monthName);
+    monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+  });
+
+  const copyData = [headers];
+  const structuredData = [];
+
+  selectedRows.forEach((rowIndex) => {
+    const emp = localEmployees[rowIndex];
+    if (emp && emp.emple && !hiddenRows[rowIndex]) {
+      const employeeRow = getEmployeeRow(emp, rowIndex);
+      const rowData = [
+        employeeRow.idType,
+        employeeRow.emplId,
+        employeeRow.name,
+        employeeRow.acctId,
+        employeeRow.acctName,
+        employeeRow.orgId,
+        employeeRow.glcPlc,
+        typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+        typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+        employeeRow.status,
+        employeeRow.perHourRate,
+      ];
+
+      sortedDurations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+        const monthHours = getMonthHours(emp);
+        const forecastValue = monthHours[uniqueKey]?.value;
+        const value = (inputValue !== undefined && inputValue !== "") 
+          ? inputValue 
+          : (forecastValue || "0.00");
+        rowData.push(value);
+      });
+
+      copyData.push(rowData);
+      structuredData.push(rowData);
+    }
+  });
+
+  const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+  navigator.clipboard.writeText(tsvContent).then(() => {
+    console.log("✅ COPY SUCCESS");
+    
+    // CRITICAL: Store month metadata with copied data
+    setCopiedRowsData(() => structuredData);
+    setCopiedMonthMetadata(() => monthMetadata);  // ← Add this state
+    setHasClipboardData(() => true);
+    
+    console.log("✅ Paste button ENABLED");
+    console.log("Rows copied:", structuredData.length);
+    console.log("Month metadata:", monthMetadata);
+    
+    toast.success(`Copied ${structuredData.length} rows!`, { autoClose: 3000 });
+    
+    Promise.resolve().then(() => {
+      setSelectedRows(new Set());
+      setShowCopyButton(false);
+    });
+  }).catch((err) => {
+    console.error("Copy failed:", err);
+    toast.error("Failed to copy data.", { autoClose: 3000 });
+  });
+};
+
+// const handlePasteMultipleRows = () => {
+//   console.log("Pasting multiple rows:", copiedRowsData.length);
+  
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   // Process all copied rows
+//   const processedEntries = [];
+//   const processedHoursArray = [];
+
+//   copiedRowsData.forEach((rowData) => {
+//     // Extract employee data from row (first 11 columns before month data)
+//     const [idType, id, name, acctId, acctName, orgId, plcGlcCode, isRev, isBrd, status, perHourRate, ...monthValues] = rowData;
+
+//     // Split name into firstName and lastName
+//     const nameParts = name.split(", ");
+//     const lastName = nameParts[0] || "";
+//     const firstName = nameParts[1] || "";
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       plcGlcCode: plcGlcCode,
+//       perHourRate: perHourRate,
+//       status: status || "Act",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     // Create period hours object
+//     const periodHours = {};
+//     sortedDurations.forEach((duration, index) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       periodHours[uniqueKey] = monthValues[index] || "0.00";
+//     });
+
+//     processedEntries.push(entry);
+//     processedHoursArray.push(periodHours);
+//   });
+
+//   // Update state with all entries
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodHoursArray(processedHoursArray);
+//   setShowNewForm(false);
+
+//   toast.success(`Pasted ${processedEntries.length} entries! Review and click "Save All"`, { autoClose: 3000 });
+// };
+
+
+
+
+// const handlePasteMultipleRows = async () => {
+//   try {
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data in clipboard.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     const lines = text.split("\n").filter((line) => line.trim() !== "");
+    
+//     if (lines.length === 0) {
+//       toast.error("No valid data found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     const isFirstLineHeaders =
+//       lines[0].toLowerCase().includes("id type") ||
+//       lines[0].toLowerCase().includes("account");
+
+//     const dataLines = isFirstLineHeaders ? lines.slice(1) : lines;
+
+//     if (dataLines.length === 0) {
+//       toast.error("No data rows found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Clear existing new entries
+//     setNewEntries([]);
+//     setNewEntryPeriodHoursArray([]);
+
+//     // Process each row and create a new entry form
+//     const allNewEntries = [];
+//     const allPeriodHours = [];
+
+//     dataLines.forEach((line) => {
+//       const row = line.split("\t");
+      
+//       if (row.length < 11) {
+//         console.log("Skipping invalid row");
+//         return;
+//       }
+
+//       const [
+//         idTypeLabel, id, name, acctId, acctName, orgId, plc,
+//         rev, brd, status, hourRate, ...monthValues
+//       ] = row;
+
+//       const idType =
+//         ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+//       let firstName = "";
+//       let lastName = "";
+
+//       if (idType === "PLC") {
+//         firstName = name || "";
+//       } else if (idType === "Vendor") {
+//         lastName = name || "";
+//       } else {
+//         const nameParts = (name || "").split(" ");
+//         firstName = nameParts[0] || "";
+//         lastName = nameParts.slice(1).join(" ") || "";
+//       }
+
+//       const newEntry = {
+//         id: id || "",
+//         firstName,
+//         lastName,
+//         isRev: rev === "✓",
+//         isBrd: brd === "✓",
+//         idType,
+//         acctId: acctId || "",
+//         orgId: orgId || "",
+//         plcGlcCode: plc || "",
+//         perHourRate: hourRate || "",
+//         status: status || "ACT",
+//       };
+
+//       // Process period hours
+//       const newPeriodHours = {};
+//       if (monthValues.length > 0 && durations.length > 0) {
+//         const sortedDurations = [...durations].sort((a, b) => {
+//           if (a.year !== b.year) return a.year - b.year;
+//           return a.monthNo - b.monthNo;
+//         });
+
+//         monthValues.forEach((value, index) => {
+//           if (
+//             index < sortedDurations.length &&
+//             value &&
+//             value !== "0.00" &&
+//             value !== "0"
+//           ) {
+//             const duration = sortedDurations[index];
+//             const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//             newPeriodHours[uniqueKey] = value;
+//           }
+//         });
+//       }
+
+//       allNewEntries.push(newEntry);
+//       allPeriodHours.push(newPeriodHours);
+//     });
+
+//     // Set all entries at once
+//     setNewEntries(allNewEntries);
+//     setNewEntryPeriodHoursArray(allPeriodHours);
+
+//     // Clear clipboard data
+//     setHasClipboardData(false);
+//     setCopiedRowsData([]);
+
+//     toast.success(`Opened ${allNewEntries.length} new entry forms!`, { 
+//       autoClose: 3000 
+//     });
+
+//   } catch (err) {
+//     console.error("Paste failed:", err);
+//     toast.error("Failed to paste data.", { autoClose: 3000 });
+//   }
+// };
+
+
+
+
+
+  
+
+
+  // const handlePasteToNewEntry = async () => {
+  //   try {
+  //     isPastingRef.current = true; // Set flag BEFORE reading clipboard
+
+  //     const text = await navigator.clipboard.readText();
+
+  //     if (!text || text.trim() === "") {
+  //       toast.error("No data found in clipboard. Please copy data first.", {
+  //         autoClose: 3000,
+  //       });
+  //       isPastingRef.current = false;
+  //       return;
+  //     }
+
+  //     // Process the paste
+  //     processPastedText(text);
+
+  //     // Clear flag after a delay to ensure all state updates complete
+  //     setTimeout(() => {
+  //       isPastingRef.current = false;
+  //     }, 300);
+  //   } catch (err) {
+  //     isPastingRef.current = false; // Clear flag on error
+  //     console.log("Clipboard access failed:", err);
+  //     toast.error(
+  //       "Please use Ctrl+V to paste or grant clipboard permissions.",
+  //       {
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //   }
+  // };
+  
+//   const handlePasteToNewEntry = async () => {
+//   try {
+//     isPastingRef.current = true;
+
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data found in clipboard. Please copy data first.", {
+//         autoClose: 3000,
+//       });
+//       isPastingRef.current = false;
+//       return;
+//     }
+
+//     // Process the paste
+//     processPastedText(text);
+    
+//     // Clear clipboard data flag after successful paste
+//     setHasClipboardData(false);
+
+//     // Clear flag after a delay to ensure all state updates complete
+//     setTimeout(() => {
+//       isPastingRef.current = false;
+//     }, 300);
+//   } catch (err) {
+//     isPastingRef.current = false;
+//     console.log("Clipboard access failed:", err);
+//     toast.error(
+//       "Please use Ctrl+V to paste or grant clipboard permissions.",
+//       {
+//         autoClose: 3000,
+//       }
+//     );
+//   }
+// };
+
+// const handlePasteToNewEntry = async () => {
+//   try {
+//     isPastingRef.current = true;
+
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data found in clipboard. Please copy data first.", {
+//         autoClose: 3000,
+//       });
+//       isPastingRef.current = false;
+//       return;
+//     }
+
+//     processPastedText(text);
+    
+//     // Clear clipboard flag after successful paste
+//     setHasClipboardData(false);
+
+//     setTimeout(() => {
+//       isPastingRef.current = false;
+//     }, 300);
+//   } catch (err) {
+//     isPastingRef.current = false;
+//     console.log("Clipboard access failed:", err);
+//     toast.error(
+//       "Please use Ctrl+V to paste or grant clipboard permissions.",
+//       {
+//         autoClose: 3000,
+//       }
+//     );
+//   }
+// };
+
+// const handlePasteToNewEntry = async () => {
+//   try {
+//     isPastingRef.current = true;
+
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data found in clipboard. Please copy data first.", {
+//         autoClose: 3000,
+//       });
+//       isPastingRef.current = false;
+//       return;
+//     }
+
+//     // Process single paste normally
+//     processPastedText(text);
+    
+//     // Clear clipboard flag after successful paste
+//     setHasClipboardData(false);
+
+//     setTimeout(() => {
+//       isPastingRef.current = false;
+//     }, 300);
+//   } catch (err) {
+//     isPastingRef.current = false;
+//     console.log("Clipboard access failed:", err);
+//     toast.error("Please use Ctrl+V to paste or grant clipboard permissions.", {
+//       autoClose: 3000,
+//     });
+//   }
+// };
+// const handlePasteMultipleRows = async () => {
+//   try {
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data in clipboard.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     const lines = text.split("\n").filter((line) => line.trim() !== "");
+    
+//     if (lines.length === 0) {
+//       toast.error("No valid data found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Extract headers to get month column information
+//     const headerLine = lines[0];
+//     const headers = headerLine.split("\t");
+    
+//     // Find where month columns start (after "Hour Rate")
+//     const monthStartIndex = headers.findIndex(h => 
+//       h.match(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
+//     );
+    
+//     if (monthStartIndex === -1) {
+//       toast.error("No month data found in clipboard.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Extract month headers
+//     const monthHeaders = headers.slice(monthStartIndex);
+    
+//     const dataLines = lines.slice(1); // Skip header line
+
+//     if (dataLines.length === 0) {
+//       toast.error("No data rows found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Clear existing new entries
+//     setNewEntries([]);
+//     setNewEntryPeriodHoursArray([]);
+
+//     // Process each row
+//     const allNewEntries = [];
+//     const allPeriodHours = [];
+
+//     dataLines.forEach((line) => {
+//       const row = line.split("\t");
+      
+//       if (row.length < 11) {
+//         console.log("Skipping invalid row");
+//         return;
+//       }
+
+//       const [
+//         idTypeLabel, id, name, acctId, acctName, orgId, plc,
+//         rev, brd, status, hourRate, ...monthValues
+//       ] = row;
+
+//       const idType =
+//         ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+//       let firstName = "";
+//       let lastName = "";
+
+//       if (idType === "PLC") {
+//         firstName = name || "";
+//       } else if (idType === "Vendor") {
+//         lastName = name || "";
+//       } else {
+//         const nameParts = (name || "").split(" ");
+//         firstName = nameParts[0] || "";
+//         lastName = nameParts.slice(1).join(" ") || "";
+//       }
+
+//       const newEntry = {
+//         id: id || "",
+//         firstName,
+//         lastName,
+//         isRev: rev === "✓",
+//         isBrd: brd === "✓",
+//         idType,
+//         acctId: acctId || "",
+//         orgId: orgId || "",
+//         plcGlcCode: plc || "",
+//         perHourRate: hourRate || "",
+//         status: status || "ACT",
+//       };
+
+//       // Process period hours - MATCH BY MONTH NAME NOT INDEX
+//       const newPeriodHours = {};
+      
+//       monthHeaders.forEach((monthHeader, index) => {
+//         const value = monthValues[index];
+        
+//         if (value && value !== "0.00" && value !== "0" && value !== "") {
+//           // Parse month/year from header (e.g., "Jan 25")
+//           const monthMatch = monthHeader.match(/(\w{3})\s+(\d{2})/);
+          
+//           if (monthMatch) {
+//             const monthAbbr = monthMatch[1];
+//             const yearShort = monthMatch[2];
+            
+//             // Convert to full year
+//             const fullYear = parseInt(`20${yearShort}`);
+            
+//             // Convert month abbreviation to month number
+//             const monthMap = {
+//               'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+//               'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+//             };
+//             const monthNo = monthMap[monthAbbr];
+            
+//             if (monthNo) {
+//               const uniqueKey = `${monthNo}_${fullYear}`;
+//               newPeriodHours[uniqueKey] = value;
+//             }
+//           }
+//         }
+//       });
+
+//       allNewEntries.push(newEntry);
+//       allPeriodHours.push(newPeriodHours);
+//     });
+
+//     // Set all entries at once
+//     setNewEntries(allNewEntries);
+//     setNewEntryPeriodHoursArray(allPeriodHours);
+
+//     // Clear clipboard data
+//     setHasClipboardData(false);
+//     setCopiedRowsData([]);
+
+//     toast.success(`Opened ${allNewEntries.length} new entry forms!`, { 
+//       autoClose: 3000 
+//     });
+
+//   } catch (err) {
+//     console.error("Paste failed:", err);
+//     toast.error("Failed to paste data.", { autoClose: 3000 });
+//   }
+// };
+
+// const handlePasteMultipleRows = async () => {
+//   try {
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data in clipboard.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     const lines = text.split("\n").filter((line) => line.trim() !== "");
+    
+//     if (lines.length === 0) {
+//       toast.error("No valid data found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Extract headers
+//     const headerLine = lines[0];
+//     const headers = headerLine.split("\t");
+    
+//     // Find where month columns start
+//     const monthStartIndex = headers.findIndex(h => 
+//       h.match(/Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec/)
+//     );
+    
+//     if (monthStartIndex === -1) {
+//       toast.error("No month data found in clipboard.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Extract month headers (e.g., "Jan 25", "Feb 25")
+//     const monthHeaders = headers.slice(monthStartIndex);
+    
+//     const dataLines = lines.slice(1); // Skip header
+
+//     if (dataLines.length === 0) {
+//       toast.error("No data rows found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Clear existing entries
+//     setNewEntries([]);
+//     setNewEntryPeriodHoursArray([]);
+
+//     const allNewEntries = [];
+//     const allPeriodHours = [];
+
+//     dataLines.forEach((line) => {
+//       const row = line.split("\t");
+      
+//       if (row.length < 11) return;
+
+//       const [
+//         idTypeLabel, id, name, acctId, acctName, orgId, plc,
+//         rev, brd, status, hourRate, ...monthValues
+//       ] = row;
+
+//       const idType = ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+//       let firstName = "";
+//       let lastName = "";
+
+//       if (idType === "PLC") {
+//         firstName = name || "";
+//       } else if (idType === "Vendor") {
+//         lastName = name || "";
+//       } else {
+//         const nameParts = (name || "").split(" ");
+//         firstName = nameParts[0] || "";
+//         lastName = nameParts.slice(1).join(" ") || "";
+//       }
+
+//       const newEntry = {
+//         id: id || "",
+//         firstName,
+//         lastName,
+//         isRev: rev === "✓",
+//         isBrd: brd === "✓",
+//         idType,
+//         acctId: acctId || "",
+//         orgId: orgId || "",
+//         plcGlcCode: plc || "",
+//         perHourRate: hourRate || "",
+//         status: status || "ACT",
+//       };
+
+//       // CRITICAL FIX: Match by month name and year
+//       const newPeriodHours = {};
+      
+//       monthHeaders.forEach((monthHeader, index) => {
+//         const value = monthValues[index];
+        
+//         if (value && value !== "0.00" && value !== "0" && value !== "") {
+//           // Parse month header (e.g., "Jan 25")
+//           const monthMatch = monthHeader.match(/(\w{3})\s+(\d{2})/);
+          
+//           if (monthMatch) {
+//             const monthAbbr = monthMatch[1];
+//             const yearShort = monthMatch[2];
+//             const fullYear = parseInt(`20${yearShort}`);
+            
+//             const monthMap = {
+//               'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+//               'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+//             };
+//             const monthNo = monthMap[monthAbbr];
+            
+//             if (monthNo) {
+//               const uniqueKey = `${monthNo}_${fullYear}`;
+//               newPeriodHours[uniqueKey] = value;
+//             }
+//           }
+//         }
+//       });
+
+//       allNewEntries.push(newEntry);
+//       allPeriodHours.push(newPeriodHours);
+//     });
+
+//     setNewEntries(allNewEntries);
+//     setNewEntryPeriodHoursArray(allPeriodHours);
+
+//     setHasClipboardData(false);
+//     setCopiedRowsData([]);
+
+//     toast.success(`Opened ${allNewEntries.length} new entry forms!`, { autoClose: 3000 });
+
+//   } catch (err) {
+//     console.error("Paste failed:", err);
+//     toast.error("Failed to paste data.", { autoClose: 3000 });
+//   }
+// };
+
+// const handlePasteMultipleRows = async () => {
+//   try {
+//     const text = await navigator.clipboard.readText();
+
+//     if (!text || text.trim() === "") {
+//       toast.error("No data in clipboard.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     const lines = text.split("\n").filter((line) => line.trim() !== "");
+    
+//     if (lines.length === 0) {
+//       toast.error("No valid data found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // First line is headers
+//     const headerLine = lines[0];
+//     const headers = headerLine.split("\t");
+    
+//     console.log("📋 Headers:", headers);
+    
+//     // Find where "Hour Rate" column is
+//     const hourRateIndex = headers.findIndex(h => h.toLowerCase().includes("hour rate"));
+    
+//     if (hourRateIndex === -1) {
+//       toast.error("Invalid data format.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Month headers start RIGHT AFTER "Hour Rate" column
+//     const monthHeaders = headers.slice(hourRateIndex + 1);
+//     console.log("📅 Month headers from clipboard:", monthHeaders);
+    
+//     const dataLines = lines.slice(1); // Skip header
+
+//     if (dataLines.length === 0) {
+//       toast.error("No data rows found.", { autoClose: 3000 });
+//       return;
+//     }
+
+//     // Clear existing entries
+//     setNewEntries([]);
+//     setNewEntryPeriodHoursArray([]);
+
+//     const allNewEntries = [];
+//     const allPeriodHours = [];
+
+//     dataLines.forEach((line, lineIndex) => {
+//       const row = line.split("\t");
+      
+//       console.log(`Row ${lineIndex}:`, row.slice(0, 12)); // Log first 12 columns
+      
+//       if (row.length < 11) {
+//         console.log(`Skipping row ${lineIndex} - insufficient columns`);
+//         return;
+//       }
+
+//       const [
+//         idTypeLabel, id, name, acctId, acctName, orgId, plc,
+//         rev, brd, status, hourRate, ...monthValues
+//       ] = row;
+
+//       const idType = ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+//       let firstName = "";
+//       let lastName = "";
+
+//       if (idType === "PLC") {
+//         firstName = name || "";
+//       } else if (idType === "Vendor") {
+//         lastName = name || "";
+//       } else {
+//         const nameParts = (name || "").split(" ");
+//         firstName = nameParts[0] || "";
+//         lastName = nameParts.slice(1).join(" ") || "";
+//       }
+
+//       const newEntry = {
+//         id: id || "",
+//         firstName,
+//         lastName,
+//         isRev: rev === "✓",
+//         isBrd: brd === "✓",
+//         idType,
+//         acctId: acctId || "",
+//         orgId: orgId || "",
+//         plcGlcCode: plc || "",
+//         perHourRate: hourRate || "",
+//         status: status || "ACT",
+//       };
+
+//       // CRITICAL FIX: Match month values by parsing month headers and matching with sortedDurations
+//       const newPeriodHours = {};
+      
+//       monthHeaders.forEach((monthHeader, index) => {
+//         const value = monthValues[index];
+        
+//         if (value && value !== "0.00" && value !== "0" && value !== "") {
+//           // Parse month header (formats: "Jan 25", "Jan 2025", "January 25")
+//           const monthMatch = monthHeader.match(/(\w{3,9})\s+(\d{2,4})/);
+          
+//           if (monthMatch) {
+//             const monthAbbr = monthMatch[1].substring(0, 3); // Take first 3 chars
+//             let yearStr = monthMatch[2];
+            
+//             // Handle 2-digit or 4-digit year
+//             const fullYear = yearStr.length === 2 ? parseInt(`20${yearStr}`) : parseInt(yearStr);
+            
+//             // Month abbreviation to number mapping
+//             const monthMap = {
+//               'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+//               'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+//             };
+//             const monthNo = monthMap[monthAbbr];
+            
+//             if (monthNo && fullYear) {
+//               const uniqueKey = `${monthNo}_${fullYear}`;
+              
+//               // CRITICAL: Only add if this month exists in sortedDurations (current fiscal year)
+//               const existsInDurations = sortedDurations.some(d => 
+//                 d.monthNo === monthNo && d.year === fullYear
+//               );
+              
+//               if (existsInDurations) {
+//                 newPeriodHours[uniqueKey] = value;
+//                 console.log(`✅ Mapped ${monthHeader} -> ${uniqueKey} = ${value}`);
+//               } else {
+//                 console.log(`⏭️ Skipped ${monthHeader} (not in fiscal year ${fiscalYear})`);
+//               }
+//             }
+//           }
+//         }
+//       });
+
+//       console.log(`Entry ${lineIndex} period hours:`, newPeriodHours);
+
+//       allNewEntries.push(newEntry);
+//       allPeriodHours.push(newPeriodHours);
+//     });
+
+//     setNewEntries(allNewEntries);
+//     setNewEntryPeriodHoursArray(allPeriodHours);
+
+//     setHasClipboardData(false);
+//     setCopiedRowsData([]);
+
+//     toast.success(`Opened ${allNewEntries.length} new entry forms with fiscal year ${fiscalYear} hours!`, { 
+//       autoClose: 3000 
+//     });
+
+//   } catch (err) {
+//     console.error("Paste failed:", err);
+//     toast.error("Failed to paste data.", { autoClose: 3000 });
+//   }
+// };
+
+// const handlePasteMultipleRows = () => {
+//   console.log("Pasting multiple rows:", copiedRowsData.length);
+  
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // CRITICAL FIX: Close single new form if it's open
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   // Process all copied rows
+//   const processedEntries = [];
+//   const processedHoursArray = [];
+
+//   copiedRowsData.forEach((rowData) => {
+//     // Extract employee data from row (first 11 columns before month data)
+//     const [idTypeLabel, id, name, acctId, acctName, orgId, plcGlcCode, isRev, isBrd, status, perHourRate, ...monthValues] = rowData;
+
+//     // CRITICAL FIX: Map ID Type label to value correctly
+//     const idType = ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || idTypeLabel;
+
+//     // CRITICAL FIX: Parse name based on ID type (NO HARDCODING)
+//     let firstName = "";
+//     let lastName = "";
+
+//     if (idType === "PLC") {
+//       firstName = name;
+//     } else if (idType === "Vendor") {
+//       // For Vendor, name might be in "Last, First" format
+//       if (name.includes(", ")) {
+//         const nameParts = name.split(", ");
+//         lastName = nameParts[0] || "";
+//         firstName = nameParts[1] || "";
+//       } else {
+//         lastName = name;
+//       }
+//     } else if (idType === "Employee") {
+//       // For Employee, name is "First Last"
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0] || "";
+//       lastName = nameParts.slice(1).join(" ") || "";
+//     } else {
+//       // Other types - use name as-is
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       plcGlcCode: plcGlcCode,
+//       perHourRate: perHourRate,
+//       status: status || "Act",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     // CRITICAL FIX: Create period hours object - match by month/year
+//     const periodHours = {};
+//     sortedDurations.forEach((duration, index) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = monthValues[index];
+      
+//       // Only add non-zero values
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodHours[uniqueKey] = value;
+//       }
+//     });
+
+//     processedEntries.push(entry);
+//     processedHoursArray.push(periodHours);
+//   });
+
+//   // Update state with all entries
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodHoursArray(processedHoursArray);
+
+//   // Disable paste button
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+
+//   toast.success(`Pasted ${processedEntries.length} entries! Review and click "Save All"`, { autoClose: 3000 });
+// };
+
+// const handlePasteMultipleRows = () => {
+//   console.log("Pasting multiple rows:", copiedRowsData.length);
+  
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // CRITICAL: Close single new form if open
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   // Get month headers from the copy operation
+//   const headers = ["ID Type", "ID", "Name", "Account", "Account Name", "Organization", "PLC", "Rev", "Brd", "Status", "Hour Rate"];
+  
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(duration.year, duration.monthNo - 1).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//   });
+
+//   const processedEntries = [];
+//   const processedHoursArray = [];
+
+//   copiedRowsData.forEach((rowData) => {
+//     // Extract employee data (first 11 columns)
+//     const [idTypeLabel, id, name, acctId, acctName, orgId, plcGlcCode, isRev, isBrd, status, perHourRate, ...monthValues] = rowData;
+
+//     // Map ID Type
+//     const idType = ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || idTypeLabel;
+
+//     // Parse name based on ID type
+//     let firstName = "";
+//     let lastName = "";
+
+//     if (idType === "PLC") {
+//       firstName = name;
+//     } else if (idType === "Vendor") {
+//       if (name.includes(", ")) {
+//         const nameParts = name.split(", ");
+//         lastName = nameParts[0] || "";
+//         firstName = nameParts[1] || "";
+//       } else {
+//         lastName = name;
+//       }
+//     } else if (idType === "Employee") {
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0] || "";
+//       lastName = nameParts.slice(1).join(" ") || "";
+//     } else {
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       plcGlcCode: plcGlcCode,
+//       perHourRate: perHourRate,
+//       status: status || "Act",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     // CRITICAL FIX: Map month values correctly by matching indices
+//     const periodHours = {};
+//     sortedDurations.forEach((duration, index) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = monthValues[index];
+      
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodHours[uniqueKey] = value;
+//       }
+//     });
+
+//     processedEntries.push(entry);
+//     processedHoursArray.push(periodHours);
+//   });
+
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodHoursArray(processedHoursArray);
+
+//   // Disable paste button
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+
+//   toast.success(`Pasted ${processedEntries.length} entries!`, { autoClose: 3000 });
+// };
+
+// const handlePasteMultipleRows = () => {
+//   console.log("Pasting multiple rows:", copiedRowsData.length);
+  
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // Close single new form if open
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const processedEntries = [];
+//   const processedHoursArray = [];
+
+//   copiedRowsData.forEach((rowData, rowIndex) => {
+//     console.log(`Processing row ${rowIndex}:`, rowData.slice(0, 12));
+    
+//     // Extract employee data (first 11 columns)
+//     const [idTypeLabel, id, name, acctId, acctName, orgId, plcGlcCode, isRev, isBrd, status, perHourRate, ...monthValues] = rowData;
+
+//     // Map ID Type
+//     const idType = ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || idTypeLabel;
+
+//     // Parse name based on ID type
+//     let firstName = "";
+//     let lastName = "";
+
+//     if (idType === "PLC") {
+//       firstName = name;
+//     } else if (idType === "Vendor") {
+//       if (name.includes(", ")) {
+//         const nameParts = name.split(", ");
+//         lastName = nameParts[0] || "";
+//         firstName = nameParts[1] || "";
+//       } else {
+//         lastName = name;
+//       }
+//     } else if (idType === "Employee") {
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0] || "";
+//       lastName = nameParts.slice(1).join(" ") || "";
+//     } else {
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       plcGlcCode: plcGlcCode,
+//       perHourRate: perHourRate,
+//       status: status || "Act",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     // CRITICAL FIX: Map hours correctly by index
+//     const periodHours = {};
+//     sortedDurations.forEach((duration, index) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = monthValues[index];
+      
+//       console.log(`Duration ${index}: ${duration.monthNo}/${duration.year} = ${value}`);
+      
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodHours[uniqueKey] = value;
+//       }
+//     });
+
+//     console.log(`Entry ${rowIndex} period hours:`, periodHours);
+
+//     processedEntries.push(entry);
+//     processedHoursArray.push(periodHours);
+//   });
+
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodHoursArray(processedHoursArray);
+
+//   // Disable paste button
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+
+//   toast.success(`Pasted ${processedEntries.length} entries!`, { autoClose: 3000 });
+// };
+
+// const handlePasteMultipleRows = () => {
+//   console.log("Pasting multiple rows:", copiedRowsData.length);
+  
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // Close single new form if open
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const processedEntries = [];
+//   const processedHoursArray = [];
+
+//   copiedRowsData.forEach((rowData, rowIndex) => {
+//     console.log(`Processing row ${rowIndex}:`, rowData.slice(0, 12));
+    
+//     // Extract employee data (first 11 columns)
+//     const [idTypeLabel, id, name, acctId, acctName, orgId, plcGlcCode, isRev, isBrd, status, perHourRate, ...monthValues] = rowData;
+
+//     // Map ID Type
+//     const idType = ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || idTypeLabel;
+
+//     // Parse name based on ID type
+//     let firstName = "";
+//     let lastName = "";
+
+//     if (idType === "PLC") {
+//       firstName = name;
+//     } else if (idType === "Vendor") {
+//       if (name.includes(", ")) {
+//         const nameParts = name.split(", ");
+//         lastName = nameParts[0] || "";
+//         firstName = nameParts[1] || "";
+//       } else {
+//         lastName = name;
+//       }
+//     } else if (idType === "Employee") {
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0] || "";
+//       lastName = nameParts.slice(1).join(" ") || "";
+//     } else {
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       plcGlcCode: plcGlcCode,
+//       perHourRate: perHourRate,
+//       status: status || "Act",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     // CRITICAL FIX: Map hours correctly by index
+//     const periodHours = {};
+//     sortedDurations.forEach((duration, index) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = monthValues[index];
+      
+//       console.log(`Duration ${index}: ${duration.monthNo}/${duration.year} = ${value}`);
+      
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodHours[uniqueKey] = value;
+//       }
+//     });
+
+//     console.log(`Entry ${rowIndex} period hours:`, periodHours);
+
+//     processedEntries.push(entry);
+//     processedHoursArray.push(periodHours);
+//   });
+
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodHoursArray(processedHoursArray);
+
+//   // Disable paste button
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+
+//   toast.success(`Pasted ${processedEntries.length} entries!`, { autoClose: 3000 });
+// };
+
+// const handlePasteMultipleRows = () => {
+//   console.log("Pasting multiple rows", copiedRowsData.length);
+  
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // Close single new form if open
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   // CRITICAL FIX: Filter durations by selected fiscal year FIRST
+//   const sortedDurations = [...durations]
+//     .filter((d) => {
+//       if (fiscalYear === "All") return true;
+//       return d.year === parseInt(fiscalYear);
+//     })
+//     .sort((a, b) => {
+//       if (a.year !== b.year) return a.year - b.year;
+//       return a.monthNo - b.monthNo;
+//     });
+
+//   console.log("Filtered durations for fiscal year", fiscalYear, ":", sortedDurations.length);
+
+//   const processedEntries = [];
+//   const processedHoursArray = [];
+
+//   copiedRowsData.forEach((rowData, rowIndex) => {
+//     console.log("Processing row", rowIndex, rowData.slice(0, 12));
+    
+//     // Extract employee data (first 11 columns)
+//     const [
+//       idTypeLabel, id, name, acctId, acctName, orgId, 
+//       plcGlcCode, isRev, isBrd, status, perHourRate, 
+//       ...monthValues
+//     ] = rowData;
+
+//     // Map ID Type using ID_TYPE_OPTIONS
+//     const idType = ID_TYPE_OPTIONS.find(opt => opt.label === idTypeLabel)?.value || idTypeLabel;
+
+//     // Parse name based on ID type
+//     let firstName = "";
+//     let lastName = "";
+    
+//     if (idType === "PLC") {
+//       firstName = name;
+//     } else if (idType === "Vendor") {
+//       if (name.includes(", ")) {
+//         const nameParts = name.split(", ");
+//         lastName = nameParts[0];
+//         firstName = nameParts[1];
+//       } else {
+//         lastName = name;
+//       }
+//     } else if (idType === "Employee") {
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0];
+//       lastName = nameParts.slice(1).join(" ");
+//     } else {
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       plcGlcCode: plcGlcCode,
+//       perHourRate: perHourRate,
+//       status: status || "ACT",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     // CRITICAL FIX: Only map hours for the filtered fiscal year durations
+//     const periodHours = {};
+//     sortedDurations.forEach((duration, index) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = monthValues[index];
+      
+//       console.log(`Duration ${index}: ${duration.monthNo}/${duration.year} = ${value}`);
+      
+//       // Only add non-zero values
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodHours[uniqueKey] = value;
+//       }
+//     });
+
+//     console.log(`Entry ${rowIndex} period hours:`, periodHours);
+
+//     processedEntries.push(entry);
+//     processedHoursArray.push(periodHours);
+//   });
+
+//   // Set state with all processed data
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodHoursArray(processedHoursArray);
+
+//   // Disable paste button
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+
+//   toast.success(`Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`, { autoClose: 3000 });
+// };
+
+const handlePasteMultipleRows = () => {
+  console.log("Pasting multiple rows", copiedRowsData.length);
+  
+  if (copiedRowsData.length === 0) {
+    toast.error("No copied data available to paste", { autoClose: 2000 });
+    return;
+  }
+
+  // Close single new form if open
+  if (showNewForm) {
+    setShowNewForm(false);
+  }
+
+  // Filter durations by selected fiscal year
+  const sortedDurations = [...durations]
+    .filter((d) => {
+      if (fiscalYear === "All") return true;
+      return d.year === parseInt(fiscalYear);
+    })
+    .sort((a, b) => {
       if (a.year !== b.year) return a.year - b.year;
       return a.monthNo - b.monthNo;
     });
 
-    // Create header row WITHOUT warning and total columns
-    const headers = [
-      "ID Type",
-      "ID",
-      "Name",
-      "Account",
-      "Account Name",
-      "Organization",
-      "PLC",
-      "Rev",
-      "Brd",
-      "Status",
-      "Hour Rate",
-      // Removed "Warning" and "Total" from headers
-    ];
+  const processedEntries = [];
+  const processedHoursArray = [];
 
-    // Add month headers
-    sortedDurations.forEach((duration) => {
-      const monthName = new Date(
-        duration.year,
-        duration.monthNo - 1
-      ).toLocaleDateString("en-US", {
-        month: "short",
-        year: "2-digit",
-      });
-      headers.push(monthName);
-    });
-
-    const copyData = [headers];
-
-    // Process selected rows
-    selectedRows.forEach((rowIndex) => {
-      if (rowIndex === "new-entry" && showNewForm) {
-        // Handle new entry row WITHOUT warning and total
-        const newEntryData = [
-          ID_TYPE_OPTIONS.find((opt) => opt.value === newEntry.idType)?.label ||
-            newEntry.idType,
-          newEntry.id,
-          // Removed warning column
-          newEntry.idType === "PLC"
-            ? newEntry.firstName || ""
-            : newEntry.idType === "Vendor"
-            ? newEntry.lastName || newEntry.firstName || ""
-            : `${newEntry.firstName || ""} ${newEntry.lastName || ""}`.trim(),
-          newEntry.acctId,
-          accountOptionsWithNames.find((acc) => acc.id === newEntry.acctId)
-            ?.name || "-",
-          newEntry.orgId,
-          newEntry.plcGlcCode,
-          newEntry.isRev ? "✓" : "-",
-          newEntry.isBrd ? "✓" : "-",
-          newEntry.status,
-          newEntry.perHourRate,
-          // Removed total column
-        ];
-
-        // Add month values for new entry
-        sortedDurations.forEach((duration) => {
-          const uniqueKey = `${duration.monthNo}_${duration.year}`;
-          const value = newEntryPeriodHours[uniqueKey] || "0.00";
-          newEntryData.push(value);
-        });
-
-        copyData.push(newEntryData);
-      } else {
-        // Handle existing employee rows WITHOUT warning and total
-        const emp = localEmployees[rowIndex];
-        if (emp && emp.emple && !hiddenRows[rowIndex]) {
-          const employeeRow = getEmployeeRow(emp, rowIndex);
-          const rowData = [
-            employeeRow.idType,
-            employeeRow.emplId,
-            // Removed warning column
-            employeeRow.name,
-            employeeRow.acctId,
-            employeeRow.acctName,
-            employeeRow.orgId,
-            employeeRow.glcPlc,
-            typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
-            typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
-            employeeRow.status,
-            employeeRow.perHourRate,
-            // Removed total column
-          ];
-
-          // Add month values
-          sortedDurations.forEach((duration) => {
-            const uniqueKey = `${duration.monthNo}_${duration.year}`;
-            const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
-            const monthHours = getMonthHours(emp);
-            const forecastValue = monthHours[uniqueKey]?.value;
-            const value =
-              inputValue !== undefined && inputValue !== ""
-                ? inputValue
-                : forecastValue || "0.00";
-            rowData.push(value);
-          });
-
-          copyData.push(rowData);
-        }
-      }
-    });
-
-    // Convert to tab-separated values for Excel compatibility
-    const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
-
-    // Copy to clipboard
-    navigator.clipboard
-      .writeText(tsvContent)
-      .then(() => {
-        toast.success(
-          `Successfully copied ${selectedRows.size} row(s) to clipboard!`,
-          {
-            autoClose: 3000,
-          }
-        );
-        // Clear selection after copying
-        setSelectedRows(new Set());
-        setShowCopyButton(false);
-      })
-      .catch((err) => {
-        console.error("Failed to copy to clipboard:", err);
-        toast.error("Failed to copy data to clipboard.", { autoClose: 3000 });
-      });
-  };
-
-  const handlePasteToNewEntry = async () => {
-    try {
-      isPastingRef.current = true; // Set flag BEFORE reading clipboard
-
-      const text = await navigator.clipboard.readText();
-
-      if (!text || text.trim() === "") {
-        toast.error("No data found in clipboard. Please copy data first.", {
-          autoClose: 3000,
-        });
-        isPastingRef.current = false;
-        return;
-      }
-
-      // Process the paste
-      processPastedText(text);
-
-      // Clear flag after a delay to ensure all state updates complete
-      setTimeout(() => {
-        isPastingRef.current = false;
-      }, 300);
-    } catch (err) {
-      isPastingRef.current = false; // Clear flag on error
-      console.log("Clipboard access failed:", err);
-      toast.error(
-        "Please use Ctrl+V to paste or grant clipboard permissions.",
-        {
-          autoClose: 3000,
-        }
-      );
-    }
-  };
-
-  const processPastedText = (text) => {
-    const lines = text.split("\n").filter((line) => line.trim() !== "");
-
-    if (lines.length === 0) {
-      toast.error("No valid data found in clipboard.", { autoClose: 3000 });
-      return;
-    }
-
-    // Check if first line is headers (skip it) or data
-    const isFirstLineHeaders =
-      lines[0].toLowerCase().includes("id type") ||
-      lines[0].toLowerCase().includes("account") ||
-      lines[0].toLowerCase().includes("organization") ||
-      lines[0].toLowerCase().includes("warning");
-
-    const dataLines = isFirstLineHeaders ? lines.slice(1) : lines;
-
-    if (dataLines.length === 0) {
-      toast.error("No data rows found in clipboard.", { autoClose: 3000 });
-      return;
-    }
-
-    // Process first data row (for new entry form)
-    const firstRow = dataLines[0].split("\t");
-
-    if (firstRow.length < 11) {
-      toast.error("Invalid data format. Please copy complete row data.", {
-        autoClose: 3000,
-      });
-      return;
-    }
-
-    // Parse the row data
+  copiedRowsData.forEach((rowData, rowIndex) => {
+    console.log("Processing row", rowIndex, rowData.slice(0, 12));
+    
+    // Extract employee data (first 11 columns)
     const [
-      idTypeLabel,
-      id,
-      name,
-      acctId,
-      acctName,
-      orgId,
-      plc,
-      rev,
-      brd,
-      status,
-      hourRate,
+      idTypeLabel, id, name, acctId, acctName, orgId, 
+      plcGlcCode, isRev, isBrd, status, perHourRate, 
       ...monthValues
-    ] = firstRow;
+    ] = rowData;
 
-    // Map ID Type label back to value
-    const idType =
-      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-      "Employee";
+    // Map ID Type
+    const idType = ID_TYPE_OPTIONS.find(opt => opt.label === idTypeLabel)?.value || idTypeLabel;
 
     // Parse name based on ID type
     let firstName = "";
     let lastName = "";
-
+    
     if (idType === "PLC") {
-      firstName = name || "";
+      firstName = name;
     } else if (idType === "Vendor") {
-      lastName = name || "";
+      if (name.includes(", ")) {
+        const nameParts = name.split(", ");
+        lastName = nameParts[0];
+        firstName = nameParts[1];
+      } else {
+        lastName = name;
+      }
+    } else if (idType === "Employee") {
+      const nameParts = name.split(" ");
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(" ");
     } else {
-      const nameParts = (name || "").split(" ");
-      firstName = nameParts[0] || "";
-      lastName = nameParts.slice(1).join(" ") || "";
+      firstName = name;
     }
 
-    // Create complete entry data object BEFORE any state updates
-    const completeNewEntryData = {
-      id: id || "",
-      firstName,
-      lastName,
-      isRev: rev === "✓",
-      isBrd: brd === "✓",
-      idType,
-      acctId: acctId || "",
-      orgId: orgId || "",
-      plcGlcCode: plc || "",
-      perHourRate: hourRate || "",
+    const entry = {
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      idType: idType,
+      acctId: acctId,
+      orgId: orgId,
+      plcGlcCode: plcGlcCode,
+      perHourRate: perHourRate,
       status: status || "ACT",
+      isRev: isRev === "✓",
+      isBrd: isBrd === "✓",
     };
 
-    // Single batched state update - React will batch these together
-    setNewEntry(completeNewEntryData);
-    setPlcSearch(plc || "");
-    setOrgSearch(orgId || "");
+    // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+    const periodHours = {};
+    
+    // Build a lookup map from copiedMonthMetadata to monthValues
+    const copiedHoursMap = {};
+    copiedMonthMetadata.forEach((meta, index) => {
+      const key = `${meta.monthNo}_${meta.year}`;
+      copiedHoursMap[key] = monthValues[index];
+    });
+    
+    // Now map to current fiscal year durations
+    sortedDurations.forEach((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      const value = copiedHoursMap[uniqueKey];  // ← Match by month/year
+      
+      console.log(`Duration: ${duration.monthNo}/${duration.year} = ${value}`);
+      
+      // Only add non-zero values that exist in copied data
+      if (value && value !== "0.00" && value !== "0" && value !== "") {
+        periodHours[uniqueKey] = value;
+      }
+    });
 
-    // Update period hours if month data is available
-    if (monthValues.length > 0 && durations.length > 0) {
-      const newPeriodHours = {};
-      const sortedDurations = [...durations].sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year;
-        return a.monthNo - b.monthNo;
+    console.log(`Entry ${rowIndex} period hours:`, periodHours);
+
+    processedEntries.push(entry);
+    processedHoursArray.push(periodHours);
+  });
+
+  // Set state with all processed data
+  setNewEntries(processedEntries);
+  setNewEntryPeriodHoursArray(processedHoursArray);
+
+   // **ADD THIS** - Fetch suggestions for each pasted entry
+  processedEntries.forEach((entry, index) => {
+    fetchSuggestionsForPastedEntry(index, entry);
+  });
+
+  // Disable paste button
+  setHasClipboardData(false);
+  setCopiedRowsData([]);
+  setCopiedMonthMetadata([]);
+
+  toast.success(`Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`, { autoClose: 3000 });
+};
+
+const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  if (planType === "NBBUD") return;
+  
+  // CRITICAL FIX: URL encode project ID
+  const encodedProjectId = encodeURIComponent(projectId);
+  const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+  
+  // Fetch employee suggestions based on ID type
+  if (entry.idType && entry.idType !== "") {
+    try {
+      const endpoint = entry.idType === "Vendor"
+        ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+        : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+      
+      const response = await axios.get(endpoint);
+      const suggestions = Array.isArray(response.data)
+        ? response.data.map((emp) => {
+            if (entry.idType === "Vendor") {
+              return {
+                emplId: emp.vendId,
+                firstName: "",
+                lastName: emp.employeeName,
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            } else {
+              const [lastName, firstName] = (emp.employeeName || "")
+                .split(", ")
+                .map((str) => str.trim());
+              return {
+                emplId: emp.empId,
+                firstName: firstName || "",
+                lastName: lastName || "",
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            }
+          })
+        : [];
+      
+      setPastedEntrySuggestions(prev => ({
+        ...prev,
+        [entryIndex]: suggestions
+      }));
+    } catch (err) {
+      console.error(`Failed to fetch pasted entry suggestions for index ${entryIndex}:`, err);
+    }
+  }
+  
+  // Fetch account, org, and PLC options
+  try {
+    const response = await axios.get(
+      `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+    );
+    const data = Array.isArray(response.data) ? response.data[0] : response.data;
+    
+    // Fetch accounts
+    let accountsWithNames = [];
+    
+    if (entry.idType === "PLC") {
+      const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+        ? data.employeeLaborAccounts.map((account) => ({ 
+            id: account.accountId, 
+            name: account.acctName 
+          }))
+        : [];
+      const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+        ? data.sunContractorLaborAccounts.map((account) => ({ 
+            id: account.accountId, 
+            name: account.acctName 
+          }))
+        : [];
+      accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+    } else if (entry.idType === "Employee") {
+      accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+        ? data.employeeLaborAccounts.map((account) => ({ 
+            id: account.accountId, 
+            name: account.acctName 
+          }))
+        : [];
+    } else if (entry.idType === "Vendor") {
+      accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+        ? data.sunContractorLaborAccounts.map((account) => ({ 
+            id: account.accountId, 
+            name: account.acctName 
+          }))
+        : [];
+    } else if (entry.idType === "Other") {
+      accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+        ? data.otherDirectCostLaborAccounts.map((account) => ({ 
+            id: account.accountId, 
+            name: account.acctName 
+          }))
+        : [];
+    }
+    
+    setPastedEntryAccounts(prev => ({
+      ...prev,
+      [entryIndex]: accountsWithNames
+    }));
+    
+    // Fetch organizations
+    const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+    const orgOptions = Array.isArray(orgResponse.data)
+      ? orgResponse.data.map((org) => ({ value: org.orgId, label: org.orgId }))
+      : [];
+    
+    setPastedEntryOrgs(prev => ({
+      ...prev,
+      [entryIndex]: orgOptions
+    }));
+    
+    // Fetch PLC options
+    if (data.plc && Array.isArray(data.plc)) {
+      const plcOptions = data.plc.map((plc) => ({
+        value: plc.laborCategoryCode,
+        label: `${plc.laborCategoryCode} - ${plc.description}`,
+      }));
+      
+      setPastedEntryPlcs(prev => ({
+        ...prev,
+        [entryIndex]: plcOptions
+      }));
+    }
+  } catch (err) {
+    console.error(`Failed to fetch pasted entry options for index ${entryIndex}:`, err);
+  }
+};
+
+
+// const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+//   if (planType === "NBBUD") return;
+  
+//   // Fetch employee suggestions based on ID type
+//   if (entry.idType && entry.idType !== "") {
+//     try {
+//       const endpoint = entry.idType === "Vendor"
+//         ? `${backendUrl}Project/GetVenderEmployeesByProject/${projectId}`
+//         : `${backendUrl}Project/GetEmployeesByProject/${projectId}`;
+      
+//       const response = await axios.get(endpoint);
+//       const suggestions = Array.isArray(response.data)
+//         ? response.data.map((emp) => {
+//             if (entry.idType === "Vendor") {
+//               return {
+//                 emplId: emp.vendId,
+//                 firstName: "",
+//                 lastName: emp.employeeName,
+//                 perHourRate: emp.perHourRate || emp.hrRate || "",
+//                 plc: emp.plc || "",
+//                 orgId: emp.orgId || "",
+//               };
+//             } else {
+//               const [lastName, firstName] = (emp.employeeName || "")
+//                 .split(", ")
+//                 .map((str) => str.trim());
+//               return {
+//                 emplId: emp.empId,
+//                 firstName: firstName || "",
+//                 lastName: lastName || "",
+//                 perHourRate: emp.perHourRate || emp.hrRate || "",
+//                 plc: emp.plc || "",
+//                 orgId: emp.orgId || "",
+//               };
+//             }
+//           })
+//         : [];
+      
+//       setPastedEntrySuggestions(prev => ({
+//         ...prev,
+//         [entryIndex]: suggestions
+//       }));
+//     } catch (err) {
+//       console.error("Failed to fetch pasted entry suggestions:", err);
+//     }
+//   }
+  
+//   // Fetch account, org, and PLC options
+//   try {
+//     const response = await axios.get(`${backendUrl}Project/GetAllProjectByProjId/${projectId}/${planType}`);
+//     const data = Array.isArray(response.data) ? response.data[0] : response.data;
+    
+//     // Fetch accounts
+//     let accounts = [];
+//     let accountsWithNames = [];
+    
+//     if (entry.idType === "PLC") {
+//       const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+//         ? data.employeeLaborAccounts.map((account) => ({ 
+//             id: account.accountId, 
+//             name: account.acctName 
+//           }))
+//         : [];
+//       const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+//         ? data.sunContractorLaborAccounts.map((account) => ({ 
+//             id: account.accountId, 
+//             name: account.acctName 
+//           }))
+//         : [];
+//       accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+//     } else if (entry.idType === "Employee") {
+//       accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+//         ? data.employeeLaborAccounts.map((account) => ({ 
+//             id: account.accountId, 
+//             name: account.acctName 
+//           }))
+//         : [];
+//     } else if (entry.idType === "Vendor") {
+//       accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+//         ? data.sunContractorLaborAccounts.map((account) => ({ 
+//             id: account.accountId, 
+//             name: account.acctName 
+//           }))
+//         : [];
+//     } else if (entry.idType === "Other") {
+//       accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+//         ? data.otherDirectCostLaborAccounts.map((account) => ({ 
+//             id: account.accountId, 
+//             name: account.acctName 
+//           }))
+//         : [];
+//     }
+    
+//     setPastedEntryAccounts(prev => ({
+//       ...prev,
+//       [entryIndex]: accountsWithNames
+//     }));
+    
+//     // Fetch organizations
+//     const orgResponse = await axios.get(`${backendUrl}Orgnization/GetAllOrgs`);
+//     const orgOptions = Array.isArray(orgResponse.data)
+//       ? orgResponse.data.map((org) => ({ value: org.orgId, label: org.orgId }))
+//       : [];
+    
+//     setPastedEntryOrgs(prev => ({
+//       ...prev,
+//       [entryIndex]: orgOptions
+//     }));
+    
+//     // Fetch PLC options
+//     if (data.plc && Array.isArray(data.plc)) {
+//       const plcOptions = data.plc.map((plc) => ({
+//         value: plc.laborCategoryCode,
+//         label: `${plc.laborCategoryCode} - ${plc.description}`,
+//       }));
+      
+//       setPastedEntryPlcs(prev => ({
+//         ...prev,
+//         [entryIndex]: plcOptions
+//       }));
+//     }
+//   } catch (err) {
+//     console.error("Failed to fetch pasted entry options:", err);
+//   }
+// };
+
+
+// const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+//   if (planType === "NBBUD") return;
+  
+//   // Fetch employee suggestions based on ID type
+//   if (entry.idType && entry.idType !== "") {
+//     try {
+//       const endpoint = entry.idType === "Vendor"
+//         ? `${backendUrl}Project/GetVenderEmployeesByProject/${projectId}`
+//         : `${backendUrl}Project/GetEmployeesByProject/${projectId}`;
+      
+//       const response = await axios.get(endpoint);
+//       const suggestions = Array.isArray(response.data)
+//         ? response.data.map((emp) => {
+//             if (entry.idType === "Vendor") {
+//               return {
+//                 emplId: emp.vendId,
+//                 firstName: "",
+//                 lastName: emp.employeeName,
+//                 perHourRate: emp.perHourRate || emp.hrRate || "",
+//                 plc: emp.plc || "",
+//                 orgId: emp.orgId || "",
+//               };
+//             } else {
+//               const [lastName, firstName] = (emp.employeeName || "")
+//                 .split(", ")
+//                 .map((str) => str.trim());
+//               return {
+//                 emplId: emp.empId,
+//                 firstName: firstName || "",
+//                 lastName: lastName || "",
+//                 perHourRate: emp.perHourRate || emp.hrRate || "",
+//                 plc: emp.plc || "",
+//                 orgId: emp.orgId || "",
+//               };
+//             }
+//           })
+//         : [];
+      
+//       setPastedEntrySuggestions(prev => ({
+//         ...prev,
+//         [entryIndex]: suggestions
+//       }));
+//     } catch (err) {
+//       console.error("Failed to fetch pasted entry suggestions:", err);
+//     }
+//   }
+  
+//   // Fetch account options
+//   try {
+//     const response = await axios.get(`${backendUrl}Project/GetAllProjectByProjId/${projectId}/${planType}`);
+//     const data = Array.isArray(response.data) ? response.data[0] : response.data;
+    
+//     let accounts = [];
+//     if (entry.idType === "PLC") {
+//       const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+//         ? data.employeeLaborAccounts.map((account) => ({ id: account.accountId, name: account.acctName }))
+//         : [];
+//       const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+//         ? data.sunContractorLaborAccounts.map((account) => ({ id: account.accountId, name: account.acctName }))
+//         : [];
+//       accounts = [...employeeAccounts, ...vendorAccounts];
+//     } else if (entry.idType === "Employee") {
+//       accounts = Array.isArray(data.employeeLaborAccounts)
+//         ? data.employeeLaborAccounts.map((account) => ({ id: account.accountId, name: account.acctName }))
+//         : [];
+//     } else if (entry.idType === "Vendor") {
+//       accounts = Array.isArray(data.sunContractorLaborAccounts)
+//         ? data.sunContractorLaborAccounts.map((account) => ({ id: account.accountId, name: account.acctName }))
+//         : [];
+//     } else if (entry.idType === "Other") {
+//       accounts = Array.isArray(data.otherDirectCostLaborAccounts)
+//         ? data.otherDirectCostLaborAccounts.map((account) => ({ id: account.accountId, name: account.acctName }))
+//         : [];
+//     }
+    
+//     setPastedEntryAccounts(prev => ({
+//       ...prev,
+//       [entryIndex]: accounts
+//     }));
+    
+//     // Fetch organizations
+//     const orgResponse = await axios.get(`${backendUrl}Orgnization/GetAllOrgs`);
+//     const orgOptions = Array.isArray(orgResponse.data)
+//       ? orgResponse.data.map((org) => ({ value: org.orgId, label: org.orgId }))
+//       : [];
+    
+//     setPastedEntryOrgs(prev => ({
+//       ...prev,
+//       [entryIndex]: orgOptions
+//     }));
+    
+//     // Fetch PLC options
+//     if (data.plc && Array.isArray(data.plc)) {
+//       const plcOptions = data.plc.map((plc) => ({
+//         value: plc.laborCategoryCode,
+//         label: `${plc.laborCategoryCode} - ${plc.description}`,
+//       }));
+      
+//       setPastedEntryPlcs(prev => ({
+//         ...prev,
+//         [entryIndex]: plcOptions
+//       }));
+//     }
+//   } catch (err) {
+//     console.error("Failed to fetch pasted entry options:", err);
+//   }
+// };
+
+
+
+
+
+
+
+
+const handlePasteToNewEntry = async () => {
+  try {
+    isPastingRef.current = true;
+
+    // Check if there's an unsaved entry
+    if (showNewForm && newEntry.id) {
+      toast.warning("Please save the current entry before pasting again.", {
+        autoClose: 3000,
       });
-
-      monthValues.forEach((value, index) => {
-        if (
-          index < sortedDurations.length &&
-          value &&
-          value !== "0.00" &&
-          value !== "0"
-        ) {
-          const duration = sortedDurations[index];
-          const uniqueKey = `${duration.monthNo}_${duration.year}`;
-          newPeriodHours[uniqueKey] = value;
-        }
-      });
-
-      setNewEntryPeriodHours(newPeriodHours);
+      isPastingRef.current = false;
+      return;
     }
 
-    // Show success message
+    const text = await navigator.clipboard.readText();
+
+    if (!text || text.trim() === "") {
+      toast.error("No data found in clipboard. Please copy data first.", {
+        autoClose: 3000,
+      });
+      isPastingRef.current = false;
+      return;
+    }
+
+    // Process the paste
+    processPastedText(text);
+
+    setTimeout(() => {
+      isPastingRef.current = false;
+    }, 300);
+  } catch (err) {
+    isPastingRef.current = false;
+    console.log("Clipboard access failed:", err);
+    toast.error("Please use Ctrl+V to paste or grant clipboard permissions.", {
+      autoClose: 3000,
+    });
+  }
+};
+
+
+
+
+
+
+
+//   const processPastedText = (text) => {
+//   const lines = text.split("\n").filter((line) => line.trim() !== "");
+
+//   if (lines.length === 0) {
+//     toast.error("No valid data found in clipboard.", { autoClose: 3000 });
+//     return;
+//   }
+
+//   // Check if first line is headers
+//   const isFirstLineHeaders =
+//     lines[0].toLowerCase().includes("id type") ||
+//     lines[0].toLowerCase().includes("account");
+
+//   const dataLines = isFirstLineHeaders ? lines.slice(1) : lines;
+
+//   if (dataLines.length === 0) {
+//     toast.error("No data rows found in clipboard.", { autoClose: 3000 });
+//     return;
+//   }
+
+//   // Check if multiple rows
+//   if (dataLines.length > 1) {
+//     toast.info(`Opening ${dataLines.length} new entry forms...`, { autoClose: 2000 });
+    
+//     // For multiple rows, just paste the first one and show a message
+//     // User needs to manually paste remaining rows
+//     const firstRow = dataLines[0].split("\t");
+//     pasteRowData(firstRow);
+    
+//     toast.warning(
+//       `Pasted 1 of ${dataLines.length} rows. Please click Paste button ${dataLines.length - 1} more time(s) or press Ctrl+V to paste remaining rows.`,
+//       { autoClose: 5000 }
+//     );
+    
+//     // Keep clipboard data available for next paste
+//     // Remove the first line from copiedRowsData
+//     setCopiedRowsData(prev => prev.slice(1));
+    
+//     // Keep paste button enabled if more rows remain
+//     if (dataLines.length > 1) {
+//       // Put remaining data back in clipboard
+//       const remainingLines = [lines[0], ...dataLines.slice(1)];
+//       const remainingText = remainingLines.join("\n");
+//       navigator.clipboard.writeText(remainingText).catch(err => {
+//         console.error("Failed to update clipboard:", err);
+//       });
+//       setHasClipboardData(true);
+//     } else {
+//       setHasClipboardData(false);
+//       setCopiedRowsData([]);
+//     }
+    
+//     return;
+//   }
+
+//   // Single row paste
+//   const firstRow = dataLines[0].split("\t");
+//   pasteRowData(firstRow);
+  
+//   // Clear clipboard data after single paste
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+  
+//   toast.success("Data pasted successfully!", { autoClose: 2000 });
+// };
+
+// Helper function to paste a single row
+
+// const processPastedText = (text) => {
+//   const lines = text.split("\n").filter((line) => line.trim() !== "");
+
+//   if (lines.length === 0) {
+//     toast.error("No valid data found in clipboard.", { autoClose: 3000 });
+//     return;
+//   }
+
+//   const isFirstLineHeaders =
+//     lines[0].toLowerCase().includes("id type") ||
+//     lines[0].toLowerCase().includes("account");
+
+//   const dataLines = isFirstLineHeaders ? lines.slice(1) : lines;
+
+//   if (dataLines.length === 0) {
+//     toast.error("No data rows found in clipboard.", { autoClose: 3000 });
+//     return;
+//   }
+
+//   // Process first row
+//   const firstRow = dataLines[0].split("\t");
+//   pasteRowData(firstRow);
+
+//   // Handle multiple rows
+//   if (dataLines.length > 1) {
+//     // Update clipboard with remaining rows
+//     const remainingLines = [lines[0], ...dataLines.slice(1)];
+//     const remainingText = remainingLines.join("\n");
+    
+//     navigator.clipboard.writeText(remainingText).then(() => {
+//       // Update copiedRowsData to remove the first pasted row
+//       setCopiedRowsData(prev => prev.slice(1));
+      
+//       // Keep paste button enabled
+//       setHasClipboardData(true);
+      
+//       toast.info(
+//         `Pasted 1 row. ${dataLines.length - 1} row(s) remaining. Click Paste again to continue.`,
+//         { autoClose: 4000 }
+//       );
+//     }).catch(err => {
+//       console.error("Failed to update clipboard:", err);
+//       // Even if clipboard update fails, keep the state
+//       setCopiedRowsData(prev => prev.slice(1));
+//       setHasClipboardData(dataLines.length > 1);
+//     });
+//   } else {
+//     // Single row - clear everything
+//     setHasClipboardData(false);
+//     setCopiedRowsData([]);
+//     toast.success("Data pasted successfully!", { autoClose: 2000 });
+//   }
+// };
+
+const processPastedText = (text) => {
+  const lines = text.split("\n").filter((line) => line.trim() !== "");
+
+  if (lines.length === 0) {
+    toast.error("No valid data found in clipboard.", { autoClose: 3000 });
+    return;
+  }
+
+  const isFirstLineHeaders =
+    lines[0].toLowerCase().includes("id type") ||
+    lines[0].toLowerCase().includes("account");
+
+  const dataLines = isFirstLineHeaders ? lines.slice(1) : lines;
+
+  if (dataLines.length === 0) {
+    toast.error("No data rows found in clipboard.", { autoClose: 3000 });
+    return;
+  }
+
+  // Process first row
+  const firstRow = dataLines[0].split("\t");
+  pasteRowData(firstRow);
+
+  // Handle remaining rows
+  if (dataLines.length > 1) {
+    // If there are more rows, save current form and show next paste option
+    toast.info(
+      `Pasted 1 of ${dataLines.length} rows. Save this entry, then click Paste again for next row.`,
+      { autoClose: 4000 }
+    );
+    
+    // Update clipboard with remaining rows
+    const remainingLines = [lines[0], ...dataLines.slice(1)];
+    const remainingText = remainingLines.join("\n");
+    
+    navigator.clipboard.writeText(remainingText).then(() => {
+      // Keep hasClipboardData true for next paste
+      setHasClipboardData(true);
+      // Update copiedRowsData to remove first row
+      setCopiedRowsData(prev => prev.slice(1));
+    }).catch(err => {
+      console.error("Failed to update clipboard:", err);
+      // Even if clipboard update fails, keep states
+      setHasClipboardData(true);
+      setCopiedRowsData(prev => prev.slice(1));
+    });
+  } else {
+    // Last row - clear everything
+    setHasClipboardData(false);
+    setCopiedRowsData([]);
     toast.success("Data pasted successfully!", { autoClose: 2000 });
+  }
+};
+
+
+// const pasteRowData = (row) => {
+//   if (row.length < 11) {
+//     toast.error("Invalid data format. Please copy complete row data.", {
+//       autoClose: 3000,
+//     });
+//     return;
+//   }
+
+//   // Parse the row data
+//   const [
+//     idTypeLabel, id, name, acctId, acctName, orgId, plc,
+//     rev, brd, status, hourRate, ...monthValues
+//   ] = row;
+
+//   // Map ID Type label back to value
+//   const idType =
+//     ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+//   // Parse name based on ID type
+//   let firstName = "";
+//   let lastName = "";
+
+//   if (idType === "PLC") {
+//     firstName = name || "";
+//   } else if (idType === "Vendor") {
+//     lastName = name || "";
+//   } else {
+//     const nameParts = (name || "").split(" ");
+//     firstName = nameParts[0] || "";
+//     lastName = nameParts.slice(1).join(" ") || "";
+//   }
+
+//   // Create complete entry data object
+//   const completeNewEntryData = {
+//     id: id || "",
+//     firstName,
+//     lastName,
+//     isRev: rev === "✓",
+//     isBrd: brd === "✓",
+//     idType,
+//     acctId: acctId || "",
+//     orgId: orgId || "",
+//     plcGlcCode: plc || "",
+//     perHourRate: hourRate || "",
+//     status: status || "ACT",
+//   };
+
+//   // Batch state updates
+//   setNewEntry(completeNewEntryData);
+//   setPlcSearch(plc || "");
+//   setOrgSearch(orgId || "");
+
+//   // Update period hours if month data is available
+//   if (monthValues.length > 0 && durations.length > 0) {
+//     const newPeriodHours = {};
+//     const sortedDurations = [...durations].sort((a, b) => {
+//       if (a.year !== b.year) return a.year - b.year;
+//       return a.monthNo - b.monthNo;
+//     });
+
+//     monthValues.forEach((value, index) => {
+//       if (
+//         index < sortedDurations.length &&
+//         value &&
+//         value !== "0.00" &&
+//         value !== "0"
+//       ) {
+//         const duration = sortedDurations[index];
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         newPeriodHours[uniqueKey] = value;
+//       }
+//     });
+
+//     setNewEntryPeriodHours(newPeriodHours);
+//   }
+// };
+
+
+  
+  // useEffect(() => {
+  //   const handleKeyDown = (e) => {
+  //     if (showNewForm && (e.ctrlKey || e.metaKey) && e.key === "v") {
+  //       e.preventDefault();
+  //       e.stopPropagation();
+  //       handlePasteToNewEntry(); // <-- No parameter (this is correct)
+  //     }
+  //   };
+
+  //   document.addEventListener("keydown", handleKeyDown);
+  //   return () => document.removeEventListener("keydown", handleKeyDown);
+  // }, [showNewForm]);
+  
+//   useEffect(() => {
+//   const handleKeyDown = async (e) => {
+//     // Check if Ctrl+V or Cmd+V is pressed
+//     if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+//       e.preventDefault();
+//       e.stopPropagation();
+      
+//       // If new form is not showing, open it first
+//       if (!showNewForm) {
+//         setShowNewForm(true);
+        
+//         // Wait a tiny bit for the form to render, then paste
+//         setTimeout(() => {
+//           handlePasteToNewEntry();
+//         }, 100);
+//       } else {
+//         // Form is already open, just paste
+//         handlePasteToNewEntry();
+//       }
+//     }
+//   };
+
+//   document.addEventListener("keydown", handleKeyDown);
+//   return () => document.removeEventListener("keydown", handleKeyDown);
+// }, [showNewForm]); // Keep showNewForm in dependencies
+
+// useEffect(() => {
+//   const handleKeyDown = async (e) => {
+//     // Detect Ctrl+C or Cmd+C (Copy)
+//     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+//       // User just copied something, enable paste button
+//       setTimeout(() => {
+//         setHasClipboardData(true);
+//       }, 100);
+//     }
+    
+//     // Check if Ctrl+V or Cmd+V is pressed (Paste)
+//     if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+//       e.preventDefault();
+//       e.stopPropagation();
+      
+//       // If new form is not showing, open it first
+//       if (!showNewForm) {
+//         setShowNewForm(true);
+        
+//         // Wait a tiny bit for the form to render, then paste
+//         setTimeout(() => {
+//           handlePasteToNewEntry();
+//         }, 100);
+//       } else {
+//         // Form is already open, just paste
+//         handlePasteToNewEntry();
+//       }
+//     }
+//   };
+
+//   document.addEventListener("keydown", handleKeyDown);
+//   return () => document.removeEventListener("keydown", handleKeyDown);
+// }, [showNewForm]);
+
+// useEffect(() => {
+//   const handleKeyDown = async (e) => {
+//     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+//       setTimeout(() => {
+//         setHasClipboardData(true);
+//       }, 100);
+//     }
+    
+//     if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+//       e.preventDefault();
+//       e.stopPropagation();
+      
+//       if (!showNewForm) {
+//         setShowNewForm(true);
+//         await new Promise(resolve => setTimeout(resolve, 150));
+//       }
+      
+//       // NEW: Check if multiple rows
+//       if (copiedRowsData.length > 1) {
+//         handlePasteMultipleRows();
+//       } else {
+//         handlePasteToNewEntry();
+//       }
+//     }
+//   };
+
+//   document.addEventListener("keydown", handleKeyDown);
+//   return () => document.removeEventListener("keydown", handleKeyDown);
+// }, [showNewForm, copiedRowsData]);
+
+// useEffect(() => {
+//   const handleKeyDown = async (e) => {
+//     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+//       setTimeout(() => {
+//         setHasClipboardData(true);
+//       }, 100);
+//     }
+    
+//     if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+//       e.preventDefault();
+//       e.stopPropagation();
+      
+//       if (!showNewForm) {
+//         setShowNewForm(true);
+//         await new Promise(resolve => setTimeout(resolve, 150));
+//       }
+      
+//       handlePasteToNewEntry();
+//     }
+//   };
+
+//   document.addEventListener("keydown", handleKeyDown);
+//   return () => document.removeEventListener("keydown", handleKeyDown);
+// }, [showNewForm, hasClipboardData, copiedRowsData]);
+
+const pasteRowData = (row) => {
+  if (row.length < 11) {
+    toast.error("Invalid data format. Please copy complete row data.", {
+      autoClose: 3000,
+    });
+    return;
+  }
+
+  const [
+    idTypeLabel, id, name, acctId, acctName, orgId, plc,
+    rev, brd, status, hourRate, ...monthValues
+  ] = row;
+
+  // const idType =
+  //   ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+  const idType = ID_TYPE_OPTIONS.find((opt) => opt.label.toLowerCase() === idTypeLabel.toLowerCase())?.value || "Employee";
+
+  let firstName = "";
+  let lastName = "";
+
+  if (idType === "PLC") {
+    firstName = name || "";
+  } else if (idType === "Vendor") {
+    lastName = name || "";
+  } else {
+    const nameParts = (name || "").split(" ");
+    firstName = nameParts[0] || "";
+    lastName = nameParts.slice(1).join(" ") || "";
+  }
+
+  const completeNewEntryData = {
+    id: id || "",
+    firstName,
+    lastName,
+    isRev: rev === "✓",
+    isBrd: brd === "✓",
+    idType,
+    acctId: acctId || "",
+    orgId: orgId || "",
+    plcGlcCode: plc || "",
+    perHourRate: hourRate || "",
+    status: status || "ACT",
   };
 
-  // KEEP THIS ONE (the correct version):
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (showNewForm && (e.ctrlKey || e.metaKey) && e.key === "v") {
-        e.preventDefault();
-        e.stopPropagation();
-        handlePasteToNewEntry(); // <-- No parameter (this is correct)
-      }
-    };
+  setNewEntry(completeNewEntryData);
+  setPlcSearch(plc || "");
+  setOrgSearch(orgId || "");
 
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [showNewForm]);
+  if (monthValues.length > 0 && durations.length > 0) {
+    const newPeriodHours = {};
+    const sortedDurations = [...durations].sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.monthNo - b.monthNo;
+    });
+
+    monthValues.forEach((value, index) => {
+      if (
+        index < sortedDurations.length &&
+        value &&
+        value !== "0.00" &&
+        value !== "0"
+      ) {
+        const duration = sortedDurations[index];
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        newPeriodHours[uniqueKey] = value;
+      }
+    });
+
+    setNewEntryPeriodHours(newPeriodHours);
+  }
+};
+
+// useEffect(() => {
+//   const handleKeyDown = async (e) => {
+//     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+//       // Don't override hasClipboardData here, let handleCopySelectedRows do it
+//       console.log("Ctrl+C detected");
+//     }
+    
+//     if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+//       e.preventDefault();
+//       e.stopPropagation();
+      
+//       console.log("=== CTRL+V PRESSED ===");
+//       console.log("hasClipboardData:", hasClipboardData);
+//       console.log("copiedRowsData.length:", copiedRowsData.length);
+      
+//       if (!showNewForm) {
+//         console.log("Opening new form via keyboard...");
+//         setShowNewForm(true);
+//         await new Promise(resolve => setTimeout(resolve, 200));
+//       }
+      
+//       console.log("Calling handlePasteToNewEntry via keyboard...");
+//       handlePasteToNewEntry();
+//     }
+//   };
+
+//   document.addEventListener("keydown", handleKeyDown);
+//   return () => document.removeEventListener("keydown", handleKeyDown);
+// }, [showNewForm, hasClipboardData, copiedRowsData]);
+
+
+
+
+// useEffect(() => {
+//   const handleCopy = () => {
+//     setHasClipboardData(true);
+//   };
+  
+//   document.addEventListener('copy', handleCopy);
+//   return () => document.removeEventListener('copy', handleCopy);
+// }, []);
+
+// Add this function to reset the new entry form
+
+// useEffect(() => {
+//   const handleKeyDown = async (e) => {
+//     if ((e.ctrlKey || e.metaKey) && e.key === "c") {
+//       // Let handleCopySelectedRows manage the state
+//       console.log("Ctrl+C detected");
+//     }
+    
+//     if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+//       e.preventDefault();
+//       e.stopPropagation();
+      
+//       console.log("=== CTRL+V PRESSED ===");
+//       console.log("hasClipboardData:", hasClipboardData);
+//       console.log("copiedRowsData.length:", copiedRowsData.length);
+      
+//       if (!showNewForm) {
+//         console.log("Opening new form...");
+//         setShowNewForm(true);
+//         await new Promise(resolve => setTimeout(resolve, 200));
+//       }
+      
+//       console.log("Calling handlePasteToNewEntry...");
+//       handlePasteToNewEntry();
+//     }
+//   };
+
+//   document.addEventListener("keydown", handleKeyDown);
+//   return () => document.removeEventListener("keydown", handleKeyDown);
+// }, [showNewForm, hasClipboardData, copiedRowsData]);
+
+useEffect(() => {
+  const handleKeyDown = async (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      if (hasClipboardData && copiedRowsData.length > 0) {
+        console.log("Ctrl+V - Pasting", copiedRowsData.length, "rows");
+        handlePasteMultipleRows();
+      }
+    }
+  };
+
+  document.addEventListener("keydown", handleKeyDown);
+  return () => document.removeEventListener("keydown", handleKeyDown);
+}, [hasClipboardData, copiedRowsData]);
+
+
+
+const resetNewEntryForm = () => {
+  setNewEntry({
+    id: "",
+    firstName: "",
+    lastName: "",
+    isRev: false,
+    isBrd: false,
+    idType: "",
+    acctId: "",
+    orgId: "",
+    plcGlcCode: "",
+    perHourRate: "",
+    status: "Act",
+  });
+  setNewEntryPeriodHours({});
+  setPlcSearch("");
+  setOrgSearch("");
+  setAutoPopulatedPLC(false);
+};
+
+
 
   const getEmployeeRow = (emp, idx) => {
     if (!emp || !emp.emple) {
@@ -3467,6 +7034,950 @@ const ProjectHoursDetails = ({
     }
   };
 
+//   const handleSaveMultipleEntry = async () => {
+//   if (newEntries.length === 0) {
+//     toast.info("No entries to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsDurationLoading(true);
+//   let successCount = 0;
+//   let failCount = 0;
+//   const failedIndices = [];
+
+//   try {
+//     for (let i = 0; i < newEntries.length; i++) {
+//       const entry = newEntries[i];
+//       const periodHours = newEntryPeriodHoursArray[i];
+
+//       // Validation for each entry
+//       if (planType !== "NBBUD") {
+//         // Validate ID
+//         if (!entry.id || !entry.id.trim()) {
+//           toast.error(`Entry ${i + 1}: ID is required.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate ID Type specific validations
+//         if (entry.idType === "PLC") {
+//           if (entry.id !== "PLC") {
+//             toast.error(`Entry ${i + 1}: ID must be 'PLC' for PLC type.`, { autoClose: 3000 });
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+//         } else if (entry.idType !== "Other") {
+//           // For Employee and Vendor, validate against suggestions
+//           if (employeeSuggestions.length > 0) {
+//             const validEmployee = employeeSuggestions.find(
+//               (emp) => emp.emplId === entry.id.trim()
+//             );
+//             if (!validEmployee) {
+//               toast.error(`Entry ${i + 1}: Invalid ID. Not found in employee list.`, { autoClose: 3000 });
+//               failCount++;
+//               failedIndices.push(i);
+//               continue;
+//             }
+//           }
+//         }
+
+//         // Validate Account
+//         if (!isValidAccount(entry.acctId)) {
+//           toast.error(`Entry ${i + 1}: Invalid Account.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate Organization
+//         if (!isValidOrg(entry.orgId)) {
+//           toast.error(`Entry ${i + 1}: Organization is required.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate PLC
+//         if (!isValidPlc(entry.plcGlcCode)) {
+//           toast.error(`Entry ${i + 1}: Invalid PLC.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Check for duplicates
+//         const isDuplicate = localEmployees.some((emp) => {
+//           if (!emp.emple) return false;
+//           if (entry.idType === "Other") {
+//             return emp.emple.emplId === entry.id.trim();
+//           }
+//           return (
+//             emp.emple.emplId === entry.id.trim() &&
+//             emp.emple.plcGlcCode === entry.plcGlcCode.trim()
+//           );
+//         });
+
+//         if (isDuplicate) {
+//           toast.error(
+//             `Entry ${i + 1}: Duplicate entry with existing ID and PLC combination.`,
+//             { autoClose: 3000 }
+//           );
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+//       }
+
+//       // Build payload forecasts
+//       const payloadForecasts = durations.map((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         return {
+//           ...(planType === "EAC"
+//             ? { actualhours: Number(periodHours[uniqueKey] || 0) }
+//             : { forecastedhours: Number(periodHours[uniqueKey] || 0) }),
+//           projId: projectId,
+//           plId: planId,
+//           emplId: entry.id,
+//           month: duration.monthNo,
+//           year: duration.year,
+//           acctId: entry.acctId,
+//           orgId: entry.orgId,
+//           plc: entry.plcGlcCode,
+//           hrlyRate: Number(entry.perHourRate || 0),
+//           effectDt: null,
+//           plEmployee: null,
+//         };
+//       });
+
+//       const payload = {
+//         id: 0,
+//         emplId: entry.id,
+//         firstName: entry.firstName,
+//         lastName: entry.lastName,
+//         type: entry.idType,
+//         isRev: entry.isRev,
+//         isBrd: entry.isBrd,
+//         plcGlcCode: entry.plcGlcCode.substring(0, 20),
+//         perHourRate: Number(entry.perHourRate || 0),
+//         status: entry.status || "ACT",
+//         accId: entry.acctId,
+//         orgId: entry.orgId,
+//         plId: planId,
+//         plForecasts: payloadForecasts,
+//       };
+
+//       try {
+//         const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+//         await axios.post(`${backendUrl}Employee/AddNewEmployee/${apiPlanType}`, payload);
+//         successCount++;
+//         console.log(`✅ Saved entry ${i + 1}/${newEntries.length}`);
+//       } catch (error) {
+//         console.error(`❌ Failed to save entry ${i + 1}:`, error);
+//         failCount++;
+//         failedIndices.push(i);
+        
+//         // Show specific error for this entry
+//         const errorMsg = error?.response?.data?.message || error?.message || "Unknown error";
+//         toast.error(`Entry ${i + 1} failed: ${errorMsg}`, { autoClose: 4000 });
+//       }
+
+//       // Small delay between saves
+//       await new Promise((resolve) => setTimeout(resolve, 300));
+//     }
+
+//     // After all saves, handle results
+//     if (failedIndices.length > 0) {
+//       // Keep only failed entries
+//       const remainingEntries = newEntries.filter((_, idx) => failedIndices.includes(idx));
+//       const remainingHours = newEntryPeriodHoursArray.filter((_, idx) => failedIndices.includes(idx));
+      
+//       setNewEntries(remainingEntries);
+//       setNewEntryPeriodHoursArray(remainingHours);
+      
+//       toast.warning(`${failCount} entries failed. Please fix errors and try again.`, { autoClose: 5000 });
+//     } else {
+//       // All saved successfully
+//       setNewEntries([]);
+//       setNewEntryPeriodHoursArray([]);
+//       toast.success(`✅ All ${successCount} entries saved successfully!`, { autoClose: 3000 });
+//     }
+
+//     if (successCount > 0) {
+//       // Refresh employee list
+//       fetchEmployees();
+//       if (onSaveSuccess) {
+//         onSaveSuccess();
+//       }
+//     }
+//   } catch (err) {
+//     console.error("Save multiple entries error:", err);
+//     toast.error("Failed to save entries.", { autoClose: 3000 });
+//   } finally {
+//     setIsDurationLoading(false);
+//   }
+// };
+
+
+  // Add this NEW function after handleSaveNewEntry
+
+// const handleSaveMultipleEntry = async () => {
+//   if (newEntries.length === 0) {
+//     toast.info("No entries to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsDurationLoading(true);
+//   let successCount = 0;
+//   let failCount = 0;
+//   const failedIndices = [];
+
+//   try {
+//     for (let i = 0; i < newEntries.length; i++) {
+//       const entry = newEntries[i];
+//       const periodHours = newEntryPeriodHoursArray[i];
+
+//       // Validation for each entry
+//       if (planType !== "NBBUD") {
+//         // Validate ID
+//         if (!entry.id || !entry.id.trim()) {
+//           toast.error(`Entry ${i + 1}: ID is required.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate ID Type specific validations
+//         if (entry.idType === "PLC") {
+//           if (entry.id !== "PLC") {
+//             toast.error(`Entry ${i + 1}: ID must be 'PLC' for PLC type.`, { autoClose: 3000 });
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+//         } else if (entry.idType !== "Other") {
+//           // For Employee and Vendor, validate against suggestions if available
+//           // Skip validation if no suggestions loaded (not critical for pasted data)
+//         }
+
+//         // CRITICAL FIX: Use updateAccountOptions instead of laborAccounts
+//         // Validate Account using update options
+//         if (!entry.acctId) {
+//           toast.error(`Entry ${i + 1}: Account is required.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+        
+//         const isValidAcc = updateAccountOptions.some(acc => acc.id === entry.acctId);
+//         if (!isValidAcc) {
+//           toast.error(`Entry ${i + 1}: Invalid Account '${entry.acctId}'.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate Organization using update options
+//         if (!entry.orgId) {
+//           toast.error(`Entry ${i + 1}: Organization is required.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         const trimmedOrg = entry.orgId.toString().trim();
+//         if (!/^\d+$/.test(trimmedOrg)) {
+//           toast.error(`Entry ${i + 1}: Organization must be numeric.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         const isValidOrganization = updateOrganizationOptions.some(
+//           opt => opt.value.toString() === trimmedOrg
+//         );
+//         if (!isValidOrganization) {
+//           toast.error(`Entry ${i + 1}: Invalid Organization '${entry.orgId}'.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate PLC using update options
+//         if (entry.plcGlcCode && entry.plcGlcCode.trim()) {
+//           const isValidPLC = updatePlcOptions.some(
+//             option => option.value === entry.plcGlcCode.trim()
+//           );
+//           if (!isValidPLC) {
+//             toast.error(`Entry ${i + 1}: Invalid PLC '${entry.plcGlcCode}'.`, { autoClose: 3000 });
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+//         }
+
+//         // Check for duplicates
+//         const isDuplicate = localEmployees.some((emp) => {
+//           if (!emp.emple) return false;
+//           if (entry.idType === "Other") {
+//             return emp.emple.emplId === entry.id.trim();
+//           }
+//           return (
+//             emp.emple.emplId === entry.id.trim() &&
+//             emp.emple.plcGlcCode === entry.plcGlcCode.trim()
+//           );
+//         });
+
+//         if (isDuplicate) {
+//           toast.error(
+//             `Entry ${i + 1}: Duplicate entry with existing ID and PLC combination.`,
+//             { autoClose: 3000 }
+//           );
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+//       }
+
+//       // Build payload forecasts
+//       const payloadForecasts = durations.map((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         return {
+//           ...(planType === "EAC"
+//             ? { actualhours: Number(periodHours[uniqueKey] || 0) }
+//             : { forecastedhours: Number(periodHours[uniqueKey] || 0) }),
+//           projId: projectId,
+//           plId: planId,
+//           emplId: entry.id,
+//           month: duration.monthNo,
+//           year: duration.year,
+//           acctId: entry.acctId,
+//           orgId: entry.orgId,
+//           plc: entry.plcGlcCode,
+//           hrlyRate: Number(entry.perHourRate || 0),
+//           effectDt: null,
+//           plEmployee: null,
+//         };
+//       });
+
+//       const payload = {
+//         id: 0,
+//         emplId: entry.id,
+//         firstName: entry.firstName,
+//         lastName: entry.lastName,
+//         type: entry.idType,
+//         isRev: entry.isRev,
+//         isBrd: entry.isBrd,
+//         plcGlcCode: entry.plcGlcCode.substring(0, 20),
+//         perHourRate: Number(entry.perHourRate || 0),
+//         status: entry.status || "ACT",
+//         accId: entry.acctId,
+//         orgId: entry.orgId,
+//         plId: planId,
+//         plForecasts: payloadForecasts,
+//       };
+
+//       try {
+//         const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+//         await axios.post(`${backendUrl}Employee/AddNewEmployee/${apiPlanType}`, payload);
+//         successCount++;
+//         console.log(`✅ Saved entry ${i + 1}/${newEntries.length}`);
+//       } catch (error) {
+//         console.error(`❌ Failed to save entry ${i + 1}:`, error);
+//         failCount++;
+//         failedIndices.push(i);
+        
+//         // Show specific error for this entry
+//         const errorMsg = error?.response?.data?.message || error?.message || "Unknown error";
+//         toast.error(`Entry ${i + 1} failed: ${errorMsg}`, { autoClose: 4000 });
+//       }
+
+//       // Small delay between saves
+//       await new Promise((resolve) => setTimeout(resolve, 300));
+//     }
+
+//     // After all saves, handle results
+//     if (failedIndices.length > 0) {
+//       // Keep only failed entries
+//       const remainingEntries = newEntries.filter((_, idx) => failedIndices.includes(idx));
+//       const remainingHours = newEntryPeriodHoursArray.filter((_, idx) => failedIndices.includes(idx));
+      
+//       setNewEntries(remainingEntries);
+//       setNewEntryPeriodHoursArray(remainingHours);
+      
+//       toast.warning(`${failCount} entries failed. Please fix errors and try again.`, { autoClose: 5000 });
+//     } else {
+//       // All saved successfully
+//       setNewEntries([]);
+//       setNewEntryPeriodHoursArray([]);
+//       toast.success(`✅ All ${successCount} entries saved successfully!`, { autoClose: 3000 });
+//     }
+
+//     if (successCount > 0) {
+//       // Refresh employee list
+//       fetchEmployees();
+//       if (onSaveSuccess) {
+//         onSaveSuccess();
+//       }
+//     }
+//   } catch (err) {
+//     console.error("Save multiple entries error:", err);
+//     toast.error("Failed to save entries.", { autoClose: 3000 });
+//   } finally {
+//     setIsDurationLoading(false);
+//   }
+// };
+
+// const handleSaveMultipleEntry = async () => {
+//   if (newEntries.length === 0) {
+//     toast.info("No entries to save.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   setIsDurationLoading(true);
+//   let successCount = 0;
+//   let failCount = 0;
+//   const failedIndices = [];
+
+//   try {
+//     for (let i = 0; i < newEntries.length; i++) {
+//       const entry = newEntries[i];
+//       const periodHours = newEntryPeriodHoursArray[i];
+
+//       // Skip all validations if planType is NBBUD
+//       if (planType !== "NBBUD") {
+//         // Check for duplicate employee ID
+//         const isDuplicate = localEmployees.some((emp) => {
+//           if (!emp.emple) return false;
+//           if (entry.idType === "Other") {
+//             return emp.emple.emplId === entry.id.trim();
+//           }
+//           return (
+//             emp.emple.emplId === entry.id.trim() &&
+//             emp.emple.plcGlcCode === entry.plcGlcCode.trim()
+//           );
+//         });
+
+//         if (isDuplicate) {
+//           toast.error(
+//             `Entry ${i + 1}: Can't save entry with existing ID and PLC combination.`,
+//             { autoClose: 3000 }
+//           );
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate ID based on type
+//         if (entry.idType === "PLC") {
+//           if (!entry.id || entry.id !== "PLC") {
+//             toast.error(`Entry ${i + 1}: ID must be 'PLC' for PLC type.`, { autoClose: 3000 });
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+//         } else if (entry.idType === "Other") {
+//           if (!entry.id.trim()) {
+//             toast.error(`Entry ${i + 1}: ID is required.`, { autoClose: 3000 });
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+//         } else {
+//           // For Employee and Vendor, validate against suggestions
+//           if (!entry.id.trim()) {
+//             toast.error(`Entry ${i + 1}: ID is required.`, { autoClose: 3000 });
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+
+//           const suggestions = pastedEntrySuggestions[i] || [];
+//           if (suggestions.length > 0) {
+//             const validEmployee = suggestions.find(
+//               (emp) => emp.emplId === entry.id.trim()
+//             );
+//             if (!validEmployee) {
+//               toast.error(`Entry ${i + 1}: Please enter a valid ID from the available list.`, {
+//                 autoClose: 3000,
+//               });
+//               failCount++;
+//               failedIndices.push(i);
+//               continue;
+//             }
+//           }
+//         }
+
+//         // Validate Account using isValidAccount
+//         if (!isValidAccount(entry.acctId)) {
+//           toast.error(`Entry ${i + 1}: Please enter a valid Account from the available list.`, {
+//             autoClose: 3000,
+//           });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate Organization using isValidOrg
+//         if (!isValidOrg(entry.orgId)) {
+//           toast.error(`Entry ${i + 1}: Organization is required.`, { autoClose: 3000 });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate PLC is not empty
+//         if (!entry.plcGlcCode || !entry.plcGlcCode.trim()) {
+//           toast.error(`Entry ${i + 1}: PLC is required and cannot be empty.`, {
+//             autoClose: 3000,
+//           });
+//           failCount++;
+//           failedIndices.push(i);
+//           continue;
+//         }
+
+//         // Validate PLC matches from options
+//         const entryPlcOptions = pastedEntryPlcs[i] || [];
+//         if (entry.plcGlcCode && entry.plcGlcCode.trim() !== "") {
+//           const exactPlcMatch = entryPlcOptions.find(
+//             (option) =>
+//               option.value.toLowerCase() === entry.plcGlcCode.toLowerCase().trim()
+//           );
+
+//           if (!exactPlcMatch) {
+//             toast.error(
+//               `Entry ${i + 1}: PLC must be selected from the available suggestions.`,
+//               { autoClose: 4000 }
+//             );
+//             failCount++;
+//             failedIndices.push(i);
+//             continue;
+//           }
+//         }
+//       }
+
+//       // Build payload forecasts
+//       const payloadForecasts = durations.map((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         return {
+//           ...(planType === "EAC"
+//             ? { actualhours: Number(periodHours[uniqueKey] || 0) }
+//             : { forecastedhours: Number(periodHours[uniqueKey] || 0) }),
+//           projId: projectId,
+//           plId: planId,
+//           emplId: entry.id,
+//           month: duration.monthNo,
+//           year: duration.year,
+//           acctId: entry.acctId,
+//           orgId: entry.orgId,
+//           plc: entry.plcGlcCode || "",
+//           hrlyRate: Number(entry.perHourRate || 0),
+//           effectDt: null,
+//           plEmployee: null,
+//         };
+//       });
+
+//       const payload = {
+//         id: 0,
+//         emplId: entry.id,
+//         firstName: entry.firstName,
+//         lastName: entry.lastName,
+//         type: entry.idType,
+//         isRev: entry.isRev,
+//         isBrd: entry.isBrd,
+//         plcGlcCode: (entry.plcGlcCode || "").substring(0, 20),
+//         perHourRate: Number(entry.perHourRate || 0),
+//         status: entry.status || "ACT",
+//         accId: entry.acctId,
+//         orgId: entry.orgId || "",
+//         plId: planId,
+//         plForecasts: payloadForecasts,
+//       };
+
+//       try {
+//         await axios.post(`${backendUrl}/Employee/AddNewEmployee`, payload);
+//         successCount++;
+//         console.log(`✅ Saved entry ${i + 1}/${newEntries.length}`);
+//       } catch (error) {
+//         console.error(`❌ Failed to save entry ${i + 1}:`, error);
+//         failCount++;
+//         failedIndices.push(i);
+        
+//         // Extract detailed error message
+//         let detailedErrorMessage = `Entry ${i + 1}: `;
+//         if (error?.response?.data) {
+//           const errorData = error.response.data;
+//           if (errorData.errors) {
+//             const fieldErrors = [];
+//             Object.keys(errorData.errors).forEach((field) => {
+//               const errors = errorData.errors[field];
+//               if (Array.isArray(errors) && errors.length > 0) {
+//                 fieldErrors.push(`${field}: ${errors[0]}`);
+//               }
+//             });
+//             if (fieldErrors.length > 0) {
+//               detailedErrorMessage += fieldErrors.join(", ");
+//             }
+//           } else if (errorData.message) {
+//             detailedErrorMessage += errorData.message;
+//           } else {
+//             detailedErrorMessage += "Unknown error";
+//           }
+//         } else if (error?.message) {
+//           detailedErrorMessage += error.message;
+//         } else {
+//           detailedErrorMessage += "Unknown error";
+//         }
+        
+//         toast.error(detailedErrorMessage, { autoClose: 4000 });
+//       }
+
+//       // Small delay between saves
+//       await new Promise((resolve) => setTimeout(resolve, 300));
+//     }
+
+//     // After all saves, handle results
+//     if (failedIndices.length > 0) {
+//       // Keep only failed entries
+//       const remainingEntries = newEntries.filter((_, idx) => failedIndices.includes(idx));
+//       const remainingHours = newEntryPeriodHoursArray.filter((_, idx) => failedIndices.includes(idx));
+      
+//       setNewEntries(remainingEntries);
+//       setNewEntryPeriodHoursArray(remainingHours);
+//     } else {
+//       // All saved successfully
+//       setNewEntries([]);
+//       setNewEntryPeriodHoursArray([]);
+//       toast.success(`✅ All ${successCount} entries saved successfully!`, { autoClose: 3000 });
+//     }
+
+//     if (successCount > 0) {
+//       // Refresh employee list
+//       fetchEmployees();
+//       if (onSaveSuccess) {
+//         onSaveSuccess();
+//       }
+//     }
+//   } catch (err) {
+//     console.error("Save multiple entries error:", err);
+//     toast.error("Failed to save entries.", { autoClose: 3000 });
+//   } finally {
+//     setIsDurationLoading(false);
+//   }
+// };
+
+const handleSaveMultipleEntry = async () => {
+  if (newEntries.length === 0) {
+    toast.info("No entries to save.", { autoClose: 2000 });
+    return;
+  }
+
+  setIsDurationLoading(true);
+  let successCount = 0;
+  let failCount = 0;
+  const failedIndices = [];
+
+  try {
+    for (let i = 0; i < newEntries.length; i++) {
+      const entry = newEntries[i];
+      const periodHours = newEntryPeriodHoursArray[i];
+
+      // Skip all validations if planType is NBBUD
+      if (planType !== "NBBUD") {
+        // Check for duplicate employee ID before validating anything else
+        const isDuplicate = localEmployees.some((emp) => {
+          if (!emp.emple) return false;
+
+          // For "Other" type, only check emplId
+          if (entry.idType === "Other") {
+            return emp.emple.emplId === entry.id.trim();
+          }
+
+          // For other types, check both emplId and plcGlcCode
+          return (
+            emp.emple.emplId === entry.id.trim() &&
+            emp.emple.plcGlcCode === entry.plcGlcCode.trim()
+          );
+        });
+
+        if (isDuplicate) {
+          toast.error(
+            "Can't save entry with existing ID and PLC combination. Please use a different ID or PLC.",
+            {
+              toastId: "duplicate-save-error",
+              autoClose: 3000,
+            }
+          );
+          failCount++;
+          failedIndices.push(i);
+          continue;
+        }
+
+        // UPDATED VALIDATION LOGIC - Apply to ALL ID types except "Other"
+        if (entry.idType === "PLC") {
+          if (!entry.id || entry.id !== "PLC") {
+            toast.error("ID must be automatically set to 'PLC' for PLC type.", {
+              autoClose: 3000,
+            });
+            failCount++;
+            failedIndices.push(i);
+            continue;
+          }
+        } else if (entry.idType === "Other") {
+          // For Other type, just check that it's not empty (no further validation)
+          if (!entry.id.trim()) {
+            toast.error("ID is required.", { autoClose: 3000 });
+            failCount++;
+            failedIndices.push(i);
+            continue;
+          }
+        } else {
+          // For ALL other ID types (Employee, Vendor), validate against suggestions
+          if (!entry.id.trim()) {
+            toast.error("ID is required.", { autoClose: 3000 });
+            failCount++;
+            failedIndices.push(i);
+            continue;
+          }
+
+          // MANDATORY validation against suggestions for Employee and Vendor types
+          const suggestions = pastedEntrySuggestions[i] || [];
+          if (suggestions.length > 0) {
+            const validEmployee = suggestions.find(
+              (emp) => emp.emplId === entry.id.trim()
+            );
+            if (!validEmployee) {
+              toast.error("Please enter a valid ID from the available list.", {
+                autoClose: 3000,
+              });
+              failCount++;
+              failedIndices.push(i);
+              continue;
+            }
+          } else {
+            // If no suggestions are loaded, don't allow saving for Employee/Vendor
+            toast.error("Employee suggestions not loaded. Please try again.", {
+              autoClose: 3000,
+            });
+            failCount++;
+            failedIndices.push(i);
+            continue;
+          }
+        }
+
+        // Validate Account against pastedEntryAccounts
+        const entryAccounts = pastedEntryAccounts[i] || [];
+        const isValidAcc = entryAccounts.some(acc => acc.id === entry.acctId);
+        if (!isValidAcc) {
+          toast.error("Please enter a valid Account from the available list.", {
+            autoClose: 3000,
+          });
+          failCount++;
+          failedIndices.push(i);
+          continue;
+        }
+
+        // Validate Organization against pastedEntryOrgs
+        const entryOrgs = pastedEntryOrgs[i] || [];
+        const isValidOrganization = entryOrgs.some(org => org.value.toString() === entry.orgId.toString());
+        if (!isValidOrganization) {
+          toast.error("Organization is required.", { autoClose: 3000 });
+          failCount++;
+          failedIndices.push(i);
+          continue;
+        }
+
+        // Validate PLC is not empty
+        if (!entry.plcGlcCode || !entry.plcGlcCode.trim()) {
+          toast.error("PLC is required and cannot be empty.", {
+            autoClose: 3000,
+          });
+          failCount++;
+          failedIndices.push(i);
+          continue;
+        }
+
+        // Enhanced PLC validation - must match exactly from suggestions
+        const entryPlcs = pastedEntryPlcs[i] || [];
+        if (entry.plcGlcCode && entry.plcGlcCode.trim() !== "") {
+          const exactPlcMatch = entryPlcs.find(
+            (option) =>
+              option.value.toLowerCase() ===
+              entry.plcGlcCode.toLowerCase().trim()
+          );
+
+          if (!exactPlcMatch) {
+            toast.error(
+              "PLC must be selected from the available suggestions. Custom values are not allowed.",
+              {
+                autoClose: 4000,
+              }
+            );
+            failCount++;
+            failedIndices.push(i);
+            continue;
+          }
+        }
+      }
+
+      // Build payload forecasts
+      const payloadForecasts = durations.map((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        return {
+          ...(planType === "EAC"
+            ? { actualhours: Number(periodHours[uniqueKey] || 0) }
+            : { forecastedhours: Number(periodHours[uniqueKey] || 0) }),
+          projId: projectId,
+          plId: planId,
+          emplId: entry.id,
+          month: duration.monthNo,
+          year: duration.year,
+          acctId: entry.acctId,
+          orgId: entry.orgId,
+          plc: entry.plcGlcCode || "",
+          hrlyRate: Number(entry.perHourRate || 0),
+          effectDt: null,
+          plEmployee: null,
+        };
+      });
+
+      const payload = {
+        id: 0,
+        emplId: entry.id,
+        firstName: entry.firstName,
+        lastName: entry.lastName,
+        type: entry.idType,
+        isRev: entry.isRev,
+        isBrd: entry.isBrd,
+        plcGlcCode: (entry.plcGlcCode || "").substring(0, 20),
+        perHourRate: Number(entry.perHourRate || 0),
+        status: entry.status || "ACT",
+        accId: entry.acctId,
+        orgId: entry.orgId || "",
+        plId: planId,
+        plForecasts: payloadForecasts,
+      };
+
+      try {
+        await axios.post(`${backendUrl}/Employee/AddNewEmployee`, payload);
+        successCount++;
+        console.log(`✅ Saved entry ${i + 1}/${newEntries.length}`);
+      } catch (err) {
+        failCount++;
+        failedIndices.push(i);
+
+        // Enhanced error message extraction (same as handleSaveNewEntry)
+        let detailedErrorMessage = "Failed to save entry. ";
+
+        if (err?.response?.data) {
+          const errorData = err.response.data;
+
+          if (errorData.errors) {
+            const fieldErrors = [];
+            Object.keys(errorData.errors).forEach((field) => {
+              const errors = errorData.errors[field];
+              if (Array.isArray(errors) && errors.length > 0) {
+                fieldErrors.push(`${field}: ${errors[0]}`);
+              }
+            });
+            if (fieldErrors.length > 0) {
+              detailedErrorMessage += `Validation errors - ${fieldErrors.join(", ")}`;
+            }
+          } else if (errorData.error) {
+            detailedErrorMessage += `Reason: ${errorData.error}`;
+          } else if (errorData.message) {
+            detailedErrorMessage += `Reason: ${errorData.message}`;
+          } else if (typeof errorData === "string") {
+            detailedErrorMessage += `Reason: ${errorData}`;
+          } else {
+            const errorMessages = [];
+            if (errorData.ID) errorMessages.push(`ID: ${errorData.ID}`);
+            if (errorData.Account) errorMessages.push(`Account: ${errorData.Account}`);
+            if (errorData.Organization) errorMessages.push(`Organization: ${errorData.Organization}`);
+            if (errorData.PLC) errorMessages.push(`PLC: ${errorData.PLC}`);
+
+            if (errorMessages.length > 0) {
+              detailedErrorMessage += `Please check - ${errorMessages.join(", ")}`;
+            } else {
+              detailedErrorMessage += `Server response: ${JSON.stringify(errorData)}`;
+            }
+          }
+        } else if (err?.message) {
+          detailedErrorMessage += `Reason: ${err.message}`;
+        } else {
+          detailedErrorMessage += "Unknown error occurred. Please check your input and try again.";
+        }
+
+        toast.error(detailedErrorMessage, {
+          toastId: `save-entry-error-${i}`,
+          autoClose: 7000,
+        });
+
+        console.error(`Save entry ${i + 1} error:`, {
+          error: err,
+          response: err?.response?.data,
+          status: err?.response?.status,
+        });
+      }
+
+      // Small delay between saves
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+
+    // After all saves, handle results
+    if (failedIndices.length > 0) {
+      // Keep only failed entries
+      const remainingEntries = newEntries.filter((_, idx) => failedIndices.includes(idx));
+      const remainingHours = newEntryPeriodHoursArray.filter((_, idx) => failedIndices.includes(idx));
+      
+      setNewEntries(remainingEntries);
+      setNewEntryPeriodHoursArray(remainingHours);
+    } else {
+      // All saved successfully
+      setNewEntries([]);
+      setNewEntryPeriodHoursArray([]);
+      toast.success(`Entries saved successfully!`, { autoClose: 3000 });
+    }
+
+    if (successCount > 0) {
+      fetchEmployees();  
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    }
+  } catch (err) {
+    console.error("Save multiple entries error:", err);
+    toast.error("Failed to save entries.", { autoClose: 3000 });
+  } finally {
+    setIsDurationLoading(false);
+  }
+};
+
+
+
+  const handleSaveMultipleEntries = async () => {
+  for (let i = 0; i < newEntries.length; i++) {
+    // Temporarily set state for this entry
+    setNewEntry(newEntries[i]);
+    setNewEntryPeriodHours(newEntryPeriodHoursArray[i]);
+    
+    // Wait for state to update
+    await new Promise(resolve => setTimeout(resolve, 150));
+    
+    // Call existing save function with ALL validation
+    await handleSaveNewEntry();
+    
+    // Delay between saves
+    await new Promise(resolve => setTimeout(resolve, 300));
+  }
+  
+  // Clear all entries after saving
+  setNewEntries([]);
+  setNewEntryPeriodHoursArray([]);
+};
+
+
   const handleFindReplace = async () => {
     if (
       !isEditable ||
@@ -3750,7 +8261,9 @@ const ProjectHoursDetails = ({
     if (showNewForm) setSourceRowIndex(actualEmpIdx);
   };
 
-  // handle delete employee here
+
+
+  
   const handleDeleteEmployee = async (emple_Id) => {
     if (!emple_Id) return;
 
@@ -3973,7 +8486,7 @@ const ProjectHoursDetails = ({
                 </button>
 
                 {/* Cancel Button */}
-                <button
+                {/* <button
                   onClick={() => {
                     // Clear all unsaved changes
                     setModifiedHours({});
@@ -3986,7 +8499,82 @@ const ProjectHoursDetails = ({
                   className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
                 >
                   Cancel
-                </button>
+                </button> */}
+
+                {/* Cancel Button - Show when newEntries OR unsaved changes exist */}
+{/* {(newEntries.length > 0 || showNewForm || hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Cancel pasted entries
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+        setPastedEntrySuggestions({});
+        setPastedEntryAccounts({});
+        setPastedEntryOrgs({});
+        setPastedEntryPlcs({});
+        toast.info("Cancelled pasted entries", { autoClose: 2000 });
+      }
+      if (showNewForm) {
+        // Cancel single new entry
+        resetNewEntryForm();
+        setShowNewForm(false);
+        toast.info("Cancelled new entry", { autoClose: 2000 });
+      }
+      if (hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) {
+        // Clear unsaved changes
+        setModifiedHours({});
+        setEditedEmployeeData({});
+        setInputValues({});
+        setHasUnsavedHoursChanges(false);
+        setHasUnsavedEmployeeChanges(false);
+        toast.info("Changes cancelled", { autoClose: 2000 });
+      }
+      // Clear clipboard data
+      setHasClipboardData(false);
+      setCopiedRowsData([]);
+      setCopiedMonthMetadata([]);
+    }}
+    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+  >
+    Cancel
+  </button>
+)} */}
+{/* Cancel Button - Show when new form OR pasted entries exist */}
+{(showNewForm || newEntries.length > 0 || hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Cancel pasted entries
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+        setPastedEntrySuggestions({});
+        setPastedEntryAccounts({});
+        setPastedEntryOrgs({});
+        setPastedEntryPlcs({});
+        toast.info("Cancelled pasted entries", { autoClose: 2000 });
+      }
+      if (showNewForm) {
+        // Cancel single new entry
+        resetNewEntryForm();
+        setShowNewForm(false);
+        toast.info("Cancelled new entry", { autoClose: 2000 });
+      }
+
+      setHasUnsavedHoursChanges(false);
+      setHasUnsavedEmployeeChanges(false);
+      // Clear clipboard data
+      setHasClipboardData(false);
+      setCopiedRowsData([]);
+      setCopiedMonthMetadata([]);
+    }}
+    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+  >
+    Cancel
+  </button>
+)}
+
+
               </div>
             )}
 
@@ -4025,14 +8613,349 @@ const ProjectHoursDetails = ({
                     setOrgSearch("");
                     setAutoPopulatedPLC(false);
                     setShowNewForm(false);
+                    resetNewEntryForm(); // Reset form first
+
                   } else {
                     setShowNewForm(true);
                   }
                 }}
                 className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
               >
-                {showNewForm ? "Cancel" : "New"}
+                {/* {showNewForm ? "Cancel" : "New"} */}
+                New
               </button>
+
+              {/* Paste Button - ALWAYS show if hasClipboardData is true */}
+{/* {hasClipboardData && (
+  <button
+    onClick={() => {
+      console.log("✅ PASTE CLICKED");
+      handlePasteMultipleRows();
+    }}
+    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium"
+  >
+    Paste ({copiedRowsData.length})
+  </button>
+)} */}
+{hasClipboardData && (
+  <button
+    onClick={() => {
+      console.log("✅ PASTE CLICKED");
+      handlePasteMultipleRows();
+      
+      // Disable paste button after pasting
+      setHasClipboardData(false);
+      setCopiedRowsData([]);
+    }}
+    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium"
+  >
+    Paste ({copiedRowsData.length})
+  </button>
+)}
+
+{/* Save Entry - Show for BOTH showNewForm AND newEntries */}
+{/* {(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={async () => {
+      if (newEntries.length > 0) {
+        // Save multiple entries
+        for (let i = 0; i < newEntries.length; i++) {
+          const entry = newEntries[i];
+          const periodHours = newEntryPeriodHoursArray[i];
+          
+          const payloadForecasts = durations.map(duration => ({
+            ...(planType === "EAC"
+              ? { actualhours: Number(periodHours[`${duration.monthNo}_${duration.year}`] || 0) }
+              : { forecastedhours: Number(periodHours[`${duration.monthNo}_${duration.year}`] || 0) }
+            ),
+            projId: projectId,
+            plId: planId,
+            emplId: entry.id,
+            month: duration.monthNo,
+            year: duration.year,
+            acctId: entry.acctId,
+            orgId: entry.orgId,
+            plc: entry.plcGlcCode,
+            hrlyRate: Number(entry.perHourRate || 0),
+            effectDt: null,
+            plEmployee: null,
+          }));
+
+          const payload = {
+            id: 0,
+            emplId: entry.id,
+            firstName: entry.firstName,
+            lastName: entry.lastName,
+            type: entry.idType,
+            isRev: entry.isRev,
+            isBrd: entry.isBrd,
+            plcGlcCode: entry.plcGlcCode.substring(0, 20),
+            perHourRate: Number(entry.perHourRate || 0),
+            status: entry.status || "Act",
+            accId: entry.acctId,
+            orgId: entry.orgId,
+            plId: planId,
+            plForecasts: payloadForecasts,
+          };
+
+          try {
+            await axios.post(`${backendUrl}/Employee/AddNewEmployee`, payload);
+          } catch (err) {
+            toast.error(`Failed to save ${entry.id}`, { autoClose: 2000 });
+          }
+        }
+        
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+        toast.success("All saved!", { autoClose: 3000 });
+        fetchEmployees();
+      } else {
+        handleSaveNewEntry();
+      }
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+  >
+    {newEntries.length > 0 ? `Save All (${newEntries.length})` : 'Save Entry'}
+  </button>
+)} */}
+{/* {(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={async () => {
+      if (newEntries.length > 0) {
+        // Save multiple entries using existing handleSaveNewEntry logic
+        for (let i = 0; i < newEntries.length; i++) {
+          // Temporarily set the newEntry state to current entry
+          const entry = newEntries[i];
+          const periodHours = newEntryPeriodHoursArray[i];
+          
+          setNewEntry(entry);
+          setNewEntryPeriodHours(periodHours);
+          
+          // Call existing save function
+          await handleSaveNewEntry();
+          
+          // Small delay between saves
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+        
+        // Clear all entries after saving
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+      } else {
+        // Single entry - use existing logic
+        handleSaveNewEntry();
+      }
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+  >
+    {newEntries.length > 0 ? `Save All (${newEntries.length})` : 'Save Entry'}
+  </button>
+)} */}
+
+{/* {(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={async () => {
+      if (newEntries.length > 0) {
+        // Save multiple entries
+        console.log("Saving multiple entries:", newEntries.length);
+        
+        let successCount = 0;
+        let failCount = 0;
+        const failedIndices = [];
+        
+        for (let i = 0; i < newEntries.length; i++) {
+          const entry = newEntries[i];
+          const periodHours = newEntryPeriodHoursArray[i];
+          
+          // Temporarily set the state
+          setNewEntry(entry);
+          setNewEntryPeriodHours(periodHours);
+          
+          // Wait for state to update
+          await new Promise(resolve => setTimeout(resolve, 100));
+          
+          try {
+            // Call existing save function
+            await handleSaveNewEntry();
+            successCount++;
+            console.log(`✅ Saved entry ${i + 1}/${newEntries.length}`);
+          } catch (error) {
+            failCount++;
+            failedIndices.push(i);
+            console.error(`❌ Failed to save entry ${i + 1}:`, error);
+            // Don't break - continue with next entry
+          }
+          
+          // Small delay between saves
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+        
+        // Only clear successfully saved entries
+        if (failedIndices.length > 0) {
+          // Keep only the failed entries
+          const remainingEntries = newEntries.filter((_, idx) => failedIndices.includes(idx));
+          const remainingHours = newEntryPeriodHoursArray.filter((_, idx) => failedIndices.includes(idx));
+          
+          setNewEntries(remainingEntries);
+          setNewEntryPeriodHoursArray(remainingHours);
+          
+          toast.error(`${failCount} entries failed. Please fix the errors and try again.`, { 
+            autoClose: 5000 
+          });
+          
+          if (successCount > 0) {
+            toast.success(`${successCount} entries saved successfully!`, { 
+              autoClose: 3000 
+            });
+            fetchEmployees();
+          }
+        } else {
+          // All saved successfully
+          setNewEntries([]);
+          setNewEntryPeriodHoursArray([]);
+          toast.success(`All ${successCount} entries saved successfully!`, { 
+            autoClose: 3000 
+          });
+          fetchEmployees();
+        }
+      } else {
+        // Single entry - use existing function directly
+        handleSaveNewEntry();
+      }
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+  >
+    {newEntries.length > 0 ? `Save All (${newEntries.length})` : 'Save Entry'}
+  </button>
+)} */}
+
+{/* {(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        handleSaveMultipleEntries();
+      } else {
+        handleSaveNewEntry();
+      }
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+  >
+    {newEntries.length > 0 ? `Save All (${newEntries.length})` : 'Save Entry'}
+  </button>
+)} */}
+
+{/* Save Entry - Show for BOTH showNewForm AND newEntries */}
+{(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Save multiple pasted entries
+        handleSaveMultipleEntry();
+      } else {
+        // Save single new entry
+        handleSaveNewEntry();
+      }
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+  >
+    {newEntries.length > 0 ? `Save All (${newEntries.length})` : "Save Entry"}
+  </button>
+)}
+
+{/* Cancel Button - Show when new form OR pasted entries exist */}
+{(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Cancel pasted entries
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+        setPastedEntrySuggestions({});
+        setPastedEntryAccounts({});
+        setPastedEntryOrgs({});
+        setPastedEntryPlcs({});
+        toast.info("Cancelled pasted entries", { autoClose: 2000 });
+      }
+      if (showNewForm) {
+        // Cancel single new entry
+        resetNewEntryForm();
+        setShowNewForm(false);
+        toast.info("Cancelled new entry", { autoClose: 2000 });
+      }
+      // Clear clipboard data
+      setHasClipboardData(false);
+      setCopiedRowsData([]);
+      setCopiedMonthMetadata([]);
+    }}
+    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+  >
+    Cancel
+  </button>
+)}
+
+
+
+
+
+{/* {(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Cancel multiple pasted entries
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+        toast.info("Cancelled pasted entries", { autoClose: 2000 });
+      }
+      
+      if (showNewForm) {
+        // Cancel single new entry
+        resetNewEntryForm();
+        setShowNewForm(false);
+        toast.info("Cancelled new entry", { autoClose: 2000 });
+      }
+      
+      // Clear clipboard data
+      setHasClipboardData(false);
+      setCopiedRowsData([]);
+    }}
+    className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 text-xs font-medium"
+  >
+    Cancel
+  </button>
+)} */}
+
+{/* {(showNewForm || newEntries.length > 0) && (hasUnsavedPastedChanges || hasUnsavedHoursChanges || hasUnsavedEmployeeChanges) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Cancel pasted entries
+        setNewEntries([]);
+        setNewEntryPeriodHoursArray([]);
+        setHasUnsavedPastedChanges(false);
+        toast.info("Cancelled pasted entries", { autoClose: 2000 });
+      }
+      if (showNewForm) {
+        resetNewEntryForm();
+        setShowNewForm(false);
+        toast.info("Cancelled new entry", { autoClose: 2000 });
+      }
+      // Clear other unsaved changes
+      setModifiedHours({});
+      setEditedEmployeeData({});
+      setInputValues({});
+      setHasUnsavedHoursChanges(false);
+      setHasUnsavedEmployeeChanges(false);
+      setHasClipboardData(false);
+      setCopiedRowsData([]);
+    }}
+    className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200"
+  >
+    Cancel
+  </button>
+)} */}
+
+
+
 
               {!showNewForm && (
                 <>
@@ -4101,44 +9024,7 @@ const ProjectHoursDetails = ({
             </>
           )}
 
-          {status === "In Progress" && showNewForm && (
-            <div className="flex gap-2 new-entry-form" data-new-entry="true">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handlePasteToNewEntry();
-                }}
-                data-new-entry="true"
-                className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-purple-500"
-                title="Paste copied data to new entry form (or use Ctrl+V)"
-              >
-                <div className="flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
-                  Paste (Ctrl+V)
-                </div>
-              </button>
-
-              <button
-                onClick={handleSaveNewEntry}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-green-500"
-              >
-                Save Entry
-              </button>
-            </div>
-          )}
+        
         </div>
       </div>
 
@@ -4279,409 +9165,724 @@ const ProjectHoursDetails = ({
               </thead>
               <tbody>
                 {showNewForm && (
-                  <tr
-                    key="new-entry"
-                    className="bg-gray-50"
-                    style={{
-                      height: `${ROW_HEIGHT_DEFAULT}px`,
-                      lineHeight: "normal",
-                    }}
-                  >
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <select
-                        name="idType"
-                        value={newEntry.idType || ""}
-                        onChange={(e) => handleIdTypeChange(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                      >
-                        {ID_TYPE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="id"
-                        value={newEntry.id}
-                        // value={
-                        //   newEntry.idType === "Other" ? "KBD001" : newEntry.id
-                        // }
-                        onChange={(e) => handleIdChange(e.target.value)}
-                        disabled={newEntry.idType === "PLC"}
-                        className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
-                          newEntry.idType === "PLC"
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        // list={
-                        //   planType === "NBBUD" ? undefined : "employee-id-list"
-                        // }
-                        list="employee-id-list"
-                        placeholder={
-                          newEntry.idType === "PLC"
-                            ? "Not required for PLC"
-                            : "Enter ID"
-                        }
-                      />
-                      {/* <datalist id="employee-id-list">
-                          {employeeSuggestions
-                            .filter(
-                              (emp) =>
-                                emp.emplId && typeof emp.emplId === "string"
-                            )
-                            .map((emp, index) => (
-                              <option
-                                key={`${emp.emplId}-${index}`}
-                                value={emp.emplId}
-                              >
-                                {emp.lastName && emp.firstName
-                                  ? `${emp.lastName}, ${emp.firstName}`
-                                  : emp.lastName || emp.firstName || emp.emplId}
-                              </option>
-                            ))}
-                        </datalist> */}
-                      <datalist id="employee-id-list">
-                        {newEntry.idType !== "Other" &&
-                          employeeSuggestions
-                            .filter(
-                              (emp) =>
-                                emp.emplId && typeof emp.emplId === "string"
-                            )
-                            .map((emp, index) => (
-                              <option
-                                key={`${emp.emplId}-${index}`}
-                                value={emp.emplId}
-                              >
-                                {emp.lastName && emp.firstName
-                                  ? `${emp.lastName}, ${emp.firstName}`
-                                  : emp.lastName || emp.firstName || emp.emplId}
-                              </option>
-                            ))}
-                      </datalist>
-                    </td>
+                                <tr
+                                  key="new-entry"
+                                  className="bg-gray-50"
+                                  style={{
+                                    height: `${ROW_HEIGHT_DEFAULT}px`,
+                                    lineHeight: "normal",
+                                  }}
+                                >
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <select
+                                      name="idType"
+                                      value={newEntry.idType || ""}
+                                      onChange={(e) => handleIdTypeChange(e.target.value)}
+                                      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                    >
+                                      {ID_TYPE_OPTIONS.map((opt) => (
+                                        <option key={opt.value} value={opt.value}>
+                                          {opt.label}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="text"
+                                      name="id"
+                                      value={newEntry.id}
+                                      // value={
+                                      //   newEntry.idType === "Other" ? "KBD001" : newEntry.id
+                                      // }
+                                      onChange={(e) => handleIdChange(e.target.value)}
+                                      disabled={newEntry.idType === "PLC"}
+                                      className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+                                        newEntry.idType === "PLC"
+                                          ? "bg-gray-100 cursor-not-allowed"
+                                          : ""
+                                      }`}
+                                      // list={
+                                      //   planType === "NBBUD" ? undefined : "employee-id-list"
+                                      // }
+                                      list="employee-id-list"
+                                      placeholder={
+                                        newEntry.idType === "PLC"
+                                          ? "Not required for PLC"
+                                          : "Enter ID"
+                                      }
+                                    />
+                                    {/* <datalist id="employee-id-list">
+                                        {employeeSuggestions
+                                          .filter(
+                                            (emp) =>
+                                              emp.emplId && typeof emp.emplId === "string"
+                                          )
+                                          .map((emp, index) => (
+                                            <option
+                                              key={`${emp.emplId}-${index}`}
+                                              value={emp.emplId}
+                                            >
+                                              {emp.lastName && emp.firstName
+                                                ? `${emp.lastName}, ${emp.firstName}`
+                                                : emp.lastName || emp.firstName || emp.emplId}
+                                            </option>
+                                          ))}
+                                      </datalist> */}
+                                    <datalist id="employee-id-list">
+                                      {newEntry.idType !== "Other" &&
+                                        employeeSuggestions
+                                          .filter(
+                                            (emp) =>
+                                              emp.emplId && typeof emp.emplId === "string"
+                                          )
+                                          .map((emp, index) => (
+                                            <option
+                                              key={`${emp.emplId}-${index}`}
+                                              value={emp.emplId}
+                                            >
+                                              {emp.lastName && emp.firstName
+                                                ? `${emp.lastName}, ${emp.firstName}`
+                                                : emp.lastName || emp.firstName || emp.emplId}
+                                            </option>
+                                          ))}
+                                    </datalist>
+                                  </td>
+              
+                                  <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+                                    <span className="text-gray-400 text-xs">-</span>
+                                  </td>
+              
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    {newEntry.idType === "PLC" ? (
+                                      // PLC Name field - automatically show selected PLC description
+                                      <input
+                                        type="text"
+                                        name="name"
+                                        value={newEntry.firstName || ""} // This will contain the PLC description
+                                        readOnly
+                                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+                                        // placeholder="PLC description will appear here"
+                                      />
+                                    ) : (
+                                      // Existing logic for other ID types
+                                      <input
+                                        type="text"
+                                        name="name"
+                                        value={
+                                          newEntry.idType === "Other" || planType === "NBBUD"
+                                            ? `${newEntry.firstName || ""} ${
+                                                newEntry.lastName || ""
+                                              }`.trim()
+                                            : newEntry.idType === "Vendor"
+                                            ? newEntry.lastName || newEntry.firstName || ""
+                                            : newEntry.lastName && newEntry.firstName
+                                            ? `${newEntry.lastName}, ${newEntry.firstName}`
+                                            : newEntry.lastName || newEntry.firstName || ""
+                                        }
+                                        readOnly={
+                                          planType !== "NBBUD" && newEntry.idType !== "Other"
+                                        }
+                                        onChange={(e) => {
+                                          if (
+                                            newEntry.idType === "Other" ||
+                                            planType === "NBBUD"
+                                          ) {
+                                            const fullName = e.target.value.trim();
+                                            const nameParts = fullName.split(" ");
+                                            const firstName = nameParts[0] || "";
+                                            const lastName =
+                                              nameParts.slice(1).join(" ") || "";
+              
+                                            setNewEntry((prev) => ({
+                                              ...prev,
+                                              firstName: firstName,
+                                              lastName: lastName,
+                                            }));
+                                          }
+                                        }}
+                                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                          newEntry.idType === "Other" || planType === "NBBUD"
+                                            ? "bg-white"
+                                            : "bg-gray-100 cursor-not-allowed"
+                                        }`}
+                                        placeholder={
+                                          newEntry.idType === "Other" || planType === "NBBUD"
+                                            ? "Enter name"
+                                            : "Name (auto-filled)"
+                                        }
+                                      />
+                                    )}
+                                  </td>
+              
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="text"
+                                      name="acctId"
+                                      value={newEntry.acctId}
+                                      onChange={(e) => handleAccountChange(e.target.value)}
+                                      onBlur={(e) => handleAccountBlur(e.target.value)}
+                                      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                        !isFieldEditable
+                                          ? "bg-gray-100 cursor-not-allowed"
+                                          : ""
+                                      }`}
+                                      list="account-list"
+                                      placeholder="Enter Account"
+                                      //   disabled={!isBudPlan}
+                                      disabled={!isFieldEditable}
+                                    />
+                                    <datalist id="account-list">
+                                      {laborAccounts.map((account, index) => (
+                                        <option
+                                          key={`${account.id}-${index}`}
+                                          value={account.id}
+                                        >
+                                          {account.id}
+                                        </option>
+                                      ))}
+                                    </datalist>
+                                  </td>
+                                  {/* ADD THIS NEW TD FOR ACCOUNT NAME IN NEW ENTRY FORM */}
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="text"
+                                      value={(() => {
+                                        const accountWithName = accountOptionsWithNames.find(
+                                          (acc) => acc.id === newEntry.acctId
+                                        );
+                                        return accountWithName ? accountWithName.name : "";
+                                      })()}
+                                      readOnly
+                                      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+                                      placeholder="Account Name (auto-filled)"
+                                    />
+                                  </td>
+                                  {/* <td className="border border-gray-300 px-1.5 py-0.5">
+                                      <input
+                                        type="text"
+                                        name="orgId"
+                                        value={newEntry.orgId}
+                                        onChange={(e) => handleOrgChange(e.target.value)}
+                                        onBlur={(e) => handleOrgBlur(e.target.value)}
+                                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                          !isBudPlan ? "bg-gray-100 cursor-not-allowed" : ""
+                                        }`}
+                                        placeholder="Enter Organization"
+                                        disabled={!isBudPlan}
+                                      />
+                                    </td> */}
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="text"
+                                      name="orgId"
+                                      value={newEntry.orgId}
+                                      onChange={(e) => handleOrgInputChange(e.target.value)}
+                                      onBlur={(e) => handleOrgBlur(e.target.value)}
+                                      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                        !isFieldEditable
+                                          ? "bg-gray-100 cursor-not-allowed"
+                                          : ""
+                                      }`}
+                                      list="organization-list"
+                                      placeholder="Enter Organization ID (numeric)"
+                                      // disabled={!isBudPlan}
+                                      disabled={!isFieldEditable}
+                                    />
+                                    <datalist id="organization-list">
+                                      {organizationOptions.map((org, index) => (
+                                        <option
+                                          key={`${org.value}-${index}`}
+                                          value={org.value}
+                                        >
+                                          {org.label}
+                                        </option>
+                                      ))}
+                                    </datalist>
+                                  </td>
+              
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="text"
+                                      name="plcGlcCode"
+                                      value={plcSearch}
+                                      onChange={(e) => handlePlcInputChange(e.target.value)}
+                                      onBlur={(e) => {
+                                        if (planType === "NBBUD") return;
+                                        const val = e.target.value.trim();
+              
+                                        if (
+                                          val !== "" &&
+                                          !plcOptions.some(
+                                            (option) =>
+                                              option.value.toLowerCase() === val.toLowerCase()
+                                          )
+                                        ) {
+                                          toast.error(
+                                            "PLC must be selected from the available suggestions.",
+                                            {
+                                              autoClose: 3000,
+                                            }
+                                          );
+                                          // Clear invalid input
+                                          setPlcSearch("");
+                                          setNewEntry((prev) => ({
+                                            ...prev,
+                                            plcGlcCode: "",
+                                          }));
+                                        }
+                                      }}
+                                      disabled={newEntry.idType === ""}
+                                      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                      list="plc-list"
+                                      placeholder="Enter or select PLC"
+                                      autoComplete="off"
+                                    />
+              
+                                    <datalist id="plc-list">
+                                      {filteredPlcOptions.map((plc, index) => (
+                                        <option
+                                          key={`${plc.value}-${index}`}
+                                          value={plc.value}
+                                        >
+                                          {plc.label}
+                                        </option>
+                                      ))}
+                                    </datalist>
+                                  </td>
+              
+                                  <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+                                    <input
+                                      type="checkbox"
+                                      name="isRev"
+                                      checked={newEntry.isRev}
+                                      //   onChange={(e) =>
+                                      //     isBudPlan &&
+                                      //     setNewEntry({
+                                      //       ...newEntry,
+                                      //       isRev: e.target.checked,
+                                      //     })
+                                      //   }
+                                      // CHANGE TO:
+                                      onChange={(e) =>
+                                        isFieldEditable &&
+                                        setNewEntry({
+                                          ...newEntry,
+                                          isRev: e.target.checked,
+                                        })
+                                      }
+                                      disabled={!isFieldEditable}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+                                    <input
+                                      type="checkbox"
+                                      name="isBrd"
+                                      checked={newEntry.isBrd}
+                                      //   onChange={(e) =>
+                                      //     isBudPlan &&
+                                      //     setNewEntry({
+                                      //       ...newEntry,
+                                      //       isBrd: e.target.checked,
+                                      //     })
+                                      //   }
+                                      //   className="w-4 h-4"
+                                      //   disabled={!isBudPlan}
+                                      // CHANGE TO:
+                                      onChange={(e) =>
+                                        isFieldEditable &&
+                                        setNewEntry({
+                                          ...newEntry,
+                                          isBrd: e.target.checked,
+                                        })
+                                      }
+                                      disabled={!isFieldEditable}
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="text"
+                                      name="status"
+                                      value={newEntry.status}
+                                      disabled={newEntry.idType === "Other"}
+                                      onChange={(e) =>
+                                        setNewEntry({ ...newEntry, status: e.target.value })
+                                      }
+                                      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                      placeholder="Enter Status"
+                                    />
+                                  </td>
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    <input
+                                      type="password"
+                                      name="perHourRate"
+                                      value={isEditingNewEntry ? newEntry.perHourRate : ""}
+                                      placeholder={isEditingNewEntry ? "" : "**"}
+                                      onFocus={() => setIsEditingNewEntry(true)}
+                                      onBlur={() => setIsEditingNewEntry(false)}
+                                      // onChange={(e) =>
+                                      //   isFieldEditable &&
+                                      //   setNewEntry({
+                                      //     ...newEntry,
+                                      //     perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
+                                      //   })
+                                      // }
+                                      // className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                      //   !isFieldEditable
+                                      //     ? "bg-gray-100 cursor-not-allowed"
+                                      //     : ""
+                                      // }`}
+                                      // disabled={!isFieldEditable}
+                                      onChange={(e) => {
+                                        const isFieldEditable = !(
+                                          newEntry.idType === "Employee" ||
+                                          newEntry.idType === "Vendor"
+                                        );
+                                        if (isFieldEditable) {
+                                          setNewEntry((prev) => ({
+                                            ...prev,
+                                            perHourRate: e.target.value.replace(
+                                              /[^0-9.]/g,
+                                              ""
+                                            ),
+                                          }));
+                                        }
+                                      }}
+                                      disabled={
+                                        newEntry.idType === "Employee" ||
+                                        newEntry.idType === "Vendor"
+                                      } // Disable for Employee and Vendor
+                                      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                        newEntry.idType === "Employee" ||
+                                        newEntry.idType === "Vendor"
+                                          ? "bg-gray-100 cursor-not-allowed"
+                                          : ""
+                                      }`}
+                                    />
+                                  </td>
+              
+                                  <td className="border border-gray-300 px-1.5 py-0.5">
+                                    {Object.values(newEntryPeriodHours)
+                                      .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+                                      .toFixed(2)}
+                                  </td>
+                                </tr>
+                              )}
 
-                    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                      <span className="text-gray-400 text-xs">-</span>
-                    </td>
+             {newEntries.length > 0 && newEntries.map((entry, entryIndex) => (
+              <React.Fragment key={`new-entry-months-${entryIndex}`}>
+  <tr 
+    key={`new-entry-${entryIndex}`} 
+    className="bg-gray-50" 
+    style={{ height: `${ROW_HEIGHT_DEFAULT}px`, lineHeight: 'normal' }}
+  >
+    {/* ID Type */}
+    <td className="border border-gray-300 px-1.5 py-0.5">
+      <select
+        name="idType"
+        value={entry.idType}
+        onChange={(e) => {
+          const value = e.target.value;
+          setNewEntries(prev => prev.map((ent, idx) => 
+            idx === entryIndex ? {
+              id: '',
+              firstName: '',
+              lastName: '',
+              isRev: false,
+              isBrd: false,
+              idType: value,
+              acctId: laborAccounts.length > 0 ? laborAccounts[0].id : '',
+              orgId: '',
+              plcGlcCode: '',
+              perHourRate: '',
+              status: 'Act',
+            } : ent
+          ));
+          setPlcSearch('');
+          setAutoPopulatedPLC(false);
+        }}
+        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+      >
+        {ID_TYPE_OPTIONS.map((opt) => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+    </td>
 
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      {newEntry.idType === "PLC" ? (
-                        // PLC Name field - automatically show selected PLC description
-                        <input
-                          type="text"
-                          name="name"
-                          value={newEntry.firstName || ""} // This will contain the PLC description
-                          readOnly
-                          className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                          // placeholder="PLC description will appear here"
-                        />
-                      ) : (
-                        // Existing logic for other ID types
-                        <input
-                          type="text"
-                          name="name"
-                          value={
-                            newEntry.idType === "Other" || planType === "NBBUD"
-                              ? `${newEntry.firstName || ""} ${
-                                  newEntry.lastName || ""
-                                }`.trim()
-                              : newEntry.idType === "Vendor"
-                              ? newEntry.lastName || newEntry.firstName || ""
-                              : newEntry.lastName && newEntry.firstName
-                              ? `${newEntry.lastName}, ${newEntry.firstName}`
-                              : newEntry.lastName || newEntry.firstName || ""
-                          }
-                          readOnly={
-                            planType !== "NBBUD" && newEntry.idType !== "Other"
-                          }
-                          onChange={(e) => {
-                            if (
-                              newEntry.idType === "Other" ||
-                              planType === "NBBUD"
-                            ) {
-                              const fullName = e.target.value.trim();
-                              const nameParts = fullName.split(" ");
-                              const firstName = nameParts[0] || "";
-                              const lastName =
-                                nameParts.slice(1).join(" ") || "";
+    {/* ID */}
+    {/* <td className="border border-gray-300 px-1.5 py-0.5">
+      <input
+        type="text"
+        name="id"
+        value={entry.id}
+        onChange={(e) => {
+          const trimmedValue = e.target.value.trim();
+          setNewEntries(prev => prev.map((ent, idx) => 
+            idx === entryIndex ? { ...ent, id: trimmedValue } : ent
+          ));
+        }}
+        disabled={entry.idType === 'PLC'}
+        className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+          entry.idType === 'PLC' ? 'bg-gray-100 cursor-not-allowed' : ''
+        }`}
+        placeholder={entry.idType === 'PLC' ? 'PLC' : 'Enter ID'}
+      />
+    </td> */}
+    {/* ID */}
+<td className="border border-gray-300 px-1.5 py-0.5">
+  <input
+    type="text"
+    name="id"
+    value={entry.id}
+    onChange={(e) => {
+      const trimmedValue = e.target.value.trim();
+      setNewEntries((prev) =>
+        prev.map((ent, idx) =>
+          idx === entryIndex ? { ...ent, id: trimmedValue } : ent
+        )
+      );
+      
+      // Auto-populate fields if employee found
+      const suggestions = pastedEntrySuggestions[entryIndex] || [];
+      const selectedEmployee = suggestions.find(emp => emp.emplId === trimmedValue);
+      if (selectedEmployee) {
+        setNewEntries((prev) =>
+          prev.map((ent, idx) =>
+            idx === entryIndex
+              ? {
+                  ...ent,
+                  id: trimmedValue,
+                  firstName: selectedEmployee.firstName || "",
+                  lastName: selectedEmployee.lastName || "",
+                  perHourRate: selectedEmployee.perHourRate || "",
+                  orgId: selectedEmployee.orgId || ent.orgId,
+                  plcGlcCode: selectedEmployee.plc || "",
+                }
+              : ent
+          )
+        );
+      }
+    }}
+    disabled={entry.idType === "PLC"}
+    className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+      entry.idType === "PLC" ? "bg-gray-100 cursor-not-allowed" : ""
+    }`}
+    list={planType === "NBBUD" ? undefined : `employee-id-list-${entryIndex}`}
+    placeholder={entry.idType === "PLC" ? "Not required for PLC" : "Enter ID"}
+  />
+  <datalist id={`employee-id-list-${entryIndex}`}>
+    {(pastedEntrySuggestions[entryIndex] || [])
+      .filter((emp) => emp.emplId && typeof emp.emplId === "string")
+      .map((emp, index) => (
+        <option
+          key={`${emp.emplId}-${index}`}
+          value={emp.emplId}
+        >
+          {emp.lastName && emp.firstName
+            ? `${emp.lastName}, ${emp.firstName}`
+            : emp.lastName || emp.firstName || emp.emplId}
+        </option>
+      ))}
+  </datalist>
+</td>
 
-                              setNewEntry((prev) => ({
-                                ...prev,
-                                firstName: firstName,
-                                lastName: lastName,
-                              }));
-                            }
-                          }}
-                          className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                            newEntry.idType === "Other" || planType === "NBBUD"
-                              ? "bg-white"
-                              : "bg-gray-100 cursor-not-allowed"
-                          }`}
-                          placeholder={
-                            newEntry.idType === "Other" || planType === "NBBUD"
-                              ? "Enter name"
-                              : "Name (auto-filled)"
-                          }
-                        />
-                      )}
-                    </td>
 
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="acctId"
-                        value={newEntry.acctId}
-                        onChange={(e) => handleAccountChange(e.target.value)}
-                        onBlur={(e) => handleAccountBlur(e.target.value)}
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          !isFieldEditable
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        list="account-list"
-                        placeholder="Enter Account"
-                        //   disabled={!isBudPlan}
-                        disabled={!isFieldEditable}
-                      />
-                      <datalist id="account-list">
-                        {laborAccounts.map((account, index) => (
-                          <option
-                            key={`${account.id}-${index}`}
-                            value={account.id}
-                          >
-                            {account.id}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    {/* ADD THIS NEW TD FOR ACCOUNT NAME IN NEW ENTRY FORM */}
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        value={(() => {
-                          const accountWithName = accountOptionsWithNames.find(
-                            (acc) => acc.id === newEntry.acctId
-                          );
-                          return accountWithName ? accountWithName.name : "";
-                        })()}
-                        readOnly
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                        placeholder="Account Name (auto-filled)"
-                      />
-                    </td>
-                    {/* <td className="border border-gray-300 px-1.5 py-0.5">
-                        <input
-                          type="text"
-                          name="orgId"
-                          value={newEntry.orgId}
-                          onChange={(e) => handleOrgChange(e.target.value)}
-                          onBlur={(e) => handleOrgBlur(e.target.value)}
-                          className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                            !isBudPlan ? "bg-gray-100 cursor-not-allowed" : ""
-                          }`}
-                          placeholder="Enter Organization"
-                          disabled={!isBudPlan}
-                        />
-                      </td> */}
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="orgId"
-                        value={newEntry.orgId}
-                        onChange={(e) => handleOrgInputChange(e.target.value)}
-                        onBlur={(e) => handleOrgBlur(e.target.value)}
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          !isFieldEditable
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        list="organization-list"
-                        placeholder="Enter Organization ID (numeric)"
-                        // disabled={!isBudPlan}
-                        disabled={!isFieldEditable}
-                      />
-                      <datalist id="organization-list">
-                        {organizationOptions.map((org, index) => (
-                          <option
-                            key={`${org.value}-${index}`}
-                            value={org.value}
-                          >
-                            {org.label}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
+    {/* Warning Column - Empty */}
+    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+      <span className="text-gray-400 text-xs">-</span>
+    </td>
 
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="plcGlcCode"
-                        value={plcSearch}
-                        onChange={(e) => handlePlcInputChange(e.target.value)}
-                        onBlur={(e) => {
-                          if (planType === "NBBUD") return;
-                          const val = e.target.value.trim();
+    {/* Name */}
+    <td className="border border-gray-300 px-1.5 py-0.5">
+      <input
+        type="text"
+        name="name"
+        value={
+          entry.idType === 'PLC'
+            ? entry.firstName
+            : entry.idType === 'Vendor'
+            ? entry.lastName || entry.firstName
+            : `${entry.firstName || ''} ${entry.lastName || ''}`.trim()
+        }
+        readOnly
+        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+        placeholder="Name auto-filled"
+      />
+    </td>
 
-                          if (
-                            val !== "" &&
-                            !plcOptions.some(
-                              (option) =>
-                                option.value.toLowerCase() === val.toLowerCase()
-                            )
-                          ) {
-                            toast.error(
-                              "PLC must be selected from the available suggestions.",
-                              {
-                                autoClose: 3000,
-                              }
-                            );
-                            // Clear invalid input
-                            setPlcSearch("");
-                            setNewEntry((prev) => ({
-                              ...prev,
-                              plcGlcCode: "",
-                            }));
-                          }
-                        }}
-                        disabled={newEntry.idType === ""}
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                        list="plc-list"
-                        placeholder="Enter or select PLC"
-                        autoComplete="off"
-                      />
+    {/* Account */}
+   <td className="border border-gray-300 px-1.5 py-0.5">
+  <input
+    type="text"
+    name="acctId"
+    value={entry.acctId}
+    onChange={(e) => {
+      const value = e.target.value;
+      setNewEntries(prev => prev.map((ent, idx) => 
+        idx === entryIndex ? { ...ent, acctId: value } : ent
+      ));
+      
+      // Auto-populate account name if account found
+      const accounts = pastedEntryAccounts[entryIndex] || [];
+      const selectedAccount = accounts.find(acc => acc.id === value);
+      if (selectedAccount) {
+        setNewEntries(prev => prev.map((ent, idx) => 
+          idx === entryIndex ? { ...ent, acctId: value, acctName: selectedAccount.name } : ent
+        ));
+      }
+    }}
+    className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+    list={`account-list-${entryIndex}`}
+    placeholder="Enter Account"
+  />
+  <datalist id={`account-list-${entryIndex}`}>
+    {(pastedEntryAccounts[entryIndex] || []).map((account, index) => (
+      <option key={`${account.id}-${index}`} value={account.id}>
+        {account.name}
+      </option>
+    ))}
+  </datalist>
+</td>
 
-                      <datalist id="plc-list">
-                        {filteredPlcOptions.map((plc, index) => (
-                          <option
-                            key={`${plc.value}-${index}`}
-                            value={plc.value}
-                          >
-                            {plc.label}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
 
-                    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                      <input
-                        type="checkbox"
-                        name="isRev"
-                        checked={newEntry.isRev}
-                        //   onChange={(e) =>
-                        //     isBudPlan &&
-                        //     setNewEntry({
-                        //       ...newEntry,
-                        //       isRev: e.target.checked,
-                        //     })
-                        //   }
-                        // CHANGE TO:
-                        onChange={(e) =>
-                          isFieldEditable &&
-                          setNewEntry({
-                            ...newEntry,
-                            isRev: e.target.checked,
-                          })
-                        }
-                        disabled={!isFieldEditable}
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                      <input
-                        type="checkbox"
-                        name="isBrd"
-                        checked={newEntry.isBrd}
-                        //   onChange={(e) =>
-                        //     isBudPlan &&
-                        //     setNewEntry({
-                        //       ...newEntry,
-                        //       isBrd: e.target.checked,
-                        //     })
-                        //   }
-                        //   className="w-4 h-4"
-                        //   disabled={!isBudPlan}
-                        // CHANGE TO:
-                        onChange={(e) =>
-                          isFieldEditable &&
-                          setNewEntry({
-                            ...newEntry,
-                            isBrd: e.target.checked,
-                          })
-                        }
-                        disabled={!isFieldEditable}
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="status"
-                        value={newEntry.status}
-                        disabled={newEntry.idType === "Other"}
-                        onChange={(e) =>
-                          setNewEntry({ ...newEntry, status: e.target.value })
-                        }
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                        placeholder="Enter Status"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="password"
-                        name="perHourRate"
-                        value={isEditingNewEntry ? newEntry.perHourRate : ""}
-                        placeholder={isEditingNewEntry ? "" : "**"}
-                        onFocus={() => setIsEditingNewEntry(true)}
-                        onBlur={() => setIsEditingNewEntry(false)}
-                        // onChange={(e) =>
-                        //   isFieldEditable &&
-                        //   setNewEntry({
-                        //     ...newEntry,
-                        //     perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
-                        //   })
-                        // }
-                        // className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                        //   !isFieldEditable
-                        //     ? "bg-gray-100 cursor-not-allowed"
-                        //     : ""
-                        // }`}
-                        // disabled={!isFieldEditable}
-                        onChange={(e) => {
-                          const isFieldEditable = !(
-                            newEntry.idType === "Employee" ||
-                            newEntry.idType === "Vendor"
-                          );
-                          if (isFieldEditable) {
-                            setNewEntry((prev) => ({
-                              ...prev,
-                              perHourRate: e.target.value.replace(
-                                /[^0-9.]/g,
-                                ""
-                              ),
-                            }));
-                          }
-                        }}
-                        disabled={
-                          newEntry.idType === "Employee" ||
-                          newEntry.idType === "Vendor"
-                        } // Disable for Employee and Vendor
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          newEntry.idType === "Employee" ||
-                          newEntry.idType === "Vendor"
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                      />
-                    </td>
+    {/* Account Name */}
+    <td className="border border-gray-300 px-1.5 py-0.5">
+      <input
+        type="text"
+        value={
+          (() => {
+            const accountWithName = accountOptionsWithNames.find(
+              (acc) => acc.id === entry.acctId
+            );
+            return accountWithName ? accountWithName.name : '';
+          })()
+        }
+        readOnly
+        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+        placeholder="Account Name auto-filled"
+      />
+    </td>
 
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      {Object.values(newEntryPeriodHours)
-                        .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
-                        .toFixed(2)}
-                    </td>
-                  </tr>
-                )}
+   {/* Organization */}
+<td className="border border-gray-300 px-1.5 py-0.5">
+  <input
+    type="text"
+    name="orgId"
+    value={entry.orgId}
+    onChange={(e) => {
+      const value = e.target.value;
+      setNewEntries(prev => prev.map((ent, idx) => 
+        idx === entryIndex ? { ...ent, orgId: value } : ent
+      ));
+    }}
+    className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+    list={`organization-list-${entryIndex}`}
+    placeholder="Enter Organization"
+  />
+  <datalist id={`organization-list-${entryIndex}`}>
+    {(pastedEntryOrgs[entryIndex] || []).map((org, index) => (
+      <option key={`${org.value}-${index}`} value={org.value}>
+        {org.label}
+      </option>
+    ))}
+  </datalist>
+</td>
+
+{/* PLC */}
+<td className="border border-gray-300 px-1.5 py-0.5">
+  <input
+    type="text"
+    name="plcGlcCode"
+    value={entry.plcGlcCode}
+    onChange={(e) => {
+      const value = e.target.value;
+      setNewEntries(prev => prev.map((ent, idx) => 
+        idx === entryIndex ? { ...ent, plcGlcCode: value } : ent
+      ));
+    }}
+    className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+    list={`plc-list-${entryIndex}`}
+    placeholder="Enter PLC"
+  />
+  <datalist id={`plc-list-${entryIndex}`}>
+    {(pastedEntryPlcs[entryIndex] || []).map((plc, index) => (
+      <option key={`${plc.value}-${index}`} value={plc.value}>
+        {plc.label}
+      </option>
+    ))}
+  </datalist>
+</td>
+
+    {/* Rev */}
+    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+      <input
+        type="checkbox"
+        name="isRev"
+        checked={entry.isRev}
+        onChange={(e) => {
+          setNewEntries(prev => prev.map((ent, idx) => 
+            idx === entryIndex ? { ...ent, isRev: e.target.checked } : ent
+          ));
+        }}
+      />
+    </td>
+
+    {/* Brd */}
+    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+      <input
+        type="checkbox"
+        name="isBrd"
+        checked={entry.isBrd}
+        onChange={(e) => {
+          setNewEntries(prev => prev.map((ent, idx) => 
+            idx === entryIndex ? { ...ent, isBrd: e.target.checked } : ent
+          ));
+        }}
+      />
+    </td>
+
+    {/* Status */}
+    <td className="border border-gray-300 px-1.5 py-0.5">
+      <input
+        type="text"
+        name="status"
+        value={entry.status}
+        onChange={(e) => {
+          setNewEntries(prev => prev.map((ent, idx) => 
+            idx === entryIndex ? { ...ent, status: e.target.value } : ent
+          ));
+        }}
+        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+      />
+    </td>
+
+    {/* Hour Rate */}
+    <td className="border border-gray-300 px-1.5 py-0.5">
+      <input
+        type="text"
+        name="perHourRate"
+        value={entry.perHourRate}
+        onChange={(e) => {
+          setNewEntries(prev => prev.map((ent, idx) => 
+            idx === entryIndex ? { ...ent, perHourRate: e.target.value.replace(/[^0-9.]/g, '') } : ent
+          ));
+        }}
+        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+      />
+    </td>
+
+    {/* Total */}
+    <td className="border border-gray-300 px-1.5 py-0.5">
+      {Object.values(newEntryPeriodHoursArray[entryIndex] || {})
+        .reduce((sum, val) => sum + parseFloat(val || 0), 0)
+        .toFixed(2)}
+    </td>
+  </tr>
+  </React.Fragment>
+))}
+
                 {localEmployees
                   .filter((_, idx) => !hiddenRows[idx])
                   .map((emp, idx) => {
@@ -5054,15 +10255,26 @@ const ProjectHoursDetails = ({
                       </tr>
                     );
                   })}
-                {/* <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
-  <td 
-    className="border border-gray-300 px-1.5 py-0.5 text-xs font-bold bg-gray-200 text-center" 
-    colSpan={EMPLOYEE_COLUMNS.length}
-  >
-    Total Hours:
-  </td>
-</tr> */}
+              
+           
+              
               </tbody>
+              <tfoot>
+                <tr
+                  className="bg-gray-200 font-normal text-center text-gray-200 "
+                  style={{
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 20,
+                    height: `${ROW_HEIGHT_DEFAULT}px`,
+                    // height: "25px",
+                    lineHeight: "normal",
+                    borderTop: "2px solid #d1d5db", // tailwind gray-300
+                  }}
+                >
+                  <td colSpan={EMPLOYEE_COLUMNS.length}> Total Hours</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
           <div
@@ -5202,8 +10414,102 @@ const ProjectHoursDetails = ({
                         </td>
                       );
                     })}
+                 
                   </tr>
                 )}
+
+                 {/* PASTED ENTRIES - ADD THIS SECTION */}
+  {newEntries.length > 0 &&
+    newEntries.map((entry, entryIndex) => (
+      <tr
+      key={`new-entry-duration-${entryIndex}`}
+      className="bg-gray-50"
+      style={{ height: `${ROW_HEIGHT_DEFAULT}px`, lineHeight: "normal" }}
+    >
+      {sortedDurations.map((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const value = newEntryPeriodHoursArray[entryIndex]?.[uniqueKey] || "";
+        const isInputEditable = isEditable && isMonthEditable(duration, closedPeriod, planType);
+
+        return (
+          <td key={`new-entry-${entryIndex}-${uniqueKey}`} className="border border-gray-300 px-1.5 py-0.5">
+            <input
+              type="text"
+              inputMode="numeric"
+              className={`text-center w-full text-xs ${
+                !isInputEditable ? "cursor-not-allowed text-gray-400 bg-gray-100" : "text-gray-700 bg-white"
+              }`}
+              value={value}
+              onChange={(e) => {
+                const inputValue = e.target.value;
+                
+                // Allow completely empty input for clearing
+                if (inputValue === "") {
+                  setNewEntryPeriodHoursArray((prev) =>
+                    prev.map((hours, idx) =>
+                      idx === entryIndex ? { ...hours, [uniqueKey]: "" } : hours
+                    )
+                  );
+                  return;
+                }
+
+                // Only allow numeric input with decimal
+                if (!/^[0-9]*\.?[0-9]*$/.test(inputValue)) {
+                  return; // Don't update if not numeric
+                }
+
+                // Check for negative values
+                const numericValue = parseFloat(inputValue);
+                if (numericValue < 0) {
+                  toast.error("Hours cannot be negative", { autoClose: 2000 });
+                  return;
+                }
+
+                // Check against available hours * 2
+                const currentDuration = sortedDurations.find(
+                  (d) => `${d.monthNo}_${d.year}` === uniqueKey
+                );
+                
+                if (currentDuration && currentDuration.workingHours) {
+                  const maxAllowedHours = currentDuration.workingHours * 2;
+                  
+                  if (numericValue > maxAllowedHours) {
+                    toast.error(
+                      `Hours cannot exceed more than available hours * 2`,
+                      { autoClose: 3000 }
+                    );
+                    return; // Don't update the state
+                  }
+                }
+
+                // Update state if validation passes
+                setNewEntryPeriodHoursArray((prev) =>
+                  prev.map((hours, idx) =>
+                    idx === entryIndex ? { ...hours, [uniqueKey]: inputValue } : hours
+                  )
+                );
+              }}
+              onKeyDown={(e) => {
+                // Allow backspace to completely clear the field
+                if (e.key === "Backspace" && (value === "0" || value === "")) {
+                  e.preventDefault();
+                  setNewEntryPeriodHoursArray((prev) =>
+                    prev.map((hours, idx) =>
+                      idx === entryIndex ? { ...hours, [uniqueKey]: "" } : hours
+                    )
+                  );
+                }
+              }}
+              disabled={!isInputEditable}
+              placeholder=""
+            />
+          </td>
+        );
+      })}
+    </tr>
+    ))}
+             
+
                 {localEmployees
                   .filter((_, idx) => !hiddenRows[idx])
                   .map((emp, idx) => {
@@ -5260,7 +10566,8 @@ const ProjectHoursDetails = ({
                       </tr>
                     );
                   })}
-                <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
+                {/* <tr style={{ position: "sticky", bottom: 0, backgroundColor: "white", zIndex: 5 }}
+                className="bg-gray-100 font-semibold border-t-2 border-gray-400">
                   {(() => {
                     const columnTotals = calculateColumnTotals();
                     return sortedDurations.map((duration) => {
@@ -5277,8 +10584,46 @@ const ProjectHoursDetails = ({
                       );
                     });
                   })()}
-                </tr>
+                </tr> */}
+                {/* Total Hours Row - FIXED */}
+
+
+
+
+                {/* Total Hours Row in Duration Table */}
+
               </tbody>
+               <tfoot>
+                <tr
+                  className="bg-gray-200 font-bold text-center"
+                  style={{
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 20,
+                    height: `${ROW_HEIGHT_DEFAULT}px`,
+                    // height: "10px",
+                    lineHeight: "normal",
+                    borderTop: "2px solid #d1d5db", // tailwind gray-300
+                  }}
+                >
+                  {(() => {
+                    const columnTotals = calculateColumnTotals();
+                    return sortedDurations.map((duration) => {
+                      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                      const total = columnTotals[uniqueKey] || 0;
+ 
+                      return (
+                        <td
+                          key={`total-${uniqueKey}`}
+                          className="border border-gray-300 px-1.5 py-0.5 text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                        >
+                          {total.toFixed(2)}
+                        </td>
+                      );
+                    });
+                  })()}
+                </tr>
+              </tfoot>
             </table>
           </div>
         </div>
@@ -5392,6 +10737,9 @@ const ProjectHoursDetails = ({
               >
                 Cancel
               </button>
+
+
+
               <button
                 type="button"
                 onClick={handleFindReplace}
