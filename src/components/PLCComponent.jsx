@@ -37,6 +37,15 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
   const rateTypeOptions = ["Select", "Billing", "Actual"];
   const vendorLookupTypeOptions = ["Select", "Vendor", "Employee"];
 
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedBillRates, setEditedBillRates] = React.useState({});
+  const [selectedRows, setSelectedRows] = useState({});
+
+  const [isEmployeeEditing, setIsEmployeeEditing] = React.useState(false);
+  const [selectedEmployeeRows, setSelectedEmployeeRows] = useState({});
+  const [isVendorEditing, setIsVendorEditing] = React.useState(false);
+  const [selectedVendorRows, setSelectedVendorRows] = useState({});
+
   const dropdownStyles = {
     //  Remove borders from datalist suggestions
     noBorderDropdown: {
@@ -375,233 +384,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   }, [selectedProjectId, employees]);
 
-  // useEffect(() => {
-  //   fetchEmployeeBillingRates();
-  // }, [fetchEmployeeBillingRates]);
-
-  // Fetch vendor billing rates
-  // useEffect(() => {
-  //   const fetchVendorBillingRates = async () => {
-  //     if (!selectedProjectId) return;
-  //     setLoading(true);
-  //     try {
-  //       const response = await axios.get(
-  //         `${backendUrl}/ProjVendRt`
-  //       );
-  //       const filteredData = response.data.filter((item) =>
-  //         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
-  //       );
-  //       setVendorBillingRates(
-  //         filteredData.map((item) => ({
-  //           id: item.projVendRtKey || item.id,
-  //           projVendRtKey: item.projVendRtKey,
-  //           lookupType: item.type,
-  //           vendorId: item.vendId || "",
-  //           vendorName: item.vendorName || "",
-  //           vendorEmployee: item.vendEmplId || "",
-  //           vendorEmployeeName: item.vendEmplName || "",
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription || item.description || "",
-  //           billRate: item.billRtAmt,
-  //           rateType: item.sBillRtTypeCd,
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //         }))
-  //       );
-  //       const newEditVendorBillRate = {};
-  //       const newEditVendorFields = {};
-  //       filteredData.forEach((item) => {
-  //         const id = item.projVendRtKey || item.id;
-  //         newEditVendorBillRate[id] = item.billRtAmt;
-  //         newEditVendorFields[id] = {
-  //           lookupType: item.type || "Select",
-  //           rateType: item.sBillRtTypeCd || "Select",
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //           vendorId: item.vendId || "",
-  //           vendorName: item.vendorName || "",
-  //           vendorEmployee: item.vendEmplId || "",
-  //           vendorEmployeeName: item.vendEmplName || "",
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription,
-  //         };
-  //       });
-  //       setEditVendorBillRate(newEditVendorBillRate);
-  //       setEditVendorFields(newEditVendorFields);
-  //     } catch (error) {
-  //       console.error("Error fetching vendor billing rates:", error);
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchVendorBillingRates();
-  // }, [selectedProjectId]);
-  // useEffect(() => {
-  //   const fetchVendorBillingRates = async () => {
-  //     if (!selectedProjectId) return;
-  //     setLoading(true);
-  //     try {
-  //       const response = await axios.get(
-  //         `${backendUrl}/ProjVendRt`
-  //       );
-  //       const filteredData = response.data.filter((item) =>
-  //         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
-  //       );
-
-  //       // Create a map to detect and handle duplicates
-  //       const seenKeys = new Set();
-  //       const uniqueVendorBillingRates = filteredData
-  //         .map((item, index) => {
-  //           const id =
-  //             item.projVendRtKey ||
-  //             item.id ||
-  //             `${item.projId}-${item.vendId}-${item.startDt}-${index}`;
-  //           // Check for duplicates
-  //           if (seenKeys.has(id)) {
-  //             // console.warn(`Duplicate key detected: ${id}. Using composite key.`);
-  //             return {
-  //               ...item,
-  //               id: `${id}-${index}`, // Append index to make it unique
-  //             };
-  //           }
-  //           seenKeys.add(id);
-  //           return {
-  //             ...item,
-  //             id,
-  //           };
-  //         })
-  //         .map((item) => ({
-  //           id: item.id,
-  //           projVendRtKey: item.projVendRtKey,
-  //           lookupType: item.type || "Select",
-  //           vendorId: item.vendId || "",
-  //           vendorName: item.vendorName || item.vendEmplName || "",
-  //           vendorEmployee: item.vendEmplId || "",
-  //           vendorEmployeeName: item.vendEmplName || "",
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription || item.description || "",
-  //           billRate: item.billRtAmt,
-  //           rateType: item.sBillRtTypeCd || "Select",
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //         }));
-
-  //       setVendorBillingRates(uniqueVendorBillingRates);
-
-  //       const newEditVendorBillRate = {};
-  //       const newEditVendorFields = {};
-  //       uniqueVendorBillingRates.forEach((item) => {
-  //         const id = item.id;
-  //         newEditVendorBillRate[id] = item.billRtAmt;
-  //         newEditVendorFields[id] = {
-  //           lookupType: item.type || "Select",
-  //           rateType: item.sBillRtTypeCd || "Select",
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //           vendorId: item.vendId || "",
-  //           vendorName: item.vendorName || item.vendEmplName || "",
-  //           vendorEmployee: item.vendEmplId || "",
-  //           vendorEmployeeName: item.vendEmplName || "",
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription,
-  //         };
-  //       });
-  //       setEditVendorBillRate(newEditVendorBillRate);
-  //       setEditVendorFields(newEditVendorFields);
-  //     } catch (error) {
-  //       console.error("Error fetching vendor billing rates:", error);
-  //       toast.error(
-  //         `Failed to fetch vendor billing rates: ${
-  //           error.response?.data?.message || error.message
-  //         }`
-  //       );
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchVendorBillingRates();
-  // }, [selectedProjectId]);
-  // useEffect(() => {
-  //   const fetchVendorBillingRates = async () => {
-  //     if (!selectedProjectId) return;
-  //     setLoading(true);
-  //     try {
-  //       const response = await axios.get(
-  //         `${backendUrl}/ProjVendRt`
-  //       );
-  //       const filteredData = response.data.filter((item) =>
-  //         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
-  //       );
-
-  //       // Check for duplicate IDs
-  //       const seenKeys = new Set();
-  //       const uniqueData = filteredData.map((item, index) => {
-  //         const id =
-  //           item.projVendRtKey ||
-  //           item.id ||
-  //           `${item.projId}-${item.vendId}-${item.startDt}-${index}`;
-  //         if (seenKeys.has(id)) {
-  //           console.warn(
-  //             `Duplicate key detected in vendorBillingRates: ${id}. Using composite key.`
-  //           );
-  //           return { ...item, id: `${id}-${index}` };
-  //         }
-  //         seenKeys.add(id);
-  //         return { ...item, id };
-  //       });
-
-  //       setVendorBillingRates(
-  //         uniqueData.map((item) => ({
-  //           id: item.id,
-  //           projVendRtKey: item.projVendRtKey,
-  //           lookupType: item.type || "Select",
-  //           vendorId: item.vendId || "",
-  //           vendorName: item.vendorName || item.vendEmplName || "",
-  //           vendorEmployee: item.vendEmplId || "",
-  //           vendorEmployeeName: item.vendEmplName || "",
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription || item.description || "",
-  //           billRate: item.billRtAmt,
-  //           rateType: item.sBillRtTypeCd || "Select",
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //         }))
-  //       );
-
-  //       const newEditVendorBillRate = {};
-  //       const newEditVendorFields = {};
-  //       uniqueData.forEach((item) => {
-  //         const id = item.id;
-  //         newEditVendorBillRate[id] = item.billRtAmt;
-  //         newEditVendorFields[id] = {
-  //           lookupType: item.type || "Select",
-  //           rateType: item.sBillRtTypeCd || "Select",
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //           vendorId: item.vendId || "",
-  //           vendorName: item.vendorName || item.vendEmplName || "",
-  //           vendorEmployee: item.vendEmplId || "",
-  //           vendorEmployeeName: item.vendEmplName || "",
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription,
-  //         };
-  //       });
-  //       setEditVendorBillRate(newEditVendorBillRate);
-  //       setEditVendorFields(newEditVendorFields);
-  //     } catch (error) {
-  //       console.error("Error fetching vendor billing rates:", error);
-  //       toast.error(
-  //         `Failed to fetch vendor billing rates: ${
-  //           error.response?.data?.message || error.message
-  //         }`
-  //       );
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-  //   fetchVendorBillingRates();
-  // }, [selectedProjectId]);
-
   const fetchVendorBillingRates = useCallback(async () => {
     if (!selectedProjectId) {
       setVendorBillingRates([]);
@@ -722,15 +504,14 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   }, [selectedProjectId]);
 
-  // useEffect(() => {
-  //   fetchVendorBillingRates();
-  // }, [fetchVendorBillingRates]);
-
   // const handleUpdate = async (id) => {
-  //   // setLoading(true);
-  //   setLoadingAction((prev) => ({ ...prev, [id]: true })); // ← Only specific row loading
+  //   setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
+
+  //   const currentItem = billingRatesSchedule.find((item) => item.id === id);
+  //   const originalId = currentItem?.originalId || id; // ✅ Use original ID for API
+
   //   const updatedData = {
-  //     plc: billingRatesSchedule.find((item) => item.id === id)?.plc, // PLC is not editable
+  //     plc: currentItem?.plc,
   //     billRate: editBillRate[id],
   //     rateType: editProjectPlcFields[id]?.rateType,
   //     startDate: editProjectPlcFields[id]?.startDate,
@@ -743,22 +524,21 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
   //     new Date(updatedData.startDate) > new Date(updatedData.endDate)
   //   ) {
   //     toast.error("End Date cannot be before Start Date.");
-  //     setLoading(false);
+  //     setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
   //     return;
   //   }
 
   //   try {
   //     await axios.put(
-  //       `${backendUrl}/api/ProjectPlcRates/${id}`,
+  //       `${backendUrl}/api/ProjectPlcRates/bulk-billingrate`, // ✅ Use original ID
   //       {
-  //         id,
+  //         id: originalId, // ✅ Use original ID
   //         projId: selectedProjectId,
   //         laborCategoryCode: updatedData.plc,
   //         costRate: parseFloat(updatedData.billRate) * 0.65,
   //         billingRate: parseFloat(updatedData.billRate),
   //         effectiveDate: updatedData.startDate,
   //         endDate: updatedData.endDate || null,
-  //         // rateType: updatedData.rateType,
   //         sBillRtTypeCd: updatedData.rateType,
   //         isActive: true,
   //         modifiedBy: "admin",
@@ -766,6 +546,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
   //         updatedAt: new Date().toISOString(),
   //       }
   //     );
+
   //     setBillingRatesSchedule((prev) =>
   //       prev.map((rate) =>
   //         rate.id === id
@@ -782,105 +563,110 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
   //     setEditingProjectPlcRowId(null);
   //     toast.success("Billing rate updated successfully!");
   //   } catch (error) {
-  //     console.error("Error updating billing rate:", error);
+  //     // console.error("Error updating billing rate:", error);
   //     toast.error(
   //       `Failed to update billing rate: ${
   //         error.response?.data?.message || error.message
   //       }`
   //     );
   //   } finally {
-  //     setLoading(false);
+  //     setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
   //   }
   // };
 
-  const handleUpdate = async (id) => {
-    setLoadingAction((prev) => ({ ...prev, [id]: true })); // ✅ Fixed
-
-    const currentItem = billingRatesSchedule.find((item) => item.id === id);
-    const originalId = currentItem?.originalId || id; // ✅ Use original ID for API
-
-    const updatedData = {
-      plc: currentItem?.plc,
-      billRate: editBillRate[id],
-      rateType: editProjectPlcFields[id]?.rateType,
-      startDate: editProjectPlcFields[id]?.startDate,
-      endDate: editProjectPlcFields[id]?.endDate,
-    };
-
-    if (
-      updatedData.startDate &&
-      updatedData.endDate &&
-      new Date(updatedData.startDate) > new Date(updatedData.endDate)
-    ) {
-      toast.error("End Date cannot be before Start Date.");
-      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
-      return;
-    }
+  const handleUpdateAllChanges = async () => {
+    setLoading(true);
 
     try {
-      await axios.put(
-        `${backendUrl}/api/ProjectPlcRates/${originalId}`, // ✅ Use original ID
-        {
-          id: originalId, // ✅ Use original ID
-          projId: selectedProjectId,
-          laborCategoryCode: updatedData.plc,
-          costRate: parseFloat(updatedData.billRate) * 0.65,
-          billingRate: parseFloat(updatedData.billRate),
-          effectiveDate: updatedData.startDate,
-          endDate: updatedData.endDate || null,
-          sBillRtTypeCd: updatedData.rateType,
-          isActive: true,
-          modifiedBy: "admin",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        }
+      // Prepare array of updated items based on editedBillRates keys
+      const itemsToUpdate = Object.keys(editedBillRates)
+        .map((idKey) => {
+          const numericId = isNaN(Number(idKey)) ? idKey : Number(idKey);
+          const currentItem = billingRatesSchedule.find(
+            (item) => item.id === numericId
+          );
+          if (!currentItem) return null;
+
+          // Parse the new bill rate string safely into a number
+          const newBillRateStr = String(editedBillRates[idKey] ?? "");
+          const newBillRateNum = parseFloat(newBillRateStr.replace(/,/g, ""));
+          if (isNaN(newBillRateNum)) return null;
+
+          // Parse original bill rate safely to number for comparison
+          const originalBillRateNum = parseFloat(
+            String(currentItem.billRate).replace(/,/g, "")
+          );
+
+          // Skip if no actual change in bill rate
+          if (newBillRateNum === originalBillRateNum) {
+            return null;
+          }
+
+          return {
+            id: currentItem.originalId || currentItem.id,
+            projId: selectedProjectId,
+            laborCategoryCode: currentItem.plc,
+            costRate: newBillRateNum * 0.65,
+            billingRate: newBillRateNum,
+            effectiveDate:
+              editProjectPlcFields[idKey]?.startDate || currentItem.startDate,
+            endDate:
+              editProjectPlcFields[idKey]?.endDate ??
+              currentItem.endDate ??
+              null,
+            sBillRtTypeCd:
+              editProjectPlcFields[idKey]?.rateType || currentItem.rateType,
+            isActive: true,
+            modifiedBy: "admin",
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+        })
+        .filter((item) => item !== null);
+
+      if (itemsToUpdate.length === 0) {
+        toast.warn("No changes to save.");
+        setLoading(false);
+        return;
+      }
+
+      // Send bulk PATCH request updating only changed records
+      await axios.patch(
+        `${backendUrl}/api/ProjectPlcRates/bulk-billingrate`,
+        itemsToUpdate
       );
 
+      // Update local state with the saved changes
       setBillingRatesSchedule((prev) =>
-        prev.map((rate) =>
-          rate.id === id
-            ? {
-                ...rate,
-                billRate: parseFloat(updatedData.billRate),
-                rateType: updatedData.rateType,
-                startDate: updatedData.startDate,
-                endDate: updatedData.endDate || null,
-              }
-            : rate
-        )
+        prev.map((rate) => {
+          const updated = itemsToUpdate.find(
+            (item) => item.id === (rate.originalId || rate.id)
+          );
+          if (updated) {
+            return {
+              ...rate,
+              billRate: updated.billingRate,
+              rateType: updated.sBillRtTypeCd,
+              startDate: updated.effectiveDate,
+              endDate: updated.endDate,
+            };
+          }
+          return rate;
+        })
       );
-      setEditingProjectPlcRowId(null);
-      toast.success("Billing rate updated successfully!");
+
+      toast.success("Billing rates updated successfully!");
+
+      // Clear edit states after successful save
+      setEditedBillRates({});
+      setEditProjectPlcFields({});
+      setIsEditing(false);
     } catch (error) {
-      // console.error("Error updating billing rate:", error);
-      toast.error(
-        `Failed to update billing rate: ${
-          error.response?.data?.message || error.message
-        }`
-      );
+      toast.error(`Failed to update billing rates: ${error.message}`);
     } finally {
-      setLoadingAction((prev) => ({ ...prev, [id]: false })); // ✅ Fixed
+      setLoading(false);
     }
   };
-
-  // useEffect(() => {
-  //   if (!selectedProjectId) {
-  //     setVendorEmployees([]);
-  //     return;
-  //   }
-  //   const fetchVendorEmployees = async () => {
-  //     try {
-  //       const response = await axios.get(
-  //         `${backendUrl}/Project/GetVenderEmployeesByProject/${selectedProjectId}`
-  //       );
-  //       setVendorEmployees(response.data);
-  //     } catch (error) {
-  //       setVendorEmployees([]);
-  //       console.error("Error fetching vendor employees:", error);
-  //     }
-  //   };
-  //   fetchVendorEmployees();
-  // }, [selectedProjectId]);
 
   const fetchVendorEmployees = useCallback(async () => {
     if (!selectedProjectId) {
@@ -929,6 +715,67 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           error.response?.data?.message || error.message
         }`
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    // Collect the synthetic IDs selected in the UI
+    const selectedSyntheticIds = Object.entries(selectedRows)
+      .filter(([id, selected]) => selected)
+      .map(([id]) => id);
+
+    if (selectedSyntheticIds.length === 0) {
+      toast.warn("No rows selected for deletion.");
+      return;
+    }
+
+    if (
+      !window.confirm("Are you sure you want to delete selected billing rates?")
+    ) {
+      return;
+    }
+
+    // Map synthetic IDs to their corresponding original backend IDs
+    const selectedOriginalIds = selectedSyntheticIds
+      .map((syntheticId) => {
+        const matchingItem = billingRatesSchedule.find(
+          (item) => item.id === syntheticId
+        );
+        return matchingItem ? matchingItem.originalId || matchingItem.id : null;
+      })
+      .filter((id) => id !== null);
+
+    setLoading(true);
+
+    try {
+      // Send original backend IDs in the bulk delete API
+      await axios.delete(`${backendUrl}/api/ProjectPlcRates/bulk-delete`, {
+        data: selectedOriginalIds,
+      });
+
+      // Filter out deleted items using synthetic IDs (used for UI state and rendering)
+      setBillingRatesSchedule((prev) =>
+        prev.filter((rate) => !selectedSyntheticIds.includes(rate.id))
+      );
+
+      setEditBillRate((prev) => {
+        const newItems = { ...prev };
+        selectedSyntheticIds.forEach((id) => delete newItems[id]);
+        return newItems;
+      });
+
+      setEditProjectPlcFields((prev) => {
+        const newItems = { ...prev };
+        selectedSyntheticIds.forEach((id) => delete newItems[id]);
+        return newItems;
+      });
+
+      toast.success("Selected billing rates deleted successfully!");
+      setSelectedRows({});
+    } catch (error) {
+      toast.error(`Failed to delete billing rates: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -1069,33 +916,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
-  // const handleNewRateChange = (field, value) => {
-  //   if (field === "billRate") {
-  //     // Allow only numbers (with decimals)
-  //     if (!/^\d*\.?\d*$/.test(value)) {
-  //       return; // ignore invalid input
-  //     }
-  //   }
-  //   setNewRate((prev) => ({ ...prev, [field]: value }));
-  // };
-
-  // const handleNewRateChange = (field, value) => {
-  //   if (field === "billRate") {
-  //     // Allow only numbers, commas, and decimals
-  //     if (!/^[0-9,]*\.?[0-9]*$/.test(value)) {
-  //       return; // ignore invalid input
-  //     }
-
-  //     // Remove commas before saving as number string
-  //     const cleanValue = value.replace(/,/g, "");
-
-  //     setNewRate((prev) => ({ ...prev, [field]: cleanValue }));
-  //     return;
-  //   }
-
-  //   setNewRate((prev) => ({ ...prev, [field]: value }));
-  // };
-
   const handleNewRateChange = (field, value) => {
     if (field === "billRate") {
       // Allow only digits, commas, and ONE decimal point
@@ -1110,13 +930,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
 
     setNewRate((prev) => ({ ...prev, [field]: value }));
   };
-
-  // const handleBillRateChange = (id, value) => {
-  //   setEditBillRate((prev) => ({
-  //     ...prev,
-  //     [id]: value === "" ? "" : parseFloat(value) || 0,
-  //   }));
-  // };
 
   const handleBillRateChange = (id, value) => {
     // Allow only digits, commas, and one decimal
@@ -1174,109 +987,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     });
   };
 
-  // const handleSaveNewEmployeeRate = async () => {
-  //   if (
-  //     !newEmployeeRate ||
-  //     !newEmployeeRate.empId ||
-  //     !newEmployeeRate.plc ||
-  //     !newEmployeeRate.startDate ||
-  //     !newEmployeeRate.billRate ||
-  //     newEmployeeRate.lookupType === "Select" ||
-  //     newEmployeeRate.rateType === "Select"
-  //   ) {
-  //     toast.error(
-  //       "Please fill all required fields (Lookup Type, Employee, PLC, Bill Rate, Rate Type, Start Date)."
-  //     );
-  //     return;
-  //   }
-  //   if (
-  //     newEmployeeRate.startDate &&
-  //     newEmployeeRate.endDate &&
-  //     new Date(newEmployeeRate.startDate) > new Date(newEmployeeRate.endDate)
-  //   ) {
-  //     toast.error("End Date cannot be before Start Date.");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     await axios.post(`${backendUrl}/ProjEmplRt`, {
-  //       id: 0,
-  //       projId: selectedProjectId,
-  //       emplId: newEmployeeRate.empId,
-  //       employeeName: newEmployeeRate.employeeName,
-  //       billLabCatCd: newEmployeeRate.plc,
-  //       billRtAmt: parseFloat(newEmployeeRate.billRate),
-  //       startDt: newEmployeeRate.startDate,
-  //       endDt: newEmployeeRate.endDate || null,
-  //       sBillRtTypeCd: newEmployeeRate.rateType,
-  //       type: newEmployeeRate.lookupType,
-  //       isActive: true,
-  //       modifiedBy: "admin",
-  //     });
-  //     setNewEmployeeRate(null);
-  //     // Refetch employee billing rates to ensure state consistency after adding
-  //     const fetchResponse = await axios.get(
-  //       `${backendUrl}/ProjEmplRt`
-  //     );
-  //     const filteredData = fetchResponse.data.filter(
-  //       (item) =>
-  //         item.projId
-  //           .toLowerCase()
-  //           .startsWith(selectedProjectId.toLowerCase()) && item.emplId
-  //     );
-  //     setEmployeeBillingRates(
-  //       filteredData.map((item) => ({
-  //         id: item.projEmplRtKey || item.id,
-  //         lookupType: item.type || "Select",
-  //         empId: item.emplId,
-  //         employeeName:
-  //           item.employeeName ||
-  //           employees.find((emp) => emp.empId === item.emplId)?.employeeName ||
-  //           "",
-  //         plc: item.billLabCatCd,
-  //         plcDescription: item.plcDescription || "",
-  //         billRate: item.billRtAmt,
-  //         rateType: item.sBillRtTypeCd || "Select",
-  //         startDate: formatDate(item.startDt),
-  //         endDate: formatDate(item.endDt),
-  //       }))
-  //     );
-  //     const newEditEmployeeBillRate = {};
-  //     const newEditEmployeeFields = {};
-  //     filteredData.forEach((item) => {
-  //       const id = item.projEmplRtKey || item.id;
-  //       if (id) {
-  //         newEditEmployeeBillRate[id] = item.billRtAmt;
-  //         newEditEmployeeFields[id] = {
-  //           lookupType: item.type || "Select",
-  //           rateType: item.sBillRtTypeCd || "Select",
-  //           startDate: formatDate(item.startDt),
-  //           endDate: formatDate(item.endDt),
-  //           empId: item.emplId,
-  //           employeeName: item.employeeName,
-  //           plc: item.billLabCatCd,
-  //           plcDescription: item.plcDescription,
-  //         };
-  //       }
-  //     });
-  //     setEditEmployeeBillRate(newEditEmployeeBillRate);
-  //     setEditEmployeeFields(newEditEmployeeFields);
-  //     toast.success("New employee billing rate added successfully!");
-  //   } catch (error) {
-  //     console.error(
-  //       "Error adding employee billing rate:",
-  //       error.response ? error.response.data : error.message
-  //     );
-  //     toast.error(
-  //       `Failed to add employee billing rate: ${
-  //         error.response?.data?.message || error.message
-  //       }`
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
   const handleSaveNewEmployeeRate = async () => {
     if (
       !newEmployeeRate ||
@@ -1347,6 +1057,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       });
       setEditEmployeeBillRate(newEditEmployeeBillRate);
       setEditEmployeeFields(newEditEmployeeFields);
+      toast.success("Added Sucessfully");
     } catch (error) {
       // console.error(
       //   "Error adding employee billing rate:",
@@ -1356,17 +1067,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       setLoading(false);
     }
   };
-
-  // const handleEmployeeBillRateChange = (id, value) => {
-  //   if (isNaN(newRate.billRate) || Number(newRate.billRate) <= 0) {
-  //     toast.error("Bill Rate must be a valid number greater than 0.");
-  //     return;
-  //   }
-  //   setEditEmployeeBillRate((prev) => ({
-  //     ...prev,
-  //     [id]: value === "" ? "" : parseFloat(value) || 0,
-  //   }));
-  // };
 
   const handleEmployeeBillRateChange = (id, value) => {
     // ✅ allow only numbers, commas, and decimals while typing
@@ -1387,82 +1087,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       [id]: cleanValue, // store clean number string
     }));
   };
-
-  // const handleUpdateEmployee = async (id) => {
-  //   if (!id) {
-  //     console.error("Invalid ID for update");
-  //     return;
-  //   }
-  //   // setLoading(true);
-  //   setLoadingAction((prev) => ({ ...prev, [id]: false })); // Individual row loading
-  //   const updatedData = employeeBillingRates.find((item) => item.id === id);
-  //   const fields = editEmployeeFields[id] || {};
-
-  //   if (
-  //     fields.startDate &&
-  //     fields.endDate &&
-  //     new Date(fields.startDate) > new Date(fields.endDate)
-  //   ) {
-  //     toast.error("End Date cannot be before Start Date.");
-  //     setLoading(false);
-  //     return;
-  //   }
-
-  //   try {
-  //     await axios.put(`${backendUrl}/ProjEmplRt/${id}`, {
-  //       projEmplRtKey: id,
-  //       projId: selectedProjectId,
-  //       emplId: fields.empId || updatedData.empId,
-  //       employeeName: fields.employeeName || updatedData.employeeName,
-  //       billLabCatCd: fields.plc || updatedData.plc,
-  //       billRtAmt: parseFloat(editEmployeeBillRate[id] ?? updatedData.billRate),
-  //       startDt: fields.startDate || updatedData.startDate,
-  //       endDt: fields.endDate || updatedData.endDate || null,
-  //       sBillRtTypeCd: fields.rateType || updatedData.rateType,
-  //       type: fields.lookupType || updatedData.lookupType,
-  //       isActive: true,
-  //       modifiedBy: "admin",
-  //     });
-  //     // Update local state with the saved changes
-  //     setEmployeeBillingRates((prev) =>
-  //       prev.map((rate) =>
-  //         rate.id === id
-  //           ? {
-  //               ...rate,
-  //               lookupType: fields.lookupType || updatedData.lookupType,
-  //               empId: fields.empId || updatedData.empId,
-  //               employeeName: fields.employeeName || updatedData.employeeName,
-  //               plc: fields.plc || updatedData.plc,
-  //               plcDescription:
-  //                 plcs.find(
-  //                   (plc) =>
-  //                     plc.laborCategoryCode === (fields.plc || updatedData.plc)
-  //                 )?.description ||
-  //                 fields.plcDescription ||
-  //                 updatedData.plcDescription,
-  //               billRate: parseFloat(
-  //                 editEmployeeBillRate[id] ?? updatedData.billRate
-  //               ),
-  //               rateType: fields.rateType || updatedData.rateType,
-  //               startDate: fields.startDate || updatedData.startDate,
-  //               endDate: fields.endDate || updatedData.endDate || null,
-  //             }
-  //           : rate
-  //       )
-  //     );
-  //     setEditingEmployeeRowId(null);
-  //     toast.success("Employee billing rate updated successfully!");
-  //   } catch (error) {
-  //     console.error("Error updating employee billing rate:", error);
-  //     toast.error(
-  //       `Failed to update employee billing rate: ${
-  //         error.response?.data?.message || error.message
-  //       }`
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
 
   const handleUpdateEmployee = async (id) => {
     if (!id) {
@@ -1544,38 +1168,90 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
-  const handleDeleteEmployee = async (id) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this employee billing rate?"
-      )
-    ) {
-      return;
-    }
-    if (!id) {
-      // console.error("Invalid ID for deletion");
-      return;
-    }
+  const handleUpdateAllEmployeeChanges = async () => {
     setLoading(true);
     try {
-      await axios.delete(`${backendUrl}/ProjEmplRt/${id}`);
-      setEmployeeBillingRates((prev) => prev.filter((rate) => rate.id !== id));
-      setEditEmployeeBillRate((prev) => {
-        const newEditEmployeeBillRate = { ...prev };
-        delete newEditEmployeeBillRate[id];
-        return newEditEmployeeBillRate;
-      });
-      setEditEmployeeFields((prev) => {
-        const newEditEmployeeFields = { ...prev };
-        delete newEditEmployeeFields[id];
-        return newEditEmployeeFields;
-      });
-      setEditingEmployeeRowId(null);
-      toast.success("Employee billing rate deleted successfully!");
+      // Prepare items to update based on the edited bill rates keys
+      const itemsToUpdate = Object.keys(editEmployeeBillRate)
+        .map((idKey) => {
+          const numericId = isNaN(Number(idKey)) ? idKey : Number(idKey);
+          const currentItem = employeeBillingRates.find(
+            (item) => item.id === numericId
+          );
+          if (!currentItem) return null;
+
+          const newBillRateStr = String(editEmployeeBillRate[idKey] ?? "");
+          const newBillRateNum = parseFloat(newBillRateStr.replace(/,/g, ""));
+
+          if (isNaN(newBillRateNum)) return null;
+          if (newBillRateNum === currentItem.billRate) return null; // skip if no change
+
+          const fields = editEmployeeFields[idKey] || {};
+
+          return {
+            projEmplRtKey: currentItem.originalId || currentItem.id,
+            projId: selectedProjectId,
+            emplId: fields.empId || currentItem.empId,
+            billLabCatCd: fields.plc || currentItem.plc,
+            plcDescription: fields.plcDescription || currentItem.plcDescription,
+            billRtAmt: newBillRateNum,
+            sBillRtTypeCd: fields.rateType || currentItem.rateType,
+            startDt: fields.startDate || currentItem.startDate,
+            endDt: fields.endDate || currentItem.endDate || null,
+            modifiedBy: "admin",
+            timeStamp: currentItem.timeStamp,
+            rowVersion: currentItem.rowVersion,
+            companyId: currentItem.companyId,
+            type: fields.lookupType || currentItem.lookupType,
+            billDiscRt: currentItem.billDiscRt || 0,
+            emplName: fields.employeeName || currentItem.employeeName,
+          };
+        })
+        .filter((item) => item !== null);
+
+      if (itemsToUpdate.length === 0) {
+        toast.warn("No changes to save.");
+        setLoading(false);
+        return;
+      }
+
+      // Call bulk update API
+      await axios.patch(
+        `${backendUrl}/ProjEmplRt/bulk-billingrate`,
+        itemsToUpdate
+      );
+
+      // Update local state with new bill rates for changed items
+      setEmployeeBillingRates((prev) =>
+        prev.map((rate) => {
+          const updated = itemsToUpdate.find(
+            (item) => item.projEmplRtKey === (rate.originalId || rate.id)
+          );
+          if (updated) {
+            return {
+              ...rate,
+              lookupType: updated.type,
+              empId: updated.emplId,
+              employeeName: updated.emplName,
+              plc: updated.billLabCatCd,
+              plcDescription: updated.plcDescription,
+              billRate: updated.billRtAmt,
+              rateType: updated.sBillRtTypeCd,
+              startDate: updated.startDt,
+              endDate: updated.endDt,
+            };
+          }
+          return rate;
+        })
+      );
+
+      setEditEmployeeBillRate({});
+      setEditEmployeeFields({});
+      setIsEmployeeEditing(false);
+      toast.success("Employee billing rates updated successfully!");
     } catch (error) {
-      // console.error("Error deleting employee billing rate:", error);
       toast.error(
-        `Failed to delete employee billing rate: ${
+        `Failed to update employee billing rates: ${
           error.response?.data?.message || error.message
         }`
       );
@@ -1584,130 +1260,107 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
-  // const handleNewEmployeeRateChange = (field, value, id = null) => {
-  //   if (id) {
-  //     if (field === "empId") {
-  //       const selectedEmp = employees.find((emp) => emp.empId === value);
-  //       setEditEmployeeFields((prev) => ({
-  //         ...prev,
-  //         [id]: {
-  //           ...prev[id],
-  //           empId: value,
-  //           employeeName: selectedEmp
-  //             ? selectedEmp.employeeName
-  //             : prev[id]?.employeeName,
-  //         },
-  //       }));
-  //     } else if (field === "plc") {
-  //       const selectedPlc = plcs.find((plc) => plc.laborCategoryCode === value);
-  //       setEditEmployeeFields((prev) => ({
-  //         ...prev,
-  //         [id]: {
-  //           ...prev[id],
-  //           plc: value,
-  //           plcDescription: selectedPlc
-  //             ? selectedPlc.description
-  //             : prev[id]?.plcDescription,
-  //         },
-  //       }));
-  //     } else {
-  //       setEditEmployeeFields((prev) => ({
-  //         ...prev,
-  //         [id]: {
-  //           ...prev[id],
-  //           [field]: value,
-  //         },
-  //       }));
-  //     }
-  //   } else {
-  //     const selectedEmp =
-  //       field === "empId" ? employees.find((emp) => emp.empId === value) : null;
-  //     const selectedPlc =
-  //       field === "plc"
-  //         ? plcs.find((plc) => plc.laborCategoryCode === value)
-  //         : null;
-  //     setNewEmployeeRate((prev) => ({
-  //       ...prev,
-  //       [field]: value,
-  //       ...(field === "empId" && selectedEmp
-  //         ? { employeeName: selectedEmp.employeeName }
-  //         : {}),
-  //       ...(field === "plc" && selectedPlc
-  //         ? { plcDescription: selectedPlc.description }
-  //         : {}),
-  //     }));
+  // const handleDeleteEmployee = async (id) => {
+  //   if (
+  //     !window.confirm(
+  //       "Are you sure you want to delete this employee billing rate?"
+  //     )
+  //   ) {
+  //     return;
+  //   }
+  //   if (!id) {
+  //     // console.error("Invalid ID for deletion");
+  //     return;
+  //   }
+  //   setLoading(true);
+  //   try {
+  //     await axios.delete(`${backendUrl}/ProjEmplRt/${id}`);
+  //     setEmployeeBillingRates((prev) => prev.filter((rate) => rate.id !== id));
+  //     setEditEmployeeBillRate((prev) => {
+  //       const newEditEmployeeBillRate = { ...prev };
+  //       delete newEditEmployeeBillRate[id];
+  //       return newEditEmployeeBillRate;
+  //     });
+  //     setEditEmployeeFields((prev) => {
+  //       const newEditEmployeeFields = { ...prev };
+  //       delete newEditEmployeeFields[id];
+  //       return newEditEmployeeFields;
+  //     });
+  //     setEditingEmployeeRowId(null);
+  //     toast.success("Employee billing rate deleted successfully!");
+  //   } catch (error) {
+  //     // console.error("Error deleting employee billing rate:", error);
+  //     toast.error(
+  //       `Failed to delete employee billing rate: ${
+  //         error.response?.data?.message || error.message
+  //       }`
+  //     );
+  //   } finally {
+  //     setLoading(false);
   //   }
   // };
 
-  // const handleNewEmployeeRateChange = (field, value, id = null) => {
-  //   const updateState = (prev, selectedEmp = null, selectedPlc = null) => {
-  //     const updated = {
-  //       ...prev,
-  //       [field]: value,
-  //       ...(field === "empId" && selectedEmp
-  //         ? { employeeName: selectedEmp.employeeName }
-  //         : {}),
-  //       ...(field === "plc" && selectedPlc
-  //         ? { plcDescription: selectedPlc.description }
-  //         : {}),
-  //     };
+  const handleDeleteEmployee = async () => {
+    // Get selected synthetic IDs from UI state
+    const selectedSyntheticIds = Object.entries(selectedEmployeeRows)
+      .filter(([id, selected]) => selected)
+      .map(([id]) => id);
 
-  //     // ✅ Date validations
-  //     if (updated.startDate && updated.endDate) {
-  //       if (new Date(updated.startDate) > new Date(updated.endDate)) {
-  //         toast.error("End Date cannot be before Start Date.");
-  //         return prev; // ❌ reject update
-  //       }
-  //     }
+    if (selectedSyntheticIds.length === 0) {
+      toast.warn("No rows selected for deletion.");
+      return;
+    }
 
-  //     if (updated.startDate) {
-  //       if (
-  //         new Date(updated.startDate) < new Date(selectedPlan.projStartDt) ||
-  //         new Date(updated.startDate) > new Date(selectedPlan.projEndDt)
-  //       ) {
-  //         toast.error("Start Date must be within project dates.");
-  //         return prev;
-  //       }
-  //     }
+    if (
+      !window.confirm(
+        "Are you sure you want to delete selected employee billing rates?"
+      )
+    ) {
+      return;
+    }
 
-  //     if (updated.endDate) {
-  //       if (
-  //         new Date(updated.endDate) < new Date(selectedPlan.projStartDt) ||
-  //         new Date(updated.endDate) > new Date(selectedPlan.projEndDt)
-  //       ) {
-  //         toast.error("End Date must be within project dates.");
-  //         return prev;
-  //       }
-  //     }
+    // Map synthetic UI IDs to original employee IDs expected by backend
+    const selectedOriginalIds = selectedSyntheticIds
+      .map((syntheticId) => {
+        const matchingItem = employeeBillingRates.find(
+          (item) => item.id === syntheticId
+        );
+        return matchingItem ? matchingItem.originalId || matchingItem.id : null;
+      })
+      .filter((id) => id !== null);
 
-  //     return updated; // ✅ valid update
-  //   };
+    setLoading(true);
 
-  //   if (id) {
-  //     // Editing existing row
-  //     const selectedEmp =
-  //       field === "empId" ? employees.find((emp) => emp.empId === value) : null;
-  //     const selectedPlc =
-  //       field === "plc"
-  //         ? plcs.find((plc) => plc.laborCategoryCode === value)
-  //         : null;
+    try {
+      await axios.delete(`${backendUrl}/ProjEmplRt/bulk-delete`, {
+        data: selectedOriginalIds,
+      });
 
-  //     setEditEmployeeFields((prev) => ({
-  //       ...prev,
-  //       [id]: updateState(prev[id] || {}, selectedEmp, selectedPlc),
-  //     }));
-  //   } else {
-  //     // Adding new row
-  //     const selectedEmp =
-  //       field === "empId" ? employees.find((emp) => emp.empId === value) : null;
-  //     const selectedPlc =
-  //       field === "plc"
-  //         ? plcs.find((plc) => plc.laborCategoryCode === value)
-  //         : null;
+      // Update UI state filtering synthetic ids
+      setEmployeeBillingRates((prev) =>
+        prev.filter((rate) => !selectedSyntheticIds.includes(rate.id))
+      );
 
-  //     setNewEmployeeRate((prev) => updateState(prev, selectedEmp, selectedPlc));
-  //   }
-  // };
+      setEditEmployeeBillRate((prev) => {
+        const newItems = { ...prev };
+        selectedSyntheticIds.forEach((id) => delete newItems[id]);
+        return newItems;
+      });
+
+      setEditEmployeeFields((prev) => {
+        const newItems = { ...prev };
+        selectedSyntheticIds.forEach((id) => delete newItems[id]);
+        return newItems;
+      });
+
+      toast.success("Selected employee billing rates deleted successfully!");
+      setSelectedEmployeeRows({});
+    } catch (error) {
+      toast.error(`Failed to delete employee billing rates: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleNewEmployeeRateChange = (field, value, id = null) => {
     const updateState = (prev, selectedEmp = null, selectedPlc = null) => {
@@ -1797,7 +1450,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       setEditEmployeeFields((prev) => ({
         ...prev,
         [id]: {
-          lookupType: currentRow.lookupType,
+          // lookupType: currentRow.lookupType,
           empId: currentRow.empId,
           employeeName: currentRow.employeeName,
           plc: currentRow.plc,
@@ -1830,320 +1483,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       endDate: "",
     });
   };
-
-  // const handleSaveNewVendorRate = async () => {
-  //   if (
-  //     !newVendorRate ||
-  //     !newVendorRate.vendorId ||
-  //     !newVendorRate.plc ||
-  //     !newVendorRate.startDate ||
-  //     !newVendorRate.billRate ||
-  //     newVendorRate.lookupType === "Select" ||
-  //     newVendorRate.rateType === "Select"
-  //   ) {
-  //     toast.error(
-  //       "Please fill all required fields (Lookup Type, Vendor ID, PLC, Bill Rate, Rate Type, Start Date)."
-  //     );
-  //     return;
-  //   }
-  //   if (
-  //     newVendorRate.startDate &&
-  //     newVendorRate.endDate &&
-  //     new Date(newVendorRate.startDate) > new Date(newVendorRate.endDate)
-  //   ) {
-  //     toast.error("End Date cannot be before Start Date.");
-  //     return;
-  //   }
-
-  //   setLoading(true);
-  //   try {
-  //     await axios.post(`${backendUrl}/ProjVendRt`, {
-  //       id: 0,
-  //       projId: selectedPlan?.projId || selectedProjectId,
-  //       vendId: newVendorRate.vendorId,
-  //       vendEmplId: newVendorRate.vendorEmployee,
-  //       billLabCatCd: newVendorRate.plc,
-  //       billDiscRt: 0,
-  //       companyId: "1",
-  //       billRtAmt: parseFloat(newVendorRate.billRate),
-  //       startDt: new Date(newVendorRate.startDate).toISOString(),
-  //       endDt: newVendorRate.endDate
-  //         ? new Date(newVendorRate.endDate).toISOString()
-  //         : null,
-  //       sBillRtTypeCd: newVendorRate.rateType,
-  //       type: newVendorRate.lookupType,
-  //       modifiedBy: "admin",
-  //       timeStamp: new Date().toISOString(),
-  //     });
-  //     setNewVendorRate(null);
-  //     const fetchResponse = await axios.get(
-  //       `${backendUrl}/ProjVendRt`
-  //     );
-  //     const filteredData = fetchResponse.data.filter((item) =>
-  //       item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
-  //     );
-  //     setVendorBillingRates(
-  //       filteredData.map((item) => ({
-  //         id: item.projVendRtKey || item.id,
-  //         projVendRtKey: item.projVendRtKey,
-  //         lookupType: item.type || "Select",
-  //         vendorId: item.vendId || "",
-  //         vendorName: item.vendorName || item.vendEmplName || "", // Use item.vendorName first, then vendEmplName
-  //         vendorEmployee: item.vendEmplId || "",
-  //         vendorEmployeeName: item.vendEmplName || "",
-  //         plc: item.billLabCatCd,
-  //         plcDescription: item.plcDescription || "",
-  //         billRate: item.billRtAmt,
-  //         rateType: item.sBillRtTypeCd || "Select",
-  //         startDate: formatDate(item.startDt),
-  //         endDate: formatDate(item.endDt),
-  //       }))
-  //     );
-  //     const newEditVendorBillRate = {};
-  //     const newEditVendorFields = {};
-  //     filteredData.forEach((item) => {
-  //       const id = item.projVendRtKey || item.id;
-  //       newEditVendorBillRate[id] = item.billRtAmt;
-  //       newEditVendorFields[id] = {
-  //         lookupType: item.type || "Select",
-  //         rateType: item.sBillRtTypeCd || "Select",
-  //         startDate: formatDate(item.startDt),
-  //         endDate: formatDate(item.endDt),
-  //         vendorId: item.vendId || "",
-  //         vendorName: item.vendorName || item.vendEmplName || "",
-  //         vendorEmployee: item.vendEmplId || "",
-  //         vendorEmployeeName: item.vendEmplName || "",
-  //         plc: item.billLabCatCd,
-  //         plcDescription: item.plcDescription,
-  //       };
-  //     });
-  //     setEditVendorBillRate(newEditVendorBillRate);
-  //     setEditVendorFields(newEditVendorFields);
-  //     toast.success("New vendor billing rate added successfully!");
-  //   } catch (error) {
-  //     console.error(
-  //       "Error adding vendor billing rate:",
-  //       error.response ? error.response.data : error.message
-  //     );
-  //     toast.error(
-  //       `Failed to add vendor billing rate: ${
-  //         error.response?.data?.message || error.message
-  //       }`
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  //   const handleSaveNewVendorRate = async () => {
-  //   if (
-  //     !newVendorRate ||
-  //     !newVendorRate.vendorId ||
-  //     !newVendorRate.vendorName ||
-  //     !newVendorRate.plc ||
-  //     !newVendorRate.startDate ||
-  //     !newVendorRate.billRate
-  //   ) {
-  //     console.error(
-  //       "Please fill all required fields (Vendor ID, Vendor Name, PLC, Bill Rate, Start Date)"
-  //     );
-  //     return;
-  //   }
-  //   setLoading(true);
-  //   try {
-  //     await axios.post(`${backendUrl}/ProjVendRt`, {
-  //       id: 0,
-  //       projId: selectedPlan?.projId || selectedProjectId,
-  //       vendId: newVendorRate.vendorId,
-  //       vendEmplId: newVendorRate.vendorEmployee,
-  //       billLabCatCd: newVendorRate.plc,
-  //       billDiscRt: 0,
-  //       companyId: "1",
-  //       billRtAmt: parseFloat(newVendorRate.billRate),
-  //       startDt: new Date(newVendorRate.startDate).toISOString(),
-  //       endDt: newVendorRate.endDate
-  //         ? new Date(newVendorRate.endDate).toISOString()
-  //         : null,
-  //       sBillRtTypeCd: newVendorRate.rateType,
-  //       type: newVendorRate.lookupType,
-  //       modifiedBy: "admin",
-  //       timeStamp: new Date().toISOString(),
-  //     });
-  //     setNewVendorRate(null);
-  //     const fetchResponse = await axios.get(
-  //       `${backendUrl}/ProjVendRt`
-  //     );
-  //     const filteredData = fetchResponse.data.filter((item) =>
-  //       item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
-  //     );
-  //     setVendorBillingRates(
-  //       filteredData.map((item) => ({
-  //       id: item.projVendRtKey || item.id,
-  //         lookupType: item.type || "Select",
-  //         vendorId: item.vendId || "",
-  //         vendorName: item.vendorName || "",
-  //         vendorEmployee: item.vendEmplId || "",
-  //         vendorEmployeeName: item.vendEmplName || "",
-  //         plc: item.billLabCatCd,
-  //         plcDescription: item.plcDescription || "",
-  //         billRate: item.billRtAmt,
-  //         rateType: item.sBillRtTypeCd || "Select",
-  //         startDate: new Date(item.startDt).toISOString().split("T")[0],
-  //         endDate: item.endDt
-  //           ? new Date(item.endDt).toISOString().split("T")[0]
-  //           : null,
-  //       }))
-  //     );
-  //     const newEditVendorBillRate = {};
-  //     const newEditVendorFields = {};
-  //     filteredData.forEach((item) => {
-  //       newEditVendorBillRate[item.id] = item.billRtAmt;
-  //       newEditVendorFields[item.id] = {
-  //         lookupType: item.type || "Select",
-  //         rateType: item.sBillRtTypeCd || "Select",
-  //         startDate: new Date(item.startDt).toISOString().split("T")[0],
-  //         endDate: item.endDt
-  //           ? new Date(item.endDt).toISOString().split("T")[0]
-  //           : null,
-  //       };
-  //     });
-  //     setEditVendorBillRate(newEditVendorBillRate);
-  //     setEditVendorFields(newEditVendorFields);
-  //   } catch (error) {
-  //     console.error(
-  //       "Error adding vendor billing rate:",
-  //       error.response ? error.response.data : error.message
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-  // Optimized handleSaveNewVendorRate
-  // const handleSaveNewVendorRate = async () => {
-  //   // Validate required fields
-  //   if (
-  //     !newVendorRate ||
-  //     !newVendorRate.vendorId ||
-  //     !newVendorRate.plc ||
-  //     !newVendorRate.startDate ||
-  //     !newVendorRate.billRate ||
-  //     newVendorRate.lookupType === "Select" ||
-  //     newVendorRate.rateType === "Select"
-  //   ) {
-  //     toast.error(
-  //       "Please fill all required fields (Lookup Type, Vendor ID, PLC, Bill Rate, Rate Type, Start Date)."
-  //     );
-  //     return;
-  //   }
-
-  //   if (
-  //     isNaN(parseFloat(newVendorRate.billRate)) ||
-  //     parseFloat(newVendorRate.billRate) <= 0
-  //   ) {
-  //     toast.error("Bill Rate must be a valid positive number.");
-  //     return;
-  //   }
-
-  //   if (
-  //     newVendorRate.startDate &&
-  //     newVendorRate.endDate &&
-  //     new Date(newVendorRate.startDate) > new Date(newVendorRate.endDate)
-  //   ) {
-  //     toast.error("End Date cannot be before Start Date.");
-  //     return;
-  //   }
-
-  //   const newId = newVendorRate.id || uuidv4(); // Ensure unique ID
-  //   setLoadingAction((prev) => ({ ...prev, [newId]: true }));
-
-  //   try {
-  //     const payload = {
-  //       id: 0,
-  //       projId: selectedPlan?.projId || selectedProjectId,
-  //       vendId: newVendorRate.vendorId,
-  //       vendEmplId: newVendorRate.vendorEmployee || null,
-  //       billLabCatCd: newVendorRate.plc,
-  //       billDiscRt: 0,
-  //       companyId: "1",
-  //       billRtAmt: parseFloat(newVendorRate.billRate),
-  //       startDt: new Date(newVendorRate.startDate).toISOString(),
-  //       endDt: newVendorRate.endDate
-  //         ? new Date(newVendorRate.endDate).toISOString()
-  //         : null,
-  //       sBillRtTypeCd: newVendorRate.rateType,
-  //       type: newVendorRate.lookupType,
-  //       modifiedBy: "admin",
-  //       timeStamp: new Date().toISOString(),
-  //     };
-
-  //     const response = await axios.post(
-  //       `${backendUrl}/ProjVendRt`,
-  //       payload
-  //     );
-
-  //     // Construct new rate object
-  //     const newRate = {
-  //       id: newId,
-  //       projVendRtKey: response.data.projVendRtKey || newId,
-  //       lookupType: newVendorRate.lookupType,
-  //       vendorId: newVendorRate.vendorId,
-  //       vendorName:
-  //         newVendorRate.vendorName ||
-  //         vendorEmployees.find((v) => v.vendId === newVendorRate.vendorId)
-  //           ?.employeeName ||
-  //         "",
-  //       vendorEmployee: newVendorRate.vendorEmployee || "",
-  //       vendorEmployeeName: newVendorRate.vendorEmployeeName || "",
-  //       plc: newVendorRate.plc,
-  //       plcDescription:
-  //         newVendorRate.plcDescription ||
-  //         plcs.find((plc) => plc.laborCategoryCode === newVendorRate.plc)
-  //           ?.description ||
-  //         "",
-  //       billRate: parseFloat(newVendorRate.billRate),
-  //       rateType: newVendorRate.rateType,
-  //       startDate: formatDate(newVendorRate.startDate),
-  //       endDate: newVendorRate.endDate
-  //         ? formatDate(newVendorRate.endDate)
-  //         : null,
-  //     };
-
-  //     // Append to state
-  //     setVendorBillingRates((prev) => [...prev, newRate]);
-  //     setEditVendorBillRate((prev) => ({
-  //       ...prev,
-  //       [newId]: newRate.billRate,
-  //     }));
-  //     setEditVendorFields((prev) => ({
-  //       ...prev,
-  //       [newId]: {
-  //         lookupType: newRate.lookupType,
-  //         vendorId: newRate.vendorId,
-  //         vendorName: newRate.vendorName,
-  //         vendorEmployee: newRate.vendorEmployee,
-  //         vendorEmployeeName: newRate.vendorEmployeeName,
-  //         plc: newRate.plc,
-  //         plcDescription: newRate.plcDescription,
-  //         rateType: newRate.rateType,
-  //         startDate: newRate.startDate,
-  //         endDate: newRate.endDate,
-  //       },
-  //     }));
-
-  //     setNewVendorRate(null);
-  //     toast.success("Vendor billing rate added successfully!");
-  //   } catch (error) {
-  //     console.error("Error adding vendor billing rate:", error);
-  //     toast.error(
-  //       `Failed to add vendor billing rate: ${
-  //         error.response?.data?.message || error.message
-  //       }`
-  //     );
-  //   } finally {
-  //     setLoadingAction((prev) => ({ ...prev, [newId]: false }));
-  //   }
-  // };
 
   const handleSaveNewVendorRate = async () => {
     if (
@@ -2242,6 +1581,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       });
       setEditVendorBillRate(newEditVendorBillRate);
       setEditVendorFields(newEditVendorFields);
+      toast.success("Added Successfully!");
     } catch (error) {
       // console.error(
       //   "Error adding vendor billing rate:",
@@ -2251,13 +1591,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       setLoading(false);
     }
   };
-
-  // const handleVendorBillRateChange = (id, value) => {
-  //   setEditVendorBillRate((prev) => ({
-  //     ...prev,
-  //     [id]: value === "" ? "" : parseFloat(value) || 0,
-  //   }));
-  // };
 
   const handleVendorBillRateChange = (id, value) => {
     // ✅ Allow only digits, commas, and decimals
@@ -2362,109 +1695,111 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
-  // const handleUpdateVendor = async (id) => {
-  //   // setLoading(true);
-  //   setLoadingAction((prev) => ({ ...prev, [id]: false })); // Individual row loading
-  //   const row = vendorBillingRates.find((r) => r.id === id);
-  //   const projVendRtKey = row?.projVendRtKey || id;
-  //   const fields = editVendorFields[id] || {};
+  const handleUpdateAllVendors = async () => {
+    setLoading(true);
+    try {
+      // Prepare payload - include only vendors with changed bill rates
+      const vendorsToUpdate = Object.entries(editVendorBillRate)
+        .map(([idKey, editedRate]) => {
+          const id = isNaN(Number(idKey)) ? idKey : Number(idKey);
+          const current = vendorBillingRates.find((v) => v.id === id);
+          if (!current) return null;
 
-  //   if (
-  //     fields.startDate &&
-  //     fields.endDate &&
-  //     new Date(fields.startDate) > new Date(fields.endDate)
-  //   ) {
-  //     toast.error("End Date cannot be before Start Date.");
-  //     setLoading(false);
-  //     return;
-  //   }
+          const cleanedRateStr =
+            typeof editedRate === "string"
+              ? editedRate.replace(/,/g, "")
+              : editedRate;
+          const newBillRate = parseFloat(cleanedRateStr);
 
-  //   try {
-  //     await axios.put(
-  //       `${backendUrl}/ProjVendRt/${projVendRtKey}`,
-  //       {
-  //         projVendRtKey: projVendRtKey,
-  //         projId: selectedProjectId,
-  //         vendId: fields.vendorId || row.vendorId,
-  //         vendEmplId: fields.vendorEmployee || row.vendorEmployee,
-  //         billLabCatCd: fields.plc || row.plc,
-  //         billDiscRt: 0,
-  //         companyId: "1",
-  //         billRtAmt: parseFloat(editVendorBillRate[id] ?? row.billRate),
-  //         startDt: new Date(fields.startDate || row.startDate).toISOString(),
-  //         endDt: fields.endDate
-  //           ? new Date(fields.endDate).toISOString()
-  //           : row.endDate
-  //           ? new Date(row.endDate).toISOString()
-  //           : null,
-  //         sBillRtTypeCd: fields.rateType || row.rateType,
-  //         type: fields.lookupType || row.lookupType,
-  //         modifiedBy: "admin",
-  //         timeStamp: new Date().toISOString(),
-  //       }
-  //     );
-  //     setVendorBillingRates((prev) =>
-  //       prev.map((rate) =>
-  //         rate.id === id
-  //           ? {
-  //               ...rate,
-  //               lookupType: fields.lookupType || rate.lookupType,
-  //               vendorId: fields.vendorId || rate.vendorId,
-  //               vendorName: fields.vendorName || rate.vendorName,
-  //               vendorEmployee: fields.vendorEmployee || rate.vendorEmployee,
-  //               vendorEmployeeName:
-  //                 fields.vendorEmployeeName || rate.vendorEmployeeName,
-  //               plc: fields.plc || rate.plc,
-  //               plcDescription:
-  //                 plcs.find(
-  //                   (plc) => plc.laborCategoryCode === (fields.plc || rate.plc)
-  //                 )?.description ||
-  //                 fields.plcDescription ||
-  //                 rate.plcDescription,
-  //               billRate: parseFloat(editVendorBillRate[id] ?? rate.billRate),
-  //               rateType: fields.rateType || rate.rateType,
-  //               startDate: fields.startDate || rate.startDate,
-  //               endDate: fields.endDate || rate.endDate || null,
-  //             }
-  //           : rate
-  //       )
-  //     );
-  //     setEditingVendorRowId(null);
-  //     toast.success("Vendor billing rate updated successfully!");
-  //   } catch (error) {
-  //     console.error("Error updating vendor billing rate:", error);
-  //     toast.error(
-  //       `Failed to update vendor billing rate: ${
-  //         error.response?.data?.message || error.message
-  //       }`
-  //     );
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+          // Skip if not a valid number or unchanged
+          if (isNaN(newBillRate) || newBillRate === current.billRate)
+            return null;
 
-  // const handleDeleteVendor = async (id) => {
-  //    setLoading(true);
-  //    try {
-  //      await axios.delete(`${backendUrl}/ProjVendRt/${id}`);
-  //      setVendorBillingRates((prev) => prev.filter((rate) => rate.id !== id));
-  //      setEditVendorBillRate((prev) => {
-  //        const newEditVendorBillRate = { ...prev };
-  //        delete newEditVendorBillRate[id];
-  //        return newEditVendorBillRate;
-  //      });
-  //      setEditVendorFields((prev) => {
-  //        const newEditVendorFields = { ...prev };
-  //        delete newEditVendorFields[id];
-  //        return newEditVendorFields;
-  //      });
-  //      setEditingVendorRowId(null);
-  //    } catch (error) {
-  //      console.error("Error deleting vendor billing rate:", error);
-  //    } finally {
-  //      setLoading(false);
-  //    }
-  //  };
+          const fields = editVendorFields[idKey] || {};
+
+          return {
+            projVendRtKey:
+              current.originalId || current.projVendRtKey || current.id,
+            projId: selectedProjectId,
+            vendId: fields.vendorId || current.vendorId,
+            vendEmplId: fields.vendorEmployee || current.vendorEmployee,
+            billLabCatCd: fields.plc || current.plc,
+            billRtAmt: newBillRate,
+            sBillRtTypeCd: fields.rateType || current.rateType,
+            startDt: fields.startDate
+              ? new Date(fields.startDate).toISOString()
+              : new Date(current.startDate).toISOString(),
+            endDt: fields.endDate
+              ? new Date(fields.endDate).toISOString()
+              : current.endDate
+              ? new Date(current.endDate).toISOString()
+              : null,
+            modifiedBy: "admin",
+            timeStamp: new Date().toISOString(),
+            rowVersion: current.rowVersion,
+            companyId: current.companyId || "1",
+            type: fields.lookupType || current.lookupType,
+            billDiscRt: current.billDiscRt || 0,
+            vendEmplName:
+              fields.vendorEmployeeName || current.vendorEmployeeName,
+            plcDescription: fields.plcDescription || current.plcDescription,
+          };
+        })
+        .filter(Boolean);
+
+      if (vendorsToUpdate.length === 0) {
+        toast.warn("No vendor billing rates were changed.");
+        setLoading(false);
+        return;
+      }
+
+      // Call bulk update API endpoint
+      await axios.patch(
+        `${backendUrl}/ProjVendRt/bulk-billingrate`,
+        vendorsToUpdate
+      );
+
+      // Update local vendorBillingRates state with changes
+      setVendorBillingRates((prev) =>
+        prev.map((vendor) => {
+          const updated = vendorsToUpdate.find(
+            (v) =>
+              v.projVendRtKey ===
+              (vendor.originalId || vendor.projVendRtKey || vendor.id)
+          );
+          return updated
+            ? {
+                ...vendor,
+                lookupType: updated.type,
+                vendorId: updated.vendId,
+                vendorEmployee: updated.vendEmplId,
+                vendorEmployeeName: updated.vendEmplName,
+                plc: updated.billLabCatCd,
+                plcDescription: updated.plcDescription,
+                billRate: updated.billRtAmt,
+                rateType: updated.sBillRtTypeCd,
+                startDate: updated.startDt,
+                endDate: updated.endDt,
+              }
+            : vendor;
+        })
+      );
+
+      // Clear editing states
+      setEditVendorBillRate({});
+      setEditVendorFields({});
+      setIsVendorEditing(false);
+      toast.success("Vendor billing rates updated successfully.");
+    } catch (error) {
+      toast.error(
+        `Failed to update vendor billing rates: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDeleteVendor = async (id) => {
     if (
@@ -2504,46 +1839,77 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
-  // const handleNewVendorRateChange = (field, value) => {
-  //   setNewVendorRate((prev) => ({ ...prev, [field]: value }));
-  // };
-  // const handleNewVendorRateChange = (field, value) => {
-  //   setNewVendorRate((prev) => {
-  //     const updated = { ...prev, [field]: value };
+  const handleDeleteSelectedVendors = async () => {
+    // Extract only IDs that are checked (truthy in selectedVendorRows)
+    const selectedIds = vendorBillingRates
+      .filter((item) => selectedVendorRows[item.id])
+      .map((item) => item.projVendRtKey ?? item.id);
 
-  //     // ✅ Check Start & End relation
-  //     if (updated.startDate && updated.endDate) {
-  //       if (new Date(updated.startDate) > new Date(updated.endDate)) {
-  //         toast.error("End Date cannot be before Start Date.");
-  //         return prev; // stop updating
-  //       }
-  //     }
+    if (selectedIds.length === 0) {
+      toast.warn("No vendor billing rates selected for deletion.");
+      return;
+    }
 
-  //     // ✅ Check Start Date within project dates
-  //     if (updated.startDate) {
-  //       if (
-  //         new Date(updated.startDate) < new Date(selectedPlan.projStartDt) ||
-  //         new Date(updated.startDate) > new Date(selectedPlan.projEndDt)
-  //       ) {
-  //         toast.error("Start Date must be within project dates.");
-  //         return prev;
-  //       }
-  //     }
+    if (
+      !window.confirm(
+        `Are you sure you want to delete ${selectedIds.length} selected vendor billing rate(s)?`
+      )
+    ) {
+      return;
+    }
 
-  //     // ✅ Check End Date within project dates
-  //     if (updated.endDate) {
-  //       if (
-  //         new Date(updated.endDate) < new Date(selectedPlan.projStartDt) ||
-  //         new Date(updated.endDate) > new Date(selectedPlan.projEndDt)
-  //       ) {
-  //         toast.error("End Date must be within project dates.");
-  //         return prev;
-  //       }
-  //     }
+    setLoading(true);
+    try {
+      await axios.delete(`${backendUrl}/ProjVendRt/bulk-delete`, {
+        data: selectedIds,
+      });
 
-  //     return updated; // ✅ only update if valid
-  //   });
-  // };
+      console.log(JSON.stringify(selectedIds));
+
+      // Remove deleted vendors from local state
+      setVendorBillingRates((prev) =>
+        prev.filter(
+          (vendor) => !selectedIds.includes(vendor.projVendRtKey ?? vendor.id)
+        )
+      );
+
+      // Clean up selection and editing state for removed IDs
+      setSelectedVendorRows((prev) => {
+        const updated = { ...prev };
+        selectedIds.forEach((id) => {
+          delete updated[id];
+        });
+        return updated;
+      });
+      setEditVendorBillRate((prev) => {
+        const updated = { ...prev };
+        selectedIds.forEach((id) => {
+          delete updated[id];
+        });
+        return updated;
+      });
+      setEditVendorFields((prev) => {
+        const updated = { ...prev };
+        selectedIds.forEach((id) => {
+          delete updated[id];
+        });
+        return updated;
+      });
+
+      setEditingVendorRowId(null);
+
+      toast.success("Selected vendor billing rates deleted successfully!");
+    } catch (error) {
+      toast.error(
+        `Failed to delete selected vendor billing rates: ${
+          error.response?.data?.message || error.message
+        }`
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNewVendorRateChange = (field, value) => {
     setNewVendorRate((prev) => {
       let updated = { ...prev, [field]: value };
@@ -2666,31 +2032,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
-  // const handleEditVendorRow = (id) => {
-  //   setEditingVendorRowId(id);
-  //   const currentRow = vendorBillingRates.find((item) => item.id === id);
-  //   if (currentRow) {
-  //     setEditVendorFields((prev) => ({
-  //       ...prev,
-  //       [id]: {
-  //         lookupType: currentRow.lookupType,
-  //         vendorId: currentRow.vendorId,
-  //         vendorName: currentRow.vendorName,
-  //         vendorEmployee: currentRow.vendorEmployee,
-  //         vendorEmployeeName: currentRow.vendorEmployeeName,
-  //         plc: currentRow.plc,
-  //         plcDescription: currentRow.plcDescription,
-  //         rateType: currentRow.rateType,
-  //         startDate: currentRow.startDate,
-  //         endDate: currentRow.endDate,
-  //       },
-  //     }));
-  //     setEditVendorBillRate((prev) => ({
-  //       ...prev,
-  //       [id]: currentRow.billRate,
-  //     }));
-  //   }
-  // };
   const handleEditVendorRow = (id) => {
     setEditingVendorRowId(id);
   };
@@ -2713,1465 +2054,27 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     setPlcSearch(value);
   };
 
-  // return (
-  //   <div className="border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16 text-xs">
-  //     {/* <ToastContainer
-  //       position="top-right"
-  //       autoClose={3000}
-  //       hideProgressBar={false}
-  //       newestOnTop={false}
-  //       closeOnClick
-  //       rtl={false}
-  //       pauseOnFocusLoss
-  //       draggable
-  //       pauseOnHover
-  //     /> */}
-  //     {/* Project Labor Categories Billing Rates Schedule */}
-  //     <div className="mb-4">
-  //       <div className="flex justify-between items-center mb-2 ">
-  //         <h3 className="text-sm font-semibold">
-  //           Project Labor Categories Billing Rates Schedule
-  //         </h3>
-  //         <div className="w-1/5"></div>
-  //         <button
-  //           onClick={handleAddRow}
-  //           className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition mr-4"
-  //           disabled={loading || newRate}
-  //         >
-  //           Add
-  //         </button>
-  //       </div>
-  //       <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-  //         <table className="w-full text-xs border-collapse">
-  //           <thead className="sticky top-0 z-10 bg-gray-100">
-  //             <tr className="bg-gray-100">
-  //               <th className="border p-2 font-normal">Plc</th>
-  //               <th className="border p-2 font-normal">Bill Rate</th>
-  //               <th className="border p-2 font-normal">Rate Type</th>
-  //               <th className="border p-2 font-normal">Start Date</th>
-  //               <th className="border p-2 font-normal">End Date</th>
-  //               <th className="border p-2 font-normal">Actions</th>
-  //             </tr>
-  //           </thead>
-  //           <tbody>
-  //             {loadingPLC ? (
-  //               <tr key="loading">
-  //                 <td colSpan="6" className="border p-2 text-center">
-  //                   Loading...
-  //                 </td>
-  //               </tr>
-  //             ) : billingRatesSchedule.length === 0 ? (
-  //               <tr key="no-data">
-  //                 <td colSpan="6" className="border p-2 text-center">
-  //                   No data available
-  //                 </td>
-  //               </tr>
-  //             ) : (
-  //               billingRatesSchedule.map((item) => (
-  //                 <tr
-  //                   key={item.id}
-  //                   className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
-  //                 >
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <span>{item.plc}</span>
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/5">
-  //                     {editingProjectPlcRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={editBillRate[item.id] ?? item.billRate}
-  //                         onChange={(e) =>
-  //                           handleBillRateChange(item.id, e.target.value)
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.billRate}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/5">
-  //                     {editingProjectPlcRowId === item.id ? (
-  //                       <select
-  //                         value={
-  //                           editProjectPlcFields[item.id]?.rateType ??
-  //                           item.rateType
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleProjectPlcFieldChange(
-  //                             item.id,
-  //                             "rateType",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       >
-  //                         {rateTypeOptions.map((option) => (
-  //                           <option key={option} value={option}>
-  //                             {option}
-  //                           </option>
-  //                         ))}
-  //                       </select>
-  //                     ) : (
-  //                       <span>{item.rateType}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/5">
-  //                     {editingProjectPlcRowId === item.id ? (
-  //                       <input
-  //                         type="date"
-  //                         value={
-  //                           editProjectPlcFields[item.id]?.startDate ??
-  //                           item.startDate
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleProjectPlcFieldChange(
-  //                             item.id,
-  //                             "startDate",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.startDate}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/5">
-  //                     {editingProjectPlcRowId === item.id ? (
-  //                       <input
-  //                         type="date"
-  //                         value={
-  //                           editProjectPlcFields[item.id]?.endDate ??
-  //                           item.endDate ??
-  //                           ""
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleProjectPlcFieldChange(
-  //                             item.id,
-  //                             "endDate",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.endDate || ""}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/5">
-  //                     <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                       {editingProjectPlcRowId === item.id ? (
-  //                         <>
-  //                           <button
-  //                             onClick={() => handleUpdate(item.id)}
-  //                             className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loading}
-  //                             title="Save"
-  //                           >
-  //                             <FaSave className="text-sm" />
-  //                           </button>
-  //                           <button
-  //                             onClick={() => setEditingProjectPlcRowId(null)}
-  //                             className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loading}
-  //                             title="Cancel"
-  //                           >
-  //                             <FaTimes className="text-sm" />
-  //                           </button>
-  //                         </>
-  //                       ) : (
-  //                         <>
-  //                           <button
-  //                             onClick={() => handleEditProjectPlcRow(item.id)}
-  //                             className="bg-blue-200 text-blue-800 p-2 rounded hover:bg-blue-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loading}
-  //                             title="Edit"
-  //                           >
-  //                             <FaEdit className="text-sm" />
-  //                           </button>
-  //                           <button
-  //                             onClick={() => handleDelete(item.id)}
-  //                             className="bg-gray-200 text-gray-800 p-2 rounded hover:bg-gray-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loading}
-  //                             title="Delete"
-  //                           >
-  //                             <FaTrash className="text-sm" />
-  //                           </button>
-  //                         </>
-  //                       )}
-  //                     </div>
-  //                   </td>
-  //                 </tr>
-  //               ))
-  //             )}
-  //             {newRate && (
-  //               <tr
-  //                 key="new-rate"
-  //                 className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
-  //               >
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <input
-  //                     type="text"
-  //                     value={newRate.plc || ""}
-  //                     onChange={(e) => {
-  //                       handleNewRateChange("plc", e.target.value);
-  //                       setPlcSearch(e.target.value);
-  //                     }}
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     list="plc-list"
-  //                   />
-  //                   <datalist
-  //                     id="plc-list"
-  //                     style={dropdownStyles.noBorderDropdown}
-  //                   >
-  //                     {plcs.map((plc) => (
-  //                       <option
-  //                         key={plc.laborCategoryCode}
-  //                         value={plc.laborCategoryCode}
-  //                         style={dropdownStyles.noBorderDropdown}
-  //                       >
-  //                         {plc.description}
-  //                       </option>
-  //                     ))}
-  //                   </datalist>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <input
-  //                     type="text"
-  //                     value={newRate.billRate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewRateChange("billRate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <select
-  //                     value={newRate.rateType}
-  //                     onChange={(e) =>
-  //                       handleNewRateChange("rateType", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   >
-  //                     {rateTypeOptions.map((option) => (
-  //                       <option key={option} value={option}>
-  //                         {option}
-  //                       </option>
-  //                     ))}
-  //                   </select>
-  //                 </td>
-  //                 {/* <td className="border p-2 sm:w-1/5">
-  //                   <input
-  //                     type="date"
-  //                     value={newRate.startDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewRateChange("startDate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <input
-  //                     type="date"
-  //                     value={newRate.endDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewRateChange("endDate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   />
-  //                 </td> */}
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <input
-  //                     type="date"
-  //                     value={newRate.startDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewRateChange("startDate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     min={selectedPlan.projStartDt} // ✅ cannot pick before project start
-  //                     max={selectedPlan.projEndDt} // ✅ cannot pick after project end
-  //                   />
-  //                 </td>
+  function cancelEditing() {
+    setIsEditing(false);
+    setEditedBillRates({});
+    setSelectedRows({});
+  }
 
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <input
-  //                     type="date"
-  //                     value={newRate.endDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewRateChange("endDate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     min={newRate.startDate || selectedPlan.projStartDt} // ✅ end date cannot be before start date
-  //                     max={selectedPlan.projEndDt} // ✅ cannot pick after project end
-  //                   />
-  //                 </td>
+  function cancelVendorEditing() {
+    setIsVendorEditing(false);
+    setEditVendorBillRate({});
+    setEditVendorFields({});
+    // Optionally, reset selectedVendorRows if you want to clear selection too
+    // setSelectedVendorRows({});
+  }
 
-  //                 <td className="border p-2 sm:w-1/5">
-  //                   <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                     <button
-  //                       onClick={handleSaveNewRate}
-  //                       className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                       disabled={loading}
-  //                       title="Save"
-  //                     >
-  //                       <FaSave className="text-sm" />
-  //                     </button>
-  //                     <button
-  //                       onClick={() => setNewRate(null)}
-  //                       className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                       disabled={loading}
-  //                       title="Cancel"
-  //                     >
-  //                       <FaTimes className="text-sm" />
-  //                     </button>
-  //                   </div>
-  //                 </td>
-  //               </tr>
-  //             )}
-  //           </tbody>
-  //         </table>
-  //       </div>
-  //     </div>
-
-  //     {/* Employee Billing Rates Schedule */}
-  //     {/* <div className="mb-4">
-  //       <h3 className="text-sm font-semibold">Employee Billing Rates Schedule</h3>
-  //       <div className="overflow-x-auto overflow-y-auto max-h-64"> */}
-  //     <div className="mb-4">
-  //       <div className="flex justify-between items-center mb-2">
-  //         <h3 className="text-sm font-semibold">
-  //           Employee Billing Rates Schedule
-  //         </h3>
-  //         <div className="w-1/5"></div>
-  //         <button
-  //           onClick={handleAddEmployeeRow}
-  //           className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition mr-4"
-  //           disabled={loading || newEmployeeRate}
-  //         >
-  //           Add
-  //         </button>
-  //       </div>
-  //       <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-  //         <table className="w-full text-xs border-collapse">
-  //           <thead className="sticky top-0 z-10 bg-gray-100">
-  //             <tr className="bg-gray-100">
-  //               <th className="border p-2 font-normal">Lookup Type</th>
-  //               <th className="border p-2 font-normal">Employee</th>
-  //               <th className="border p-2 font-normal">Employee Name</th>
-  //               <th className="border p-2 font-normal">PLC</th>
-  //               <th className="border p-2 font-normal">PLC Description</th>
-  //               <th className="border p-2 font-normal">Bill Rate</th>
-  //               <th className="border p-2 font-normal">Rate Type</th>
-  //               <th className="border p-2 font-normal">Start Date</th>
-  //               <th className="border p-2 font-normal">End Date</th>
-  //               <th className="border p-2 font-normal">Actions</th>
-  //             </tr>
-  //           </thead>
-  //           <tbody>
-  //             {loadingEmployee ? (
-  //               <tr>
-  //                 <td colSpan="10" className="border p-2 text-center">
-  //                   Loading...
-  //                 </td>
-  //               </tr>
-  //             ) : employeeBillingRates.length === 0 && !newEmployeeRate ? (
-  //               <tr>
-  //                 <td colSpan="10" className="border p-2 text-center">
-  //                   No data available
-  //                 </td>
-  //               </tr>
-  //             ) : (
-  //               employeeBillingRates.map((item) => (
-  //                 <tr
-  //                   key={item.id}
-  //                   className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
-  //                 >
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <select
-  //                         value={
-  //                           editEmployeeFields[item.id]?.lookupType ??
-  //                           item.lookupType
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleNewEmployeeRateChange(
-  //                             "lookupType",
-  //                             e.target.value,
-  //                             item.id
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       >
-  //                         {lookupTypeOptions.map((option) => (
-  //                           <option key={option} value={option}>
-  //                             {option}
-  //                           </option>
-  //                         ))}
-  //                       </select>
-  //                     ) : (
-  //                       <span>{item.lookupType}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={item.empId}
-  //                         onChange={(e) =>
-  //                           handleNewEmployeeRateChange(
-  //                             "empId",
-  //                             e.target.value,
-  //                             item.id
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                         list="employee-list"
-  //                         disabled={employees.length === 0}
-  //                       />
-  //                     ) : (
-  //                       <span>{item.empId}</span>
-  //                     )}
-  //                     <datalist id="employee-list">
-  //                       {employees.map((emp) => (
-  //                         <option key={emp.empId} value={emp.empId}>
-  //                           {emp.employeeName}
-  //                         </option>
-  //                       ))}
-  //                     </datalist>
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <span>{item.employeeName}</span>
-  //                   </td>
-  //                   {/* <td className="border p-2 sm:w-1/8">
-  //                     <input
-  //                       type="text"
-  //                       value={item.plc}
-  //                       onChange={(e) => {
-  //                         handleNewEmployeeRateChange(
-  //                           "plc",
-  //                           e.target.value,
-  //                           item.id
-  //                         );
-  //                         setPlcSearch(e.target.value);
-  //                       }}
-  //                       className="w-full p-1 border rounded text-xs"
-  //                       list="plc-list"
-  //                       disabled
-  //                     />
-  //                     <datalist id="plc-list">
-  //                       {plcs.map((plc) => (
-  //                         <option
-  //                           key={plc.laborCategoryCode}
-  //                           value={plc.laborCategoryCode}
-  //                         >
-  //                           {plc.description}
-  //                         </option>
-  //                       ))}
-  //                     </datalist>
-  //                   </td> */}
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={editEmployeeFields[item.id]?.plc || item.plc}
-  //                         onChange={(e) => {
-  //                           handleNewEmployeeRateChange(
-  //                             "plc",
-  //                             e.target.value,
-  //                             item.id
-  //                           );
-  //                           setPlcSearch(e.target.value);
-  //                         }}
-  //                         className="w-full p-1 border rounded text-xs"
-  //                         list="plc-list"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.plc}</span>
-  //                     )}
-  //                     <datalist id="plc-list">
-  //                       {plcs.map((plc) => (
-  //                         <option
-  //                           key={plc.laborCategoryCode}
-  //                           value={plc.laborCategoryCode}
-  //                         >
-  //                           {plc.description}
-  //                         </option>
-  //                       ))}
-  //                     </datalist>
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <span>
-  //                       {plcs.find((plc) => plc.laborCategoryCode === item.plc)
-  //                         ?.description || item.plcDescription}
-  //                     </span>
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={editEmployeeBillRate[item.id] ?? item.billRate}
-  //                         onChange={(e) =>
-  //                           handleEmployeeBillRateChange(
-  //                             item.id,
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.billRate}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <select
-  //                         value={
-  //                           editEmployeeFields[item.id]?.rateType ??
-  //                           item.rateType
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleNewEmployeeRateChange(
-  //                             "rateType",
-  //                             e.target.value,
-  //                             item.id
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       >
-  //                         {rateTypeOptions.map((option) => (
-  //                           <option key={option} value={option}>
-  //                             {option}
-  //                           </option>
-  //                         ))}
-  //                       </select>
-  //                     ) : (
-  //                       <span>{item.rateType}</span>
-  //                     )}
-  //                   </td>
-  //                   {/* <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <input
-  //                         type="date"
-  //                         value={
-  //                           editEmployeeFields[item.id]?.startDate ??
-  //                           item.startDate
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleNewEmployeeRateChange(
-  //                             "startDate",
-  //                             e.target.value,
-  //                             item.id
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.startDate}</span>
-  //                     )}
-  //                   </td> */}
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <input
-  //                       type="date"
-  //                       value={editEmployeeFields[item.id]?.startDate || ""}
-  //                       onChange={(e) =>
-  //                         handleNewEmployeeRateChange(
-  //                           "startDate",
-  //                           e.target.value,
-  //                           item.id
-  //                         )
-  //                       }
-  //                       className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                       min={selectedPlan.projStartDt} // ✅ cannot go before project start
-  //                       max={selectedPlan.projEndDt} // ✅ cannot go after project end
-  //                     />
-  //                   </td>
-
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <input
-  //                       type="date"
-  //                       value={editEmployeeFields[item.id]?.endDate || ""}
-  //                       onChange={(e) =>
-  //                         handleNewEmployeeRateChange(
-  //                           "endDate",
-  //                           e.target.value,
-  //                           item.id
-  //                         )
-  //                       }
-  //                       className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                       min={
-  //                         editEmployeeFields[item.id]?.startDate ||
-  //                         selectedPlan.projStartDt
-  //                       }
-  //                       max={selectedPlan.projEndDt} // ✅ must be ≤ project end
-  //                     />
-  //                   </td>
-
-  //                   {/* <td className="border p-2 sm:w-1/8">
-  //                     {editingEmployeeRowId === item.id ? (
-  //                       <input
-  //                         type="date"
-  //                         value={
-  //                           editEmployeeFields[item.id]?.endDate ??
-  //                           item.endDate ??
-  //                           ""
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleNewEmployeeRateChange(
-  //                             "endDate",
-  //                             e.target.value,
-  //                             item.id
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.endDate || ""}</span>
-  //                     )}
-  //                   </td> */}
-  //                   {/* <td className="border p-2 sm:w-1/8">
-  //                     <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                       <button
-  //                         onClick={() =>
-  //                           handleUpdateEmployee(item.id, {
-  //                             ...item,
-  //                             billRate:
-  //                               editEmployeeBillRate[item.id] || item.billRate,
-  //                           })
-  //                         }
-  //                         className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-xs font-normal hover:bg-blue-300 transition w-full sm:w-auto"
-  //                         disabled={loading || !item.id}
-  //                       >
-  //                         {editingEmployeeRowId === item.id ? "Save" : "Edit"}
-  //                       </button>
-  //                       <button
-  //                         onClick={() => handleDeleteEmployee(item.id)}
-  //                         className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-xs font-normal hover:bg-gray-300 transition w-full sm:w-auto"
-  //                         disabled={loading || !item.id}
-  //                       >
-  //                         Delete
-  //                       </button>
-  //                     </div>
-  //                   </td> */}
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                       {editingEmployeeRowId === item.id ? (
-  //                         <>
-  //                           <button
-  //                             onClick={() =>
-  //                               handleUpdateEmployee(item.id, {
-  //                                 ...item,
-  //                                 billRate:
-  //                                   editEmployeeBillRate[item.id] ||
-  //                                   item.billRate,
-  //                               })
-  //                             }
-  //                             className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loadingAction[item.id]}
-  //                             title="Save"
-  //                           >
-  //                             {loadingAction[item.id] ? (
-  //                               <span className="animate-spin">⌛</span>
-  //                             ) : (
-  //                               <FaSave className="text-sm" />
-  //                             )}
-  //                           </button>
-  //                           <button
-  //                             onClick={() => setEditingEmployeeRowId(null)}
-  //                             className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loadingAction[item.id]}
-  //                             title="Cancel"
-  //                           >
-  //                             <FaTimes className="text-sm" />
-  //                           </button>
-  //                         </>
-  //                       ) : (
-  //                         <>
-  //                           <button
-  //                             onClick={() => handleEditEmployeeRow(item.id)}
-  //                             className="bg-blue-200 text-blue-800 p-2 rounded hover:bg-blue-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loadingAction[item.id]}
-  //                             title="Edit"
-  //                           >
-  //                             {loadingAction[item.id] ? (
-  //                               <span className="animate-spin">⌛</span>
-  //                             ) : (
-  //                               <FaEdit className="text-sm" />
-  //                             )}
-  //                           </button>
-  //                           <button
-  //                             onClick={() => handleDeleteEmployee(item.id)}
-  //                             className="bg-gray-200 text-gray-800 p-2 rounded hover:bg-gray-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loadingAction[item.id]}
-  //                             title="Delete"
-  //                           >
-  //                             {loadingAction[item.id] ? (
-  //                               <span className="animate-spin">⌛</span>
-  //                             ) : (
-  //                               <FaTrash className="text-sm" />
-  //                             )}
-  //                           </button>
-  //                         </>
-  //                       )}
-  //                     </div>
-  //                   </td>
-  //                 </tr>
-  //               ))
-  //             )}
-  //             {newEmployeeRate && (
-  //               <tr className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0">
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <select
-  //                     value={newEmployeeRate.lookupType}
-  //                     onChange={(e) =>
-  //                       handleNewEmployeeRateChange(
-  //                         "lookupType",
-  //                         e.target.value
-  //                       )
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   >
-  //                     {lookupTypeOptions.map((option) => (
-  //                       <option key={option} value={option}>
-  //                         {option}
-  //                       </option>
-  //                     ))}
-  //                   </select>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="text"
-  //                     value={newEmployeeRate.empId || ""}
-  //                     onChange={(e) =>
-  //                       handleNewEmployeeRateChange("empId", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     list="employee-list"
-  //                     disabled={employees.length === 0}
-  //                   />
-  //                   <datalist id="employee-list">
-  //                     {employees.map((emp) => (
-  //                       <option key={emp.empId} value={emp.empId}>
-  //                         {emp.employeeName}
-  //                       </option>
-  //                     ))}
-  //                   </datalist>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   {newEmployeeRate.employeeName || ""}
-  //                 </td>
-  //                 {/* <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="text"
-  //                     value={newEmployeeRate.plc || ""}
-  //                     onChange={(e) => {
-  //                       handleNewEmployeeRateChange("plc", e.target.value);
-  //                       setPlcSearch(e.target.value);
-  //                     }}
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     list="plc-list"
-  //                   />
-  //                   <datalist id="plc-list">
-  //                     {plcs.map((plc) => (
-  //                       <option
-  //                         key={plc.laborCategoryCode}
-  //                         value={plc.laborCategoryCode}
-  //                       >
-  //                         {plc.description}
-  //                       </option>
-  //                     ))}
-  //                   </datalist>
-  //                 </td> */}
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="text"
-  //                     value={newEmployeeRate.plc || ""}
-  //                     onChange={(e) => {
-  //                       handleNewEmployeeRateChange("plc", e.target.value);
-  //                       setPlcSearch(e.target.value);
-  //                     }}
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     list="plc-list"
-  //                   />
-  //                   <datalist id="plc-list">
-  //                     {plcs.map((plc) => (
-  //                       <option
-  //                         key={plc.laborCategoryCode}
-  //                         value={plc.laborCategoryCode}
-  //                       >
-  //                         {plc.description}
-  //                       </option>
-  //                     ))}
-  //                   </datalist>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   {plcs.find(
-  //                     (plc) => plc.laborCategoryCode === newEmployeeRate.plc
-  //                   )?.description || ""}
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="number"
-  //                     value={newEmployeeRate.billRate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewEmployeeRateChange("billRate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <select
-  //                     value={newEmployeeRate.rateType}
-  //                     onChange={(e) =>
-  //                       handleNewEmployeeRateChange("rateType", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   >
-  //                     {rateTypeOptions.map((option) => (
-  //                       <option key={option} value={option}>
-  //                         {option}
-  //                       </option>
-  //                     ))}
-  //                   </select>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="date"
-  //                     value={newEmployeeRate.startDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewEmployeeRateChange("startDate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="date"
-  //                     value={newEmployeeRate.endDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewEmployeeRateChange("endDate", e.target.value)
-  //                     }
-  //                     className="w-full p-1 border rounded text-xs"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                     <button
-  //                       onClick={handleSaveNewEmployeeRate}
-  //                       className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition w-full sm:w-auto"
-  //                       disabled={loading}
-  //                     >
-  //                       Save
-  //                     </button>
-  //                     <button
-  //                       onClick={() => setNewEmployeeRate(null)}
-  //                       className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-gray-600 transition w-full sm:w-auto"
-  //                       disabled={loading}
-  //                     >
-  //                       Cancel
-  //                     </button>
-  //                   </div>
-  //                 </td>
-  //               </tr>
-  //             )}
-  //           </tbody>
-  //         </table>
-  //       </div>
-  //     </div>
-  //     {/* Vendor Billing Rates Schedule */}
-  //     {/* <div className="mb-4">
-  //       <h3 className="text-sm font-semibold">Vendor Billing Rates Schedule</h3>
-  //       <div className="overflow-x-auto overflow-y-auto max-h-64"> */}
-  //     <div className="mb-4">
-  //       <div className="flex justify-between items-center mb-2">
-  //         <h3 className="text-sm font-semibold">
-  //           Vendor Billing Rates Schedule
-  //         </h3>
-  //         <div className="w-1/5"></div>
-  //         <button
-  //           onClick={handleAddVendorRow}
-  //           className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition mr-4"
-  //           disabled={loading || newVendorRate}
-  //         >
-  //           Add
-  //         </button>
-  //       </div>
-  //       <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-  //         <table className="w-full text-xs border-collapse">
-  //           <thead className="sticky top-0 z-10 bg-gray-100">
-  //             <tr className="bg-gray-100">
-  //               <th className="border p-2 font-normal sm:w-1/8">Lookup Type</th>
-  //               <th className="border p-2 font-normal sm:w-1/8">Vendor</th>
-  //               <th className="border p-2 font-normal sm:w-1/8">Vendor Name</th>
-  //               <th className="border p-2 font-normal sm:w-1/8">
-  //                 Vendor Employee ID
-  //               </th>
-  //               <th className="border p-2 font-normal sm:w-1/8">
-  //                 Vendor Employee Name
-  //               </th>
-  //               <th className="border p-2 font-normal sm:w-1/8">PLC</th>
-  //               <th className="border p-2 font-normal sm:w-1/8">
-  //                 PLC Description
-  //               </th>
-  //               <th className="border p-2 font-normal sm:w-1/8">Bill Rate</th>
-  //               <th className="border p-2 font-normal">Rate Type</th>
-  //               <th className="border p-2 font-normal">Start Date</th>
-  //               <th className="border p-2 font-normal">End Date</th>
-  //               <th className="border p-2 font-normal sm:w-1/8">Actions</th>
-  //             </tr>
-  //           </thead>
-  //           <tbody>
-  //             {loadingVendor ? (
-  //               <tr>
-  //                 <td colSpan="12" className="border p-2 text-center">
-  //                   Loading...
-  //                 </td>
-  //               </tr>
-  //             ) : vendorBillingRates.length === 0 && !newVendorRate ? (
-  //               <tr>
-  //                 <td colSpan="12" className="border p-2 text-center">
-  //                   No data available
-  //                 </td>
-  //               </tr>
-  //             ) : (
-  //               vendorBillingRates.map((item) => (
-  //                 <tr
-  //                   key={item.id}
-  //                   className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
-  //                 >
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <select
-  //                         value={
-  //                           editVendorFields[item.id]?.lookupType ??
-  //                           item.lookupType
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleVendorFieldChange(
-  //                             item.id,
-  //                             "lookupType",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-1 border rounded text-xs"
-  //                       >
-  //                         {vendorLookupTypeOptions.map((option) => (
-  //                           <option key={option} value={option}>
-  //                             {option}
-  //                           </option>
-  //                         ))}
-  //                       </select>
-  //                     ) : (
-  //                       <span>{item.lookupType}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={
-  //                           editVendorFields[item.id]?.vendorId || item.vendorId
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleVendorFieldChange(
-  //                             item.id,
-  //                             "vendorId",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-2 border rounded text-xs"
-  //                         list="vendor-list"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.vendorId}</span>
-  //                     )}
-  //                     <datalist id="vendor-list">
-  //                       {vendorEmployees.map((v) => (
-  //                         <option
-  //                           key={`${v.vendId}-${v.empId}`}
-  //                           value={v.vendId}
-  //                         >
-  //                           {v.employeeName}
-  //                         </option>
-  //                       ))}
-  //                     </datalist>
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={
-  //                           editVendorFields[item.id]?.vendorName ||
-  //                           item.vendorName
-  //                         }
-  //                         readOnly
-  //                         className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.vendorName}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={
-  //                           editVendorFields[item.id]?.vendorEmployee ||
-  //                           item.vendorEmployee
-  //                         }
-  //                         readOnly
-  //                         className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.vendorEmployee}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={
-  //                           editVendorFields[item.id]?.vendorEmployeeName ||
-  //                           item.vendorEmployeeName
-  //                         }
-  //                         readOnly
-  //                         className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.vendorEmployeeName}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={editVendorFields[item.id]?.plc || item.plc}
-  //                         onChange={(e) => {
-  //                           handleVendorFieldChange(
-  //                             item.id,
-  //                             "plc",
-  //                             e.target.value
-  //                           );
-  //                           setPlcSearch(e.target.value);
-  //                         }}
-  //                         className="w-full p-2 border rounded text-xs"
-  //                         list="plc-list"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.plc}</span>
-  //                     )}
-  //                     <datalist id="plc-list">
-  //                       {plcs.map((plc) => (
-  //                         <option
-  //                           key={plc.laborCategoryCode}
-  //                           value={plc.laborCategoryCode}
-  //                         >
-  //                           {plc.description}
-  //                         </option>
-  //                       ))}
-  //                     </datalist>
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={
-  //                           editVendorFields[item.id]?.plcDescription ||
-  //                           item.plcDescription ||
-  //                           plcs.find(
-  //                             (plc) =>
-  //                               plc.laborCategoryCode ===
-  //                               (editVendorFields[item.id]?.plc || item.plc)
-  //                           )?.description ||
-  //                           ""
-  //                         }
-  //                         readOnly
-  //                         className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.plcDescription}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="text"
-  //                         value={
-  //                           editVendorBillRate[item.id] ?? item.billRate ?? ""
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleVendorBillRateChange(item.id, e.target.value)
-  //                         }
-  //                         className="w-full p-2 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.billRate}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <select
-  //                         value={
-  //                           editVendorFields[item.id]?.rateType ?? item.rateType
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleVendorFieldChange(
-  //                             item.id,
-  //                             "rateType",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-2 border rounded text-xs"
-  //                       >
-  //                         {rateTypeOptions.map((option) => (
-  //                           <option key={option} value={option}>
-  //                             {option}
-  //                           </option>
-  //                         ))}
-  //                       </select>
-  //                     ) : (
-  //                       <span>{item.rateType}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="date"
-  //                         value={
-  //                           editVendorFields[item.id]?.startDate ??
-  //                           item.startDate
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleVendorFieldChange(
-  //                             item.id,
-  //                             "startDate",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-2 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.startDate}</span>
-  //                     )}
-  //                   </td>
-  //                   <td className="border p-2">
-  //                     {editingVendorRowId === item.id ? (
-  //                       <input
-  //                         type="date"
-  //                         value={
-  //                           editVendorFields[item.id]?.endDate ??
-  //                           item.endDate ??
-  //                           ""
-  //                         }
-  //                         onChange={(e) =>
-  //                           handleVendorFieldChange(
-  //                             item.id,
-  //                             "endDate",
-  //                             e.target.value
-  //                           )
-  //                         }
-  //                         className="w-full p-2 border rounded text-xs"
-  //                       />
-  //                     ) : (
-  //                       <span>{item.endDate || ""}</span>
-  //                     )}
-  //                   </td>
-
-  //                   <td className="border p-2 sm:w-1/8">
-  //                     <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                       {editingVendorRowId === item.id ? (
-  //                         <>
-  //                           <button
-  //                             onClick={() => handleUpdateVendor(item.id)}
-  //                             className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loading}
-  //                             title="Save"
-  //                           >
-  //                             <FaSave className="text-sm" />
-  //                           </button>
-  //                           <button
-  //                             onClick={() => setEditingVendorRowId(null)}
-  //                             className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loadingAction[item.id]}
-  //                             title="Cancel"
-  //                           >
-  //                             <FaTimes className="text-sm" />
-  //                           </button>
-  //                         </>
-  //                       ) : (
-  //                         <>
-  //                           <button
-  //                             onClick={() => handleEditVendorRow(item.id)}
-  //                             className="bg-blue-200 text-blue-800 p-2 rounded hover:bg-blue-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             disabled={loadingAction[item.id]}
-  //                             title="Edit"
-  //                           >
-  //                             <FaEdit className="text-sm" />
-  //                           </button>
-  //                           <button
-  //                             onClick={() => handleDeleteVendor(item.id)}
-  //                             className="bg-gray-200 text-gray-800 p-2 rounded hover:bg-gray-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-  //                             // disabled={loadingAction[item.id]}
-  //                             disabled={loading}
-  //                             title="Delete"
-  //                           >
-  //                             {/* {loadingAction[item.id] ? (
-  //                             <span className="animate-spin">⌛</span>
-  //                           ) : (
-  //                             <FaTrash className="text-sm" />
-  //                           )} */}
-  //                             <FaTrash className="text-sm" />
-  //                           </button>
-  //                         </>
-  //                       )}
-  //                     </div>
-  //                   </td>
-  //                 </tr>
-  //               ))
-  //             )}
-  //             {newVendorRate && (
-  //               <tr className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0">
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <select
-  //                     value={newVendorRate.lookupType}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("lookupType", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs"
-  //                   >
-  //                     {vendorLookupTypeOptions.map((option) => (
-  //                       <option key={option} value={option}>
-  //                         {option}
-  //                       </option>
-  //                     ))}
-  //                   </select>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="text"
-  //                     value={newVendorRate.vendorId || ""}
-  //                     onChange={(e) => {
-  //                       const selectedVend = vendorEmployees.find(
-  //                         (v) => v.vendId === e.target.value
-  //                       );
-  //                       setNewVendorRate((prev) => ({
-  //                         ...prev,
-  //                         vendorId: e.target.value,
-  //                         vendorName: selectedVend
-  //                           ? selectedVend.employeeName
-  //                           : prev.vendorName,
-  //                         vendorEmployee: selectedVend
-  //                           ? selectedVend.empId
-  //                           : prev.vendorEmployee,
-  //                         vendorEmployeeName: selectedVend
-  //                           ? selectedVend.employeeName
-  //                           : prev.vendorEmployeeName,
-  //                       }));
-  //                     }}
-  //                     className="w-full p-1 border rounded text-xs"
-  //                     list="vendor-list"
-  //                   />
-  //                   <datalist id="vendor-list">
-  //                     {vendorEmployees.map((v, index) => (
-  //                       // <option key={`${v.vendId}-${v.empId}`} value={v.vendId}>
-  //                       <option
-  //                         key={`${v.vendId}-${v.empId}-${index}`}
-  //                         value={v.vendId}
-  //                       >
-  //                         {v.employeeName}
-  //                       </option>
-  //                     ))}
-  //                   </datalist>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="text"
-  //                     value={newVendorRate.vendorName || ""}
-  //                     readOnly
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("vendorName", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="text"
-  //                     value={newVendorRate.vendorEmployee || ""}
-  //                     readOnly
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange(
-  //                         "vendorEmployee",
-  //                         e.target.value
-  //                       )
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/80">
-  //                   <input
-  //                     type="text"
-  //                     value={newVendorRate.vendorEmployeeName || ""}
-  //                     readOnly
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange(
-  //                         "vendorEmployeeName",
-  //                         e.target.value
-  //                       )
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/18">
-  //                   <input
-  //                     type="text"
-  //                     value={newVendorRate.plc || ""}
-  //                     onChange={(e) => {
-  //                       handleNewVendorRateChange("plc", e.target.value);
-  //                       setPlcSearch(e.target.value);
-  //                     }}
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                     list="plc-list"
-  //                   />
-  //                   <datalist id="plc-list">
-  //                     {plcs.map((plc) => (
-  //                       <option
-  //                         key={plc.laborCategoryCode}
-  //                         value={plc.laborCategoryCode}
-  //                       >
-  //                         {plc.description}
-  //                       </option>
-  //                     ))}
-  //                   </datalist>
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   {plcs.find(
-  //                     (plc) => plc.laborCategoryCode === newVendorRate.plc
-  //                   )?.description || ""}
-  //                 </td>
-  //                 {/* <td className="border p-2 sm:w-1/18">
-  //                   <input
-  //                     type="text"
-  //                     value={newVendorRate.billRate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("billRate", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   />
-  //                 </td> */}
-  //                 <td>
-  //                   <input
-  //                     type="number"
-  //                     value={newVendorRate.billRate || ""}
-  //                     onChange={(e) => {
-  //                       const val = e.target.value;
-  //                       if (/^\d*\.?\d*$/.test(val)) {
-  //                         // allows only numbers + decimal
-  //                         handleNewVendorRateChange("billRate", val);
-  //                       }
-  //                     }}
-  //                     className="w-full p-2 border rounded text-xs"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/18">
-  //                   <select
-  //                     value={newVendorRate.rateType}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("rateType", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   >
-  //                     {rateTypeOptions.map((option) => (
-  //                       <option key={option} value={option}>
-  //                         {option}
-  //                       </option>
-  //                     ))}
-  //                   </select>
-  //                 </td>
-
-  //                 {/* <td className="border p-2 sm:w-1/18">
-  //                   <input
-  //                     type="date"
-  //                     value={newVendorRate.startDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("startDate", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   />
-  //                 </td>
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="date"
-  //                     value={newVendorRate.endDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("endDate", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                   />
-  //                 </td> */}
-
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="date"
-  //                     value={newVendorRate.startDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("startDate", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                     min={selectedPlan.projStartDt} // cannot be before project start
-  //                     max={selectedPlan.projEndDt} // cannot be after project end
-  //                   />
-  //                 </td>
-
-  //                 <td className="border p-2 sm:w-1/8">
-  //                   <input
-  //                     type="date"
-  //                     value={newVendorRate.endDate || ""}
-  //                     onChange={(e) =>
-  //                       handleNewVendorRateChange("endDate", e.target.value)
-  //                     }
-  //                     className="w-full p-2 border rounded text-xs bg-gray-100"
-  //                     min={newVendorRate.startDate || selectedPlan.projStartDt} // must be >= startDate
-  //                     max={selectedPlan.projEndDt} // cannot be after project end
-  //                   />
-  //                 </td>
-
-  //                 <td className="border p-2 sm:w-1/10">
-  //                   <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-  //                     <button
-  //                       onClick={handleSaveNewVendorRate}
-  //                       className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition w-full sm:w-auto"
-  //                       disabled={loading}
-  //                     >
-  //                       Save
-  //                     </button>
-  //                     <button
-  //                       onClick={() => setNewVendorRate(null)}
-  //                       className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-gray-600 transition w-full sm:w-auto"
-  //                       disabled={loading}
-  //                     >
-  //                       Cancel
-  //                     </button>
-  //                   </div>
-  //                 </td>
-  //               </tr>
-  //             )}
-  //             {/* <tr>
-  //               <td colSpan="12" className="border p-2">
-  //                 <button
-  //                   onClick={handleAddVendorRow}
-  //                   className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition"
-  //                   disabled={loading || newVendorRate}
-  //                 >
-  //                   Add
-  //                 </button>
-  //               </td>
-  //             </tr> */}
-  //           </tbody>
-  //         </table>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
+  function cancelEmployeeEditing() {
+    setIsEmployeeEditing(false);
+    setEditEmployeeBillRate({});
+    setEditEmployeeFields({});
+    // Optionally clear checkboxes if you use selection for other employee batch actions
+    // setSelectedEmployeeRows({});
+  }
 
   return (
     <div className="border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16 text-xs">
@@ -4192,25 +2095,132 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           <h3 className="text-sm font-semibold">
             Project Labor Categories Billing Rates Schedule
           </h3>
-          <div className="w-1/5"></div>
-          <button
-            onClick={handleAddRow}
-            className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition mr-4"
-            disabled={loading || newRate}
-          >
-            Add
-          </button>
+          <div className="w-1/5 flex justify-end items-center space-x-2">
+            {/* ADD BUTTON */}
+            <button
+              onClick={handleAddRow}
+              className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition"
+              disabled={loading || newRate}
+            >
+              Add
+            </button>
+
+            {/* NEW RATE SAVE/CANCEL */}
+            {newRate && (
+              <>
+                <button
+                  onClick={handleSaveNewRate}
+                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-xs font-normal flex items-center space-x-1"
+                  disabled={loading}
+                  title="Save"
+                >
+                  <FaSave className="text-sm" />
+                  <span>Save</span>
+                </button>
+                <button
+                  onClick={() => setNewRate(null)}
+                  className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition text-xs font-normal flex items-center space-x-1"
+                  disabled={loading}
+                  title="Cancel"
+                >
+                  <FaTimes className="text-sm" />
+                  <span>Cancel</span>
+                </button>
+              </>
+            )}
+
+            {/* EDIT/CANCEL BUTTON */}
+            {!newRate && (
+              <>
+                <button
+                  onClick={() =>
+                    isEditing ? cancelEditing() : setIsEditing(true)
+                  }
+                  className={`${
+                    isEditing
+                      ? "bg-gray-500 hover:bg-gray-600"
+                      : "bg-yellow-500 hover:bg-yellow-600"
+                  } text-white px-3 py-1 rounded text-xs font-normal transition flex items-center space-x-1`}
+                  disabled={loading || billingRatesSchedule.length === 0}
+                  title={isEditing ? "Cancel Editing" : "Edit Bill Rates"}
+                >
+                  {isEditing ? (
+                    <>
+                      <FaTimes className="text-sm" />
+                      <span>Cancel</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaEdit className="text-sm" />
+                      <span>Edit</span>
+                    </>
+                  )}
+                </button>
+
+                {/* SAVE BUTTON (only visible in edit mode) */}
+                {isEditing && (
+                  <button
+                    onClick={handleUpdateAllChanges}
+                    className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition flex items-center space-x-1"
+                    disabled={loading}
+                    title="Save Changes"
+                  >
+                    <FaSave className="text-sm" />
+                    <span>Save</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* DELETE SELECTED (always visible, disabled when none selected) */}
+            <button
+              onClick={handleDeleteSelected} // implement to delete selectedRows IDs
+              className="bg-red-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-red-600 transition flex items-center space-x-1"
+              disabled={loading || !Object.values(selectedRows).some(Boolean)}
+              title="Delete Selected"
+            >
+              <FaTrash className="text-sm" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
+
         <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-gray-100">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal">Plc</th>
-                <th className="border p-2 font-normal">Bill Rate</th>
-                <th className="border p-2 font-normal">Rate Type</th>
-                <th className="border p-2 font-normal">Start Date</th>
-                <th className="border p-2 font-normal">End Date</th>
-                <th className="border p-2 font-normal">Actions</th>
+                <th className="border p-2 font-normal text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      billingRatesSchedule.length > 0 &&
+                      billingRatesSchedule.every(
+                        (item) => selectedRows[item.id]
+                      )
+                    }
+                    onChange={() => {
+                      if (
+                        billingRatesSchedule.length > 0 &&
+                        billingRatesSchedule.every(
+                          (item) => selectedRows[item.id]
+                        )
+                      ) {
+                        setSelectedRows({});
+                      } else {
+                        const allSelected = {};
+                        billingRatesSchedule.forEach((item) => {
+                          allSelected[item.id] = true;
+                        });
+                        setSelectedRows(allSelected);
+                      }
+                    }}
+                  />
+                </th>
+                <th className="border p-2  ">PLC</th>
+                <th className="border p-2 ">Bill Rate</th>
+                <th className="border p-2  ">Rate Type</th>
+                <th className="border p-2 ">Start Date</th>
+                <th className="border p-2  ">End Date</th>
               </tr>
             </thead>
             <tbody>
@@ -4219,6 +2229,8 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                   key="new-rate"
                   className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
                 >
+                  {/* New Rate Inputs unchanged */}
+                  <td className="border p-2 text-center"></td>
                   <td className="border p-2 sm:w-1/5">
                     <input
                       type="text"
@@ -4236,8 +2248,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     >
                       {plcs.map((plc, index) => (
                         <option
-                          key={`${plc.laborCategoryCode}-${index}`} // ✅ Make key unique
-                          // key={plc.laborCategoryCode}
+                          key={`${plc.laborCategoryCode}-${index}`}
                           value={plc.laborCategoryCode}
                           style={dropdownStyles.noBorderDropdown}
                         >
@@ -4246,43 +2257,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  {/* <td className="border p-2 sm:w-1/5">
-                    <input
-                      type="text"
-                      value={newRate.billRate || ""}
-                      onChange={(e) =>
-                        handleNewRateChange("billRate", e.target.value)
-                      }
-                      className="w-full p-1 border rounded text-xs"
-                    />
-                  </td> */}
-                  {/* <td className="border p-2 sm:w-1/5">
-                    <input
-                      type="text"
-                      value={newRate.billRate || ""}
-                      onChange={(e) =>
-                        handleNewRateChange("billRate", e.target.value)
-                      }
-                      onBlur={() => {
-                        if (newRate.billRate) {
-                          const num = parseFloat(
-                            newRate.billRate.replace(/,/g, "")
-                          );
-                          if (!isNaN(num)) {
-                            // format with US commas + 2 decimals
-                            handleNewRateChange(
-                              "billRate",
-                              num.toLocaleString("en-US", {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })
-                            );
-                          }
-                        }
-                      }}
-                      className="w-full p-1 border rounded text-xs"
-                    />
-                  </td> */}
                   <td className="border p-2 sm:w-1/5">
                     <input
                       type="text"
@@ -4309,7 +2283,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-1 border rounded text-xs"
                     />
                   </td>
-
                   <td className="border p-2 sm:w-1/5">
                     <select
                       value={newRate.rateType}
@@ -4325,7 +2298,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </select>
                   </td>
-                  {/* <td className="border p-2 sm:w-1/5">
+                  <td className="border p-2 sm:w-1/5">
                     <input
                       type="date"
                       value={newRate.startDate || ""}
@@ -4333,6 +2306,8 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         handleNewRateChange("startDate", e.target.value)
                       }
                       className="w-full p-1 border rounded text-xs"
+                      min={selectedPlan.projStartDt}
+                      max={selectedPlan.projEndDt}
                     />
                   </td>
                   <td className="border p-2 sm:w-1/5">
@@ -4343,59 +2318,17 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         handleNewRateChange("endDate", e.target.value)
                       }
                       className="w-full p-1 border rounded text-xs"
-                    />
-                  </td> */}
-                  <td className="border p-2 sm:w-1/5">
-                    <input
-                      type="date"
-                      value={newRate.startDate || ""}
-                      onChange={(e) =>
-                        handleNewRateChange("startDate", e.target.value)
-                      }
-                      className="w-full p-1 border rounded text-xs"
-                      min={selectedPlan.projStartDt} // ✅ cannot pick before project start
-                      max={selectedPlan.projEndDt} // ✅ cannot pick after project end
+                      min={newRate.startDate || selectedPlan.projStartDt}
+                      max={selectedPlan.projEndDt}
                     />
                   </td>
-
-                  <td className="border p-2 sm:w-1/5">
-                    <input
-                      type="date"
-                      value={newRate.endDate || ""}
-                      onChange={(e) =>
-                        handleNewRateChange("endDate", e.target.value)
-                      }
-                      className="w-full p-1 border rounded text-xs"
-                      min={newRate.startDate || selectedPlan.projStartDt} // ✅ end date cannot be before start date
-                      max={selectedPlan.projEndDt} // ✅ cannot pick after project end
-                    />
-                  </td>
-
-                  <td className="border p-2 sm:w-1/5">
-                    <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                      <button
-                        onClick={handleSaveNewRate}
-                        className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                        disabled={loading}
-                        title="Save"
-                      >
-                        <FaSave className="text-sm" />
-                      </button>
-                      <button
-                        onClick={() => setNewRate(null)}
-                        className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                        disabled={loading}
-                        title="Cancel"
-                      >
-                        <FaTimes className="text-sm" />
-                      </button>
-                    </div>
-                  </td>
+                  {/* <td className="border p-2 sm:w-1/5"></td> */}
                 </tr>
               )}
+
               {loadingPLC ? (
                 <tr key="loading">
-                  <td colSpan="6" className="border p-2 text-center">
+                  <td colSpan="7" className="border p-2 text-center">
                     Loading...
                   </td>
                 </tr>
@@ -4411,44 +2344,42 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     key={item.id}
                     className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
                   >
-                    <td className="border p-2 sm:w-1/8">
-                      <span>{item.plc}</span>
+                    <td className="border p-2 sm:w-1/12 text-center">
+                      <input
+                        type="checkbox"
+                        checked={!!selectedRows[item.id]}
+                        onChange={() => {
+                          setSelectedRows((prev) => ({
+                            ...prev,
+                            [item.id]: !prev[item.id],
+                          }));
+                        }}
+                      />
                     </td>
-                    {/* <td className="border p-2 sm:w-1/5">
-                      {editingProjectPlcRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={editBillRate[item.id] ?? item.billRate}
-                          onChange={(e) =>
-                            handleBillRateChange(item.id, e.target.value)
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                        />
-                      ) : (
-                        <span>{item.billRate}</span>
-                      )}
-                    </td> */}
+                    <td className="border p-2 sm:w-1/8">{item.plc}</td>
                     <td className="border p-2 sm:w-1/5">
-                      {editingProjectPlcRowId === item.id ? (
+                      {isEditing ? (
                         <input
                           type="text"
-                          value={editBillRate[item.id] ?? item.billRate}
+                          value={editedBillRates[item.id] ?? item.billRate}
                           onChange={(e) =>
-                            handleBillRateChange(item.id, e.target.value)
+                            setEditedBillRates((prev) => ({
+                              ...prev,
+                              [item.id]: e.target.value,
+                            }))
                           }
                           onBlur={() => {
-                            const raw = editBillRate[item.id] ?? item.billRate;
-                            const num = parseFloat(
-                              (raw || "").replace(/,/g, "")
-                            );
+                            const raw =
+                              editedBillRates[item.id] ?? item.billRate;
+                            const num = parseFloat(raw.replace(/,/g, ""));
                             if (!isNaN(num)) {
-                              handleBillRateChange(
-                                item.id,
-                                num.toLocaleString("en-US", {
+                              setEditedBillRates((prev) => ({
+                                ...prev,
+                                [item.id]: num.toLocaleString("en-US", {
                                   minimumFractionDigits: 2,
                                   maximumFractionDigits: 2,
-                                })
-                              );
+                                }),
+                              }));
                             }
                           }}
                           className="w-full p-1 border rounded text-xs"
@@ -4457,128 +2388,12 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
+                    <td className="border p-2 sm:w-1/5">{item.rateType}</td>
+                    <td className="border p-2 sm:w-1/5">{item.startDate}</td>
                     <td className="border p-2 sm:w-1/5">
-                      {editingProjectPlcRowId === item.id ? (
-                        <select
-                          value={
-                            editProjectPlcFields[item.id]?.rateType ??
-                            item.rateType
-                          }
-                          onChange={(e) =>
-                            handleProjectPlcFieldChange(
-                              item.id,
-                              "rateType",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                        >
-                          {rateTypeOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{item.rateType}</span>
-                      )}
+                      {item.endDate || ""}
                     </td>
-
-                    <td className="border p-2 sm:w-1/5">
-                      {editingProjectPlcRowId === item.id ? (
-                        <input
-                          type="date"
-                          value={
-                            editProjectPlcFields[item.id]?.startDate ??
-                            item.startDate
-                          }
-                          onChange={(e) =>
-                            handleProjectPlcFieldChange(
-                              item.id,
-                              "startDate",
-                              e.target.value
-                            )
-                          }
-                          min={selectedPlan.projStartDt} // ✅ cannot pick before project start
-                          max={selectedPlan.projEndDt} // ✅ cannot pick after project end
-                          className="w-full p-1 border rounded text-xs"
-                        />
-                      ) : (
-                        <span>{item.startDate}</span>
-                      )}
-                    </td>
-                    <td className="border p-2 sm:w-1/5">
-                      {editingProjectPlcRowId === item.id ? (
-                        <input
-                          type="date"
-                          value={
-                            editProjectPlcFields[item.id]?.endDate ??
-                            item.endDate ??
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleProjectPlcFieldChange(
-                              item.id,
-                              "endDate",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                          min={
-                            editProjectPlcFields[item.id]?.startDate ??
-                            item.startDate ??
-                            selectedPlan.projStartDt
-                          } // ✅ end date cannot be before start date
-                          max={selectedPlan.projEndDt} // ✅ cannot pick after project end
-                        />
-                      ) : (
-                        <span>{item.endDate || ""}</span>
-                      )}
-                    </td>
-
-                    <td className="border p-2 sm:w-1/5">
-                      <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                        {editingProjectPlcRowId === item.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdate(item.id)}
-                              className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loading}
-                              title="Save"
-                            >
-                              <FaSave className="text-sm" />
-                            </button>
-                            <button
-                              onClick={() => setEditingProjectPlcRowId(null)}
-                              className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loading}
-                              title="Cancel"
-                            >
-                              <FaTimes className="text-sm" />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEditProjectPlcRow(item.id)}
-                              className="bg-blue-200 text-blue-800 p-2 rounded hover:bg-blue-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loading}
-                              title="Edit"
-                            >
-                              <FaEdit className="text-sm" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(item.id)}
-                              className="bg-gray-200 text-gray-800 p-2 rounded hover:bg-gray-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loading}
-                              title="Delete"
-                            >
-                              <FaTrash className="text-sm" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                    {/* <td className="border p-2 sm:w-1/5"></td> */}
                   </tr>
                 ))
               )}
@@ -4596,55 +2411,149 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           <h3 className="text-sm font-semibold">
             Employee Billing Rates Schedule
           </h3>
-          <div className="w-1/5"></div>
-          <button
-            onClick={handleAddEmployeeRow}
-            className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition mr-4"
-            disabled={loading || newEmployeeRate}
-          >
-            Add
-          </button>
+          <div className="w-1/5 flex justify-end items-center space-x-2">
+            {/* ADD BUTTON */}
+            <button
+              onClick={handleAddEmployeeRow}
+              className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition"
+              disabled={loading || newEmployeeRate}
+            >
+              Add
+            </button>
+
+            {/* NEW RATE SAVE/CANCEL */}
+            {newEmployeeRate && (
+              <>
+                <button
+                  onClick={handleSaveNewEmployeeRate}
+                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-xs font-normal flex items-center space-x-1"
+                  disabled={loading}
+                  title="Save"
+                >
+                  <FaSave className="text-sm" />
+                  <span>Save</span>
+                </button>
+                <button
+                  onClick={() => setNewEmployeeRate(null)}
+                  className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition text-xs font-normal flex items-center space-x-1"
+                  disabled={loading}
+                  title="Cancel"
+                >
+                  <FaTimes className="text-sm" />
+                  <span>Cancel</span>
+                </button>
+              </>
+            )}
+
+            {/* EDIT/CANCEL BUTTON */}
+            {!newEmployeeRate && (
+              <>
+                <button
+                  onClick={() =>
+                    isEmployeeEditing
+                      ? cancelEmployeeEditing()
+                      : setIsEmployeeEditing(true)
+                  }
+                  className={`${
+                    isEmployeeEditing
+                      ? "bg-gray-500 hover:bg-gray-600"
+                      : "bg-yellow-500 hover:bg-yellow-600"
+                  } text-white px-3 py-1 rounded text-xs font-normal transition flex items-center space-x-1`}
+                  disabled={loading || employeeBillingRates.length === 0}
+                  title={
+                    isEmployeeEditing ? "Cancel Editing" : "Edit Bill Rates"
+                  }
+                >
+                  {isEmployeeEditing ? (
+                    <>
+                      <FaTimes className="text-sm" />
+                      <span>Cancel</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaEdit className="text-sm" />
+                      <span>Edit</span>
+                    </>
+                  )}
+                </button>
+
+                {/* SAVE BUTTON (only visible in edit mode) */}
+                {isEmployeeEditing && (
+                  <button
+                    onClick={handleUpdateAllEmployeeChanges} // implement as needed
+                    className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition flex items-center space-x-1"
+                    disabled={loading}
+                    title="Save Changes"
+                  >
+                    <FaSave className="text-sm" />
+                    <span>Save</span>
+                  </button>
+                )}
+              </>
+            )}
+
+            {/* DELETE SELECTED (always visible) */}
+            <button
+              onClick={handleDeleteEmployee} // implement as needed
+              className="bg-red-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-red-600 transition flex items-center space-x-1"
+              disabled={
+                loading || !Object.values(selectedEmployeeRows).some(Boolean)
+              }
+              title="Delete Selected"
+            >
+              <FaTrash className="text-sm" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
+
         <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-gray-100">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal whitespace-nowrap">
-                  Lookup Type
+                <th className="border p-2 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      employeeBillingRates.length > 0 &&
+                      Object.values(selectedEmployeeRows).length ===
+                        employeeBillingRates.length &&
+                      Object.values(selectedEmployeeRows).every(Boolean)
+                    }
+                    onChange={() => {
+                      if (
+                        employeeBillingRates.length > 0 &&
+                        Object.values(selectedEmployeeRows).length ===
+                          employeeBillingRates.length &&
+                        Object.values(selectedEmployeeRows).every(Boolean)
+                      ) {
+                        setSelectedEmployeeRows({});
+                      } else {
+                        const allSelected = {};
+                        employeeBillingRates.forEach((item) => {
+                          allSelected[item.id] = true;
+                        });
+                        setSelectedEmployeeRows(allSelected);
+                      }
+                    }}
+                  />
                 </th>
-                <th className="border p-2 font-normal">Employee</th>
-                <th className="border p-2 font-normal">Employee Name</th>
-                <th className="border p-2 font-normal">PLC</th>
-                <th className="border p-2 font-normal">PLC Description</th>
-                <th className="border p-2 font-normal">Bill Rate</th>
-                <th className="border p-2 font-normal">Rate Type</th>
-                <th className="border p-2 font-normal">Start Date</th>
-                <th className="border p-2 font-normal">End Date</th>
-                <th className="border p-2 font-normal">Actions</th>
+                <th className="border p-2">Employee</th>
+                <th className="border p-2">Employee Name</th>
+                <th className="border p-2">PLC</th>
+                <th className="border p-2">PLC Description</th>
+                <th className="border p-2">Bill Rate</th>
+                <th className="border p-2">Rate Type</th>
+                <th className="border p-2">Start Date</th>
+                <th className="border p-2">End Date</th>
               </tr>
             </thead>
             <tbody>
               {newEmployeeRate && (
-                <tr className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0">
-                  <td className="border p-2 sm:w-1/8">
-                    <select
-                      value={newEmployeeRate.lookupType}
-                      onChange={(e) =>
-                        handleNewEmployeeRateChange(
-                          "lookupType",
-                          e.target.value
-                        )
-                      }
-                      className="w-full p-1 border rounded text-xs"
-                    >
-                      {lookupTypeOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border p-2 sm:w-1/8">
+                <tr>
+                  {/* Checkbox column for alignment */}
+                  <td className="border p-2 text-center"></td>
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newEmployeeRate.empId || ""}
@@ -4663,32 +2572,10 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     {newEmployeeRate.employeeName || ""}
                   </td>
-                  {/* <td className="border p-2 sm:w-1/8">
-                    <input
-                      type="text"
-                      value={newEmployeeRate.plc || ""}
-                      onChange={(e) => {
-                        handleNewEmployeeRateChange("plc", e.target.value);
-                        setPlcSearch(e.target.value);
-                      }}
-                      className="w-full p-1 border rounded text-xs"
-                      list="plc-list"
-                    />
-                    <datalist id="plc-list">
-                      {plcs.map((plc) => (
-                        <option
-                          key={plc.laborCategoryCode}
-                          value={plc.laborCategoryCode}
-                        >
-                          {plc.description}
-                        </option>
-                      ))}
-                    </datalist>
-                  </td> */}
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newEmployeeRate.plc || ""}
@@ -4710,28 +2597,17 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     {plcs.find(
                       (plc) => plc.laborCategoryCode === newEmployeeRate.plc
                     )?.description || ""}
                   </td>
-                  {/* <td className="border p-2 sm:w-1/8">
-                    <input
-                      type="number"
-                      value={newEmployeeRate.billRate || ""}
-                      onChange={(e) =>
-                        handleNewEmployeeRateChange("billRate", e.target.value)
-                      }
-                      className="w-full p-1 border rounded text-xs"
-                    />
-                  </td> */}
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newEmployeeRate.billRate || ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        // ✅ allow only digits, optional commas, optional decimal
                         if (/^[0-9,]*\.?[0-9]*$/.test(val) || val === "") {
                           handleNewEmployeeRateChange("billRate", val);
                         }
@@ -4752,7 +2628,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-1 border rounded text-xs"
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <select
                       value={newEmployeeRate.rateType}
                       onChange={(e) =>
@@ -4767,7 +2643,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </select>
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="date"
                       value={newEmployeeRate.startDate || ""}
@@ -4779,7 +2655,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       max={selectedPlan.projEndDt}
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="date"
                       value={newEmployeeRate.endDate || ""}
@@ -4788,194 +2664,55 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       }
                       className="w-full p-1 border rounded text-xs"
                       min={
-                        handleNewEmployeeRateChange.startDate ||
-                        selectedPlan.projStartDt
+                        newEmployeeRate.startDate || selectedPlan.projStartDt
                       }
                       max={selectedPlan.projEndDt}
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/8">
-                    <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                      <button
-                        onClick={handleSaveNewEmployeeRate}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition w-full sm:w-auto"
-                        disabled={loading}
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setNewEmployeeRate(null)}
-                        className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-gray-600 transition w-full sm:w-auto"
-                        disabled={loading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               )}
+
               {loadingEmployee ? (
                 <tr>
-                  <td colSpan="10" className="border p-2 text-center">
+                  <td colSpan="9" className="border p-2 text-center">
                     Loading...
                   </td>
                 </tr>
               ) : employeeBillingRates.length === 0 && !newEmployeeRate ? (
                 <tr>
-                  <td colSpan="10" className="border p-2 text-center">
+                  <td colSpan="9" className="border p-2 text-center">
                     No data available
                   </td>
                 </tr>
               ) : (
                 employeeBillingRates.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
-                  >
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <select
-                          value={
-                            editEmployeeFields[item.id]?.lookupType ??
-                            item.lookupType
-                          }
-                          onChange={(e) =>
-                            handleNewEmployeeRateChange(
-                              "lookupType",
-                              e.target.value,
-                              item.id
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                        >
-                          {lookupTypeOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{item.lookupType}</span>
-                      )}
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={item.empId}
-                          onChange={(e) =>
-                            handleNewEmployeeRateChange(
-                              "empId",
-                              e.target.value,
-                              item.id
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                          list="employee-list"
-                          disabled={employees.length === 0}
-                        />
-                      ) : (
-                        <span>{item.empId}</span>
-                      )}
-                      <datalist id="employee-list">
-                        {employees.map((emp) => (
-                          <option key={emp.empId} value={emp.empId}>
-                            {emp.employeeName}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      <span>{item.employeeName}</span>
-                    </td>
-                    {/* <td className="border p-2 sm:w-1/8">
+                  <tr key={item.id}>
+                    <td className="border p-2 text-center">
                       <input
-                        type="text"
-                        value={item.plc}
-                        onChange={(e) => {
-                          handleNewEmployeeRateChange(
-                            "plc",
-                            e.target.value,
-                            item.id
-                          );
-                          setPlcSearch(e.target.value);
+                        type="checkbox"
+                        checked={!!selectedEmployeeRows[item.id]}
+                        onChange={() => {
+                          setSelectedEmployeeRows((prev) => ({
+                            ...prev,
+                            [item.id]: !prev[item.id],
+                          }));
                         }}
-                        className="w-full p-1 border rounded text-xs"
-                        list="plc-list"
-                        disabled
                       />
-                      <datalist id="plc-list">
-                        {plcs.map((plc) => (
-                          <option
-                            key={plc.laborCategoryCode}
-                            value={plc.laborCategoryCode}
-                          >
-                            {plc.description}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td> */}
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={editEmployeeFields[item.id]?.plc || item.plc}
-                          onChange={(e) => {
-                            handleNewEmployeeRateChange(
-                              "plc",
-                              e.target.value,
-                              item.id
-                            );
-                            setPlcSearch(e.target.value);
-                          }}
-                          className="w-full p-1 border rounded text-xs"
-                          list="plc-list"
-                        />
-                      ) : (
-                        <span>{item.plc}</span>
-                      )}
-                      <datalist id="plc-list">
-                        {plcs.map((plc) => (
-                          <option
-                            key={plc.laborCategoryCode}
-                            value={plc.laborCategoryCode}
-                          >
-                            {plc.description}
-                          </option>
-                        ))}
-                      </datalist>
                     </td>
-                    <td className="border p-2 sm:w-1/8">
-                      <span>
-                        {plcs.find((plc) => plc.laborCategoryCode === item.plc)
-                          ?.description || item.plcDescription}
-                      </span>
+                    <td className="border p-2">{item.empId}</td>
+                    <td className="border p-2">{item.employeeName}</td>
+                    <td className="border p-2">{item.plc}</td>
+                    <td className="border p-2">
+                      {plcs.find((plc) => plc.laborCategoryCode === item.plc)
+                        ?.description || item.plcDescription}
                     </td>
-                    {/* <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={editEmployeeBillRate[item.id] ?? item.billRate}
-                          onChange={(e) =>
-                            handleEmployeeBillRateChange(
-                              item.id,
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                        />
-                      ) : (
-                        <span>{item.billRate}</span>
-                      )}
-                    </td> */}
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
+                    <td className="border p-2">
+                      {isEmployeeEditing ? (
                         <input
                           type="text"
                           value={editEmployeeBillRate[item.id] ?? item.billRate}
                           onChange={(e) => {
                             const val = e.target.value;
-                            // ✅ allow only digits, optional commas, optional decimal
                             if (/^[0-9,]*\.?[0-9]*$/.test(val) || val === "") {
                               handleEmployeeBillRateChange(item.id, val);
                             }
@@ -5002,170 +2739,9 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
-
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <select
-                          value={
-                            editEmployeeFields[item.id]?.rateType ??
-                            item.rateType
-                          }
-                          onChange={(e) =>
-                            handleNewEmployeeRateChange(
-                              "rateType",
-                              e.target.value,
-                              item.id
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                        >
-                          {rateTypeOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{item.rateType}</span>
-                      )}
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <input
-                          type="date"
-                          value={
-                            editEmployeeFields[item.id]?.startDate ??
-                            item.startDate
-                          }
-                          onChange={(e) =>
-                            handleNewEmployeeRateChange(
-                              "startDate",
-                              e.target.value,
-                              item.id
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                          min={selectedPlan.projStartDt}
-                          max={selectedPlan.projEndDt}
-                        />
-                      ) : (
-                        <span>{item.startDate}</span>
-                      )}
-                    </td>
-
-                    <td className="border p-2 sm:w-1/8">
-                      {editingEmployeeRowId === item.id ? (
-                        <input
-                          type="date"
-                          value={
-                            editEmployeeFields[item.id]?.endDate ??
-                            item.endDate ??
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleNewEmployeeRateChange(
-                              "endDate",
-                              e.target.value,
-                              item.id
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                          min={
-                            handleNewEmployeeRateChange.startDate ||
-                            selectedPlan.projStartDt
-                          }
-                          max={selectedPlan.projEndDt}
-                        />
-                      ) : (
-                        <span>{item.endDate || ""}</span>
-                      )}
-                    </td>
-                    {/* <td className="border p-2 sm:w-1/8">
-                      <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                        <button
-                          onClick={() =>
-                            handleUpdateEmployee(item.id, {
-                              ...item,
-                              billRate:
-                                editEmployeeBillRate[item.id] || item.billRate,
-                            })
-                          }
-                          className="bg-blue-200 text-blue-800 px-3 py-1 rounded text-xs font-normal hover:bg-blue-300 transition w-full sm:w-auto"
-                          disabled={loading || !item.id}
-                        >
-                          {editingEmployeeRowId === item.id ? "Save" : "Edit"}
-                        </button>
-                        <button
-                          onClick={() => handleDeleteEmployee(item.id)}
-                          className="bg-gray-200 text-gray-800 px-3 py-1 rounded text-xs font-normal hover:bg-gray-300 transition w-full sm:w-auto"
-                          disabled={loading || !item.id}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td> */}
-                    <td className="border p-2 sm:w-1/8">
-                      <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                        {editingEmployeeRowId === item.id ? (
-                          <>
-                            <button
-                              onClick={() =>
-                                handleUpdateEmployee(item.id, {
-                                  ...item,
-                                  billRate:
-                                    editEmployeeBillRate[item.id] ||
-                                    item.billRate,
-                                })
-                              }
-                              className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loadingAction[item.id]}
-                              title="Save"
-                            >
-                              {loadingAction[item.id] ? (
-                                <span className="animate-spin">⌛</span>
-                              ) : (
-                                <FaSave className="text-sm" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => setEditingEmployeeRowId(null)}
-                              className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loadingAction[item.id]}
-                              title="Cancel"
-                            >
-                              <FaTimes className="text-sm" />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEditEmployeeRow(item.id)}
-                              className="bg-blue-200 text-blue-800 p-2 rounded hover:bg-blue-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loadingAction[item.id]}
-                              title="Edit"
-                            >
-                              {loadingAction[item.id] ? (
-                                <span className="animate-spin">⌛</span>
-                              ) : (
-                                <FaEdit className="text-sm" />
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEmployee(item.id)}
-                              className="bg-gray-200 text-gray-800 p-2 rounded hover:bg-gray-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loadingAction[item.id]}
-                              title="Delete"
-                            >
-                              {loadingAction[item.id] ? (
-                                <span className="animate-spin">⌛</span>
-                              ) : (
-                                <FaTrash className="text-sm" />
-                              )}
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                    <td className="border p-2">{item.rateType}</td>
+                    <td className="border p-2">{item.startDate}</td>
+                    <td className="border p-2">{item.endDate || ""}</td>
                   </tr>
                 ))
               )}
@@ -5183,72 +2759,146 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           <h3 className="text-sm font-semibold">
             Vendor Billing Rates Schedule
           </h3>
-          <div className="w-1/5"></div>
-          <button
-            onClick={handleAddVendorRow}
-            className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition mr-4"
-            disabled={loading || newVendorRate}
-          >
-            Add
-          </button>
+          <div className="w-1/5 flex justify-end items-center space-x-2">
+            <button
+              onClick={handleAddVendorRow}
+              className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition"
+              disabled={loading || newVendorRate}
+            >
+              Add
+            </button>
+            {newVendorRate && (
+              <>
+                <button
+                  onClick={handleSaveNewVendorRate}
+                  className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 transition text-xs font-normal flex items-center space-x-1"
+                  disabled={loading}
+                  title="Save"
+                >
+                  <FaSave className="text-sm" />
+                  <span>Save</span>
+                </button>
+                <button
+                  onClick={() => setNewVendorRate(null)}
+                  className="bg-gray-500 text-white px-3 py-1 rounded hover:bg-gray-600 transition text-xs font-normal flex items-center space-x-1"
+                  disabled={loading}
+                  title="Cancel"
+                >
+                  <FaTimes className="text-sm" />
+                  <span>Cancel</span>
+                </button>
+              </>
+            )}
+            {!newVendorRate && (
+              <>
+                <button
+                  onClick={() =>
+                    isVendorEditing
+                      ? cancelVendorEditing()
+                      : setIsVendorEditing(true)
+                  }
+                  className={`${
+                    isVendorEditing
+                      ? "bg-gray-500 hover:bg-gray-600"
+                      : "bg-yellow-500 hover:bg-yellow-600"
+                  } text-white px-3 py-1 rounded text-xs font-normal transition flex items-center space-x-1`}
+                  disabled={loading || vendorBillingRates.length === 0}
+                  title={isVendorEditing ? "Cancel Editing" : "Edit Bill Rates"}
+                >
+                  {isVendorEditing ? (
+                    <>
+                      <FaTimes className="text-sm" />
+                      <span>Cancel</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaEdit className="text-sm" />
+                      <span>Edit</span>
+                    </>
+                  )}
+                </button>
+                {isVendorEditing && (
+                  <button
+                    onClick={handleUpdateAllVendors} // implement as needed
+                    className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition flex items-center space-x-1"
+                    disabled={loading}
+                    title="Save Changes"
+                  >
+                    <FaSave className="text-sm" />
+                    <span>Save</span>
+                  </button>
+                )}
+              </>
+            )}
+            <button
+              onClick={handleDeleteSelectedVendors} // implement as needed
+              className="bg-red-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-red-600 transition flex items-center space-x-1"
+              disabled={
+                loading || !Object.values(selectedVendorRows).some(Boolean)
+              }
+              title="Delete Selected"
+            >
+              <FaTrash className="text-sm" />
+              <span>Delete</span>
+            </button>
+          </div>
         </div>
         <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
           <table className="w-full text-xs border-collapse">
             <thead className="sticky top-0 z-10 bg-gray-100">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal sm:w-1/8 whitespace-nowrap">
-                  Lookup Type
+                <th className="border p-2 text-center">
+                  <input
+                    type="checkbox"
+                    checked={
+                      vendorBillingRates.length > 0 &&
+                      Object.keys(selectedVendorRows).length ===
+                        vendorBillingRates.length &&
+                      Object.values(selectedVendorRows).every(Boolean)
+                    }
+                    onChange={() => {
+                      if (
+                        vendorBillingRates.length > 0 &&
+                        Object.keys(selectedVendorRows).length ===
+                          vendorBillingRates.length &&
+                        Object.values(selectedVendorRows).every(Boolean)
+                      ) {
+                        // Deselect all
+                        setSelectedVendorRows({});
+                      } else {
+                        // Select all
+                        const allSelected = {};
+                        vendorBillingRates.forEach((item) => {
+                          allSelected[item.id] = true;
+                        });
+                        setSelectedVendorRows(allSelected);
+                      }
+                    }}
+                  />
                 </th>
-                <th className="border p-2 font-normal sm:w-1/8">Vendor</th>
-                <th className="border p-2 font-normal sm:w-1/8 whitespace-nowrap">
-                  Vendor Name
-                </th>
-                <th className="border p-2 font-normal sm:w-1/8">
-                  Vendor Employee ID
-                </th>
-                <th className="border p-2 font-normal sm:w-1/8 whitespace-nowrap">
-                  Vendor Employee Name
-                </th>
-                <th className="border p-2 font-normal sm:w-1/8">PLC</th>
-                <th className="border p-2 font-normal sm:w-1/8">
-                  PLC Description
-                </th>
-                <th className="border p-2 font-normal sm:w-1/8">Bill Rate</th>
-                <th className="border p-2 font-normal whitespace-nowrap">
-                  Rate Type
-                </th>
-                <th className="border p-2 font-normal whitespace-nowrap">
-                  Start Date
-                </th>
-                <th className="border p-2 font-normal whitespace-nowrap">
-                  End Date
-                </th>
-                <th className="border p-2 font-normal sm:w-1/8">Actions</th>
+                <th className="border p-2">Vendor</th>
+                <th className="border p-2">Vendor Name</th>
+                <th className="border p-2">Vendor Employee ID</th>
+                <th className="border p-2">Vendor Employee Name</th>
+                <th className="border p-2">PLC</th>
+                <th className="border p-2">PLC Description</th>
+                <th className="border p-2">Bill Rate</th>
+                <th className="border p-2">Rate Type</th>
+                <th className="border p-2">Start Date</th>
+                <th className="border p-2">End Date</th>
               </tr>
             </thead>
             <tbody>
               {newVendorRate && (
-                <tr className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0">
-                  <td className="border p-2 sm:w-1/8">
-                    <select
-                      value={newVendorRate.lookupType}
-                      onChange={(e) =>
-                        handleNewVendorRateChange("lookupType", e.target.value)
-                      }
-                      className="w-full p-2 border rounded text-xs"
-                    >
-                      {vendorLookupTypeOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="border p-2 sm:w-1/8">
+                <tr>
+                  {/* Checkbox column for alignment */}
+                  <td className="border p-2 text-center"></td>
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newVendorRate.vendorId || ""}
                       onChange={(e) => {
+                        // find the vendor for lookup population
                         const selectedVend = vendorEmployees.find(
                           (v) => v.vendId === e.target.value
                         );
@@ -5271,7 +2921,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     />
                     <datalist id="vendor-list">
                       {vendorEmployees.map((v, index) => (
-                        // <option key={`${v.vendId}-${v.empId}`} value={v.vendId}>
                         <option
                           key={`${v.vendId}-${v.empId}-${index}`}
                           value={v.vendId}
@@ -5281,7 +2930,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newVendorRate.vendorName || ""}
@@ -5292,7 +2941,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs bg-gray-100"
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newVendorRate.vendorEmployee || ""}
@@ -5306,7 +2955,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs bg-gray-100"
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/80">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newVendorRate.vendorEmployeeName || ""}
@@ -5320,7 +2969,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs bg-gray-100"
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/18">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newVendorRate.plc || ""}
@@ -5328,7 +2977,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         handleNewVendorRateChange("plc", e.target.value);
                         setPlcSearch(e.target.value);
                       }}
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
+                      className="w-full p-2 border rounded text-xs"
                       list="plc-list"
                     />
                     <datalist id="plc-list">
@@ -5342,48 +2991,20 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     {plcs.find(
                       (plc) => plc.laborCategoryCode === newVendorRate.plc
                     )?.description || ""}
                   </td>
-                  {/* <td className="border p-2 sm:w-1/18">
+                  <td className="border p-2">
                     <input
                       type="text"
                       value={newVendorRate.billRate || ""}
-                      onChange={(e) =>
-                        handleNewVendorRateChange("billRate", e.target.value)
-                      }
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
-                    />
-                  </td> */}
-                  {/* <td>
-                    <input
-                      type="number"
-                      value={newVendorRate.billRate || ""}
                       onChange={(e) => {
                         const val = e.target.value;
-                        if (/^\d*\.?\d*$/.test(val)) {
-                          // allows only numbers + decimal
+                        if (/^[0-9,]*\.?[0-9]*$/.test(val) || val === "") {
                           handleNewVendorRateChange("billRate", val);
                         }
-                      }}
-                      className="w-full p-2 border rounded text-xs"
-                    />
-                  </td> */}
-                  <td>
-                    <input
-                      type="text" // switch to text so commas work
-                      value={newVendorRate.billRate || ""}
-                      onChange={(e) => {
-                        const val = e.target.value;
-
-                        // ✅ allow only numbers, commas, and decimal
-                        if (!/^[0-9,]*\.?[0-9]*$/.test(val) && val !== "") {
-                          return; // ignore invalid input
-                        }
-
-                        handleNewVendorRateChange("billRate", val);
                       }}
                       onBlur={() => {
                         if (newVendorRate.billRate) {
@@ -5391,7 +3012,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                             newVendorRate.billRate.replace(/,/g, "")
                           );
                           if (!isNaN(num) && num > 0) {
-                            // ✅ format with commas and 2 decimals
                             handleNewVendorRateChange(
                               "billRate",
                               num.toLocaleString("en-US", {
@@ -5408,13 +3028,13 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs"
                     />
                   </td>
-                  <td className="border p-2 ">
+                  <td className="border p-2">
                     <select
                       value={newVendorRate.rateType}
                       onChange={(e) =>
                         handleNewVendorRateChange("rateType", e.target.value)
                       }
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
+                      className="w-full p-2 border rounded text-xs"
                     >
                       {rateTypeOptions.map((option) => (
                         <option key={option} value={option}>
@@ -5423,268 +3043,73 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </select>
                   </td>
-
-                  {/* <td className="border p-2 sm:w-1/18">
+                  <td className="border p-2">
                     <input
                       type="date"
                       value={newVendorRate.startDate || ""}
                       onChange={(e) =>
                         handleNewVendorRateChange("startDate", e.target.value)
                       }
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
+                      className="w-full p-2 border rounded text-xs"
+                      min={selectedPlan.projStartDt}
+                      max={selectedPlan.projEndDt}
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/8">
+                  <td className="border p-2">
                     <input
                       type="date"
                       value={newVendorRate.endDate || ""}
                       onChange={(e) =>
                         handleNewVendorRateChange("endDate", e.target.value)
                       }
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
+                      className="w-full p-2 border rounded text-xs"
+                      min={newVendorRate.startDate || selectedPlan.projStartDt}
+                      max={selectedPlan.projEndDt}
                     />
-                  </td> */}
-
-                  <td className="border p-2 sm:w-1/8">
-                    <input
-                      type="date"
-                      value={newVendorRate.startDate || ""}
-                      onChange={(e) =>
-                        handleNewVendorRateChange("startDate", e.target.value)
-                      }
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
-                      min={selectedPlan.projStartDt} // cannot be before project start
-                      max={selectedPlan.projEndDt} // cannot be after project end
-                    />
-                  </td>
-
-                  <td className="border p-2 sm:w-1/8">
-                    <input
-                      type="date"
-                      value={newVendorRate.endDate || ""}
-                      onChange={(e) =>
-                        handleNewVendorRateChange("endDate", e.target.value)
-                      }
-                      className="w-full p-2 border rounded text-xs bg-gray-100"
-                      min={newVendorRate.startDate || selectedPlan.projStartDt} // must be >= startDate
-                      max={selectedPlan.projEndDt} // cannot be after project end
-                    />
-                  </td>
-
-                  <td className="border p-2 sm:w-1/10">
-                    <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                      <button
-                        onClick={handleSaveNewVendorRate}
-                        className="bg-green-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-green-600 transition w-full sm:w-auto"
-                        disabled={loading}
-                      >
-                        Save
-                      </button>
-                      <button
-                        onClick={() => setNewVendorRate(null)}
-                        className="bg-gray-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-gray-600 transition w-full sm:w-auto"
-                        disabled={loading}
-                      >
-                        Cancel
-                      </button>
-                    </div>
                   </td>
                 </tr>
               )}
               {loadingVendor ? (
                 <tr>
-                  <td colSpan="12" className="border p-2 text-center">
+                  <td colSpan="11" className="border p-2 text-center">
                     Loading...
                   </td>
                 </tr>
               ) : vendorBillingRates.length === 0 && !newVendorRate ? (
                 <tr>
-                  <td colSpan="12" className="border p-2 text-center">
+                  <td colSpan="11" className="border p-2 text-center">
                     No data available
                   </td>
                 </tr>
               ) : (
                 vendorBillingRates.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
-                  >
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <select
-                          value={
-                            editVendorFields[item.id]?.lookupType ??
-                            item.lookupType
-                          }
-                          onChange={(e) =>
-                            handleVendorFieldChange(
-                              item.id,
-                              "lookupType",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-1 border rounded text-xs"
-                        >
-                          {vendorLookupTypeOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{item.lookupType}</span>
-                      )}
+                  <tr key={item.id}>
+                    <td className="border p-2 text-center">
+                      <input
+                        type="checkbox"
+                        checked={!!selectedVendorRows[item.id]}
+                        onChange={() => {
+                          setSelectedVendorRows((prev) => ({
+                            ...prev,
+                            [item.id]: !prev[item.id],
+                          }));
+                        }}
+                      />
                     </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={
-                            editVendorFields[item.id]?.vendorId || item.vendorId
-                          }
-                          onChange={(e) =>
-                            handleVendorFieldChange(
-                              item.id,
-                              "vendorId",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-2 border rounded text-xs"
-                          list="vendor-list"
-                        />
-                      ) : (
-                        <span>{item.vendorId}</span>
-                      )}
-                      <datalist id="vendor-list">
-                        {vendorEmployees.map((v) => (
-                          <option
-                            key={`${v.vendId}-${v.empId}`}
-                            value={v.vendId}
-                          >
-                            {v.employeeName}
-                          </option>
-                        ))}
-                      </datalist>
+                    <td className="border p-2">{item.vendorId}</td>
+                    <td className="border p-2">{item.vendorName}</td>
+                    <td className="border p-2">{item.vendorEmployee}</td>
+                    <td className="border p-2">{item.vendorEmployeeName}</td>
+                    <td className="border p-2">{item.plc}</td>
+                    <td className="border p-2">
+                      {plcs.find((plc) => plc.laborCategoryCode === item.plc)
+                        ?.description || item.plcDescription}
                     </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
+                    <td className="border p-2">
+                      {isVendorEditing ? (
                         <input
                           type="text"
-                          value={
-                            editVendorFields[item.id]?.vendorName ||
-                            item.vendorName
-                          }
-                          readOnly
-                          className="w-full p-2 border rounded text-xs bg-gray-100"
-                        />
-                      ) : (
-                        <span>{item.vendorName}</span>
-                      )}
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={
-                            editVendorFields[item.id]?.vendorEmployee ||
-                            item.vendorEmployee
-                          }
-                          readOnly
-                          className="w-full p-2 border rounded text-xs bg-gray-100"
-                        />
-                      ) : (
-                        <span>{item.vendorEmployee}</span>
-                      )}
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={
-                            editVendorFields[item.id]?.vendorEmployeeName ||
-                            item.vendorEmployeeName
-                          }
-                          readOnly
-                          className="w-full p-2 border rounded text-xs bg-gray-100"
-                        />
-                      ) : (
-                        <span>{item.vendorEmployeeName}</span>
-                      )}
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={editVendorFields[item.id]?.plc || item.plc}
-                          onChange={(e) => {
-                            handleVendorFieldChange(
-                              item.id,
-                              "plc",
-                              e.target.value
-                            );
-                            setPlcSearch(e.target.value);
-                          }}
-                          className="w-full p-2 border rounded text-xs"
-                          list="plc-list"
-                        />
-                      ) : (
-                        <span>{item.plc}</span>
-                      )}
-                      <datalist id="plc-list">
-                        {plcs.map((plc) => (
-                          <option
-                            key={plc.laborCategoryCode}
-                            value={plc.laborCategoryCode}
-                          >
-                            {plc.description}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={
-                            editVendorFields[item.id]?.plcDescription ||
-                            item.plcDescription ||
-                            plcs.find(
-                              (plc) =>
-                                plc.laborCategoryCode ===
-                                (editVendorFields[item.id]?.plc || item.plc)
-                            )?.description ||
-                            ""
-                          }
-                          readOnly
-                          className="w-full p-2 border rounded text-xs bg-gray-100"
-                        />
-                      ) : (
-                        <span>{item.plcDescription}</span>
-                      )}
-                    </td>
-                    {/* <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={
-                            editVendorBillRate[item.id] ?? item.billRate ?? ""
-                          }
-                          onChange={(e) =>
-                            handleVendorBillRateChange(item.id, e.target.value)
-                          }
-                          className="w-full p-2 border rounded text-xs"
-                        />
-                      ) : (
-                        <span>{item.billRate}</span>
-                      )}
-                    </td> */}
-                    <td className="border p-2 sm:w-1/8">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="text"
-                          value={
-                            editVendorBillRate[item.id] ?? item.billRate ?? ""
-                          }
+                          value={editVendorBillRate[item.id] ?? item.billRate}
                           onChange={(e) =>
                             handleVendorBillRateChange(item.id, e.target.value)
                           }
@@ -5703,7 +3128,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                                 })
                               );
                             } else if (raw) {
-                              toast.error("Bill Rate must be greater than 0.");
+                              toast.error("Bill Rate must be greater than 0");
                             }
                           }}
                           className="w-full p-2 border rounded text-xs"
@@ -5712,146 +3137,12 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
-                    <td className="border p-2">
-                      {editingVendorRowId === item.id ? (
-                        <select
-                          value={
-                            editVendorFields[item.id]?.rateType ?? item.rateType
-                          }
-                          onChange={(e) =>
-                            handleVendorFieldChange(
-                              item.id,
-                              "rateType",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-2 border rounded text-xs"
-                        >
-                          {rateTypeOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{item.rateType}</span>
-                      )}
-                    </td>
-                    <td className="border p-2">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="date"
-                          value={
-                            editVendorFields[item.id]?.startDate ??
-                            item.startDate
-                          }
-                          onChange={(e) =>
-                            handleVendorFieldChange(
-                              item.id,
-                              "startDate",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-2 border rounded text-xs"
-                          min={selectedPlan.projStartDt} // cannot be before project start
-                          max={selectedPlan.projEndDt} // cannot be after project end
-                        />
-                      ) : (
-                        <span>{item.startDate}</span>
-                      )}
-                    </td>
-                    <td className="border p-2">
-                      {editingVendorRowId === item.id ? (
-                        <input
-                          type="date"
-                          value={
-                            editVendorFields[item.id]?.endDate ??
-                            item.endDate ??
-                            ""
-                          }
-                          onChange={(e) =>
-                            handleVendorFieldChange(
-                              item.id,
-                              "endDate",
-                              e.target.value
-                            )
-                          }
-                          className="w-full p-2 border rounded text-xs"
-                          min={
-                            handleVendorFieldChange.startDate ||
-                            selectedPlan.projStartDt
-                          } // must be >= startDate
-                          max={selectedPlan.projEndDt} // cannot be after project end
-                        />
-                      ) : (
-                        <span>{item.endDate || ""}</span>
-                      )}
-                    </td>
-
-                    <td className="border p-2 sm:w-1/8">
-                      <div className="flex flex-col sm:flex-row justify-center space-y-1 sm:space-y-0 sm:space-x-2">
-                        {editingVendorRowId === item.id ? (
-                          <>
-                            <button
-                              onClick={() => handleUpdateVendor(item.id)}
-                              className="bg-green-500 text-white p-2 rounded hover:bg-green-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loading}
-                              title="Save"
-                            >
-                              <FaSave className="text-sm" />
-                            </button>
-                            <button
-                              onClick={() => setEditingVendorRowId(null)}
-                              className="bg-gray-500 text-white p-2 rounded hover:bg-gray-600 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loadingAction[item.id]}
-                              title="Cancel"
-                            >
-                              <FaTimes className="text-sm" />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEditVendorRow(item.id)}
-                              className="bg-blue-200 text-blue-800 p-2 rounded hover:bg-blue-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              disabled={loadingAction[item.id]}
-                              title="Edit"
-                            >
-                              <FaEdit className="text-sm" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteVendor(item.id)}
-                              className="bg-gray-200 text-gray-800 p-2 rounded hover:bg-gray-300 transition w-full sm:w-8 h-8 flex items-center justify-center"
-                              // disabled={loadingAction[item.id]}
-                              disabled={loading}
-                              title="Delete"
-                            >
-                              {/* {loadingAction[item.id] ? (
-                              <span className="animate-spin">⌛</span>
-                            ) : (
-                              <FaTrash className="text-sm" />
-                            )} */}
-                              <FaTrash className="text-sm" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+                    <td className="border p-2">{item.rateType}</td>
+                    <td className="border p-2">{item.startDate}</td>
+                    <td className="border p-2">{item.endDate}</td>
                   </tr>
                 ))
               )}
-
-              {/* <tr>
-                <td colSpan="12" className="border p-2">
-                  <button
-                    onClick={handleAddVendorRow}
-                    className="bg-blue-500 text-white px-3 py-1 rounded text-xs font-normal hover:bg-blue-600 transition"
-                    disabled={loading || newVendorRate}
-                  >
-                    Add
-                  </button>
-                </td>
-              </tr> */}
             </tbody>
           </table>
         </div>
