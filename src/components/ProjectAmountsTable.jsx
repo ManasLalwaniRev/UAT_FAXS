@@ -2203,13 +2203,211 @@ const handleSelectAll = (isSelected) => {
   }
 };
 
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type",
+//     "ID",
+//     "Name",
+//     "Account",
+//     "Account Name",
+//     "Organization",
+//     "Rev",
+//     "Brd",
+//     "Status",
+//   ];
+
+//   // Store month metadata for matching during paste
+//   const monthMetadata = [];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//     monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = employees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthAmounts = getMonthAmounts(emp);
+//         const forecastValue = monthAmounts[uniqueKey]?.value;
+//         const value =
+//           inputValue !== undefined && inputValue !== ""
+//             ? inputValue
+//             : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       setCopiedRowsData(() => structuredData);
+//       setCopiedMonthMetadata(() => monthMetadata);
+//       setHasClipboardData(() => true);
+
+//       toast.success(`Copied ${structuredData.length} rows!`, {
+//         autoClose: 3000,
+//       });
+
+//       Promise.resolve().then(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       });
+//     })
+//     .catch((err) => {
+//       console.error("Copy failed:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // COPY ALL DURATIONS (not filtered by fiscal year) - use spread to avoid mutation
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type",
+//     "ID",
+//     "Name",
+//     "Account",
+//     "Account Name",
+//     "Organization",
+//     "Rev",
+//     "Brd",
+//     "Status",
+//     "Total",
+//   ];
+
+//   // Store month metadata for matching during paste
+//   const monthMetadata = [];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//     monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = employees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev === true ? "✓" : "-",
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd === true ? "✓" : "-",
+//         employeeRow.status,
+//         employeeRow.total,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthAmounts = getMonthAmounts(emp);
+//         const forecastValue = monthAmounts[uniqueKey]?.value;
+        
+//         // Format the value properly
+//         let value = "0.00";
+//         if (inputValue !== undefined && inputValue !== "" && inputValue !== null) {
+//           value = parseFloat(inputValue).toFixed(2);
+//         } else if (forecastValue !== undefined && forecastValue !== "" && forecastValue !== null) {
+//           value = parseFloat(forecastValue).toFixed(2);
+//         }
+        
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       setCopiedRowsData(() => structuredData);
+//       setCopiedMonthMetadata(() => monthMetadata);
+//       setHasClipboardData(() => true);
+
+//       toast.success(`Copied ${structuredData.length} rows with all fiscal year data!`, {
+//         autoClose: 3000,
+//       });
+
+//       Promise.resolve().then(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       });
+//     })
+//     .catch((err) => {
+//       console.error("Copy failed:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
 const handleCopySelectedRows = () => {
   if (selectedRows.size === 0) {
     toast.info("No rows selected to copy.", { autoClose: 2000 });
     return;
   }
 
-  const sortedDurations = durations.sort((a, b) => {
+  // COPY ALL DURATIONS (not filtered by fiscal year) - use spread to avoid mutation
+  const sortedDurations = [...durations].sort((a, b) => {
     if (a.year !== b.year) return a.year - b.year;
     return a.monthNo - b.monthNo;
   });
@@ -2224,16 +2422,18 @@ const handleCopySelectedRows = () => {
     "Rev",
     "Brd",
     "Status",
+    "Total",
   ];
 
   // Store month metadata for matching during paste
   const monthMetadata = [];
 
+  // GENERATE MONTH NAMES CORRECTLY
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
   sortedDurations.forEach((duration) => {
-    const monthName = new Date(
-      duration.year,
-      duration.monthNo - 1
-    ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+    // Use direct month mapping instead of Date object
+    const monthName = `${monthNames[duration.monthNo - 1]} ${duration.year}`;
     headers.push(monthName);
     monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
   });
@@ -2252,9 +2452,10 @@ const handleCopySelectedRows = () => {
         employeeRow.acctId,
         employeeRow.acctName,
         employeeRow.orgId,
-        typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
-        typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+        typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev === true ? "✓" : "-",
+        typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd === true ? "✓" : "-",
         employeeRow.status,
+        employeeRow.total,
       ];
 
       sortedDurations.forEach((duration) => {
@@ -2262,10 +2463,15 @@ const handleCopySelectedRows = () => {
         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
         const monthAmounts = getMonthAmounts(emp);
         const forecastValue = monthAmounts[uniqueKey]?.value;
-        const value =
-          inputValue !== undefined && inputValue !== ""
-            ? inputValue
-            : forecastValue || "0.00";
+        
+        // Format the value properly
+        let value = "0.00";
+        if (inputValue !== undefined && inputValue !== "" && inputValue !== null) {
+          value = parseFloat(inputValue).toFixed(2);
+        } else if (forecastValue !== undefined && forecastValue !== "" && forecastValue !== null) {
+          value = parseFloat(forecastValue).toFixed(2);
+        }
+        
         rowData.push(value);
       });
 
@@ -2283,7 +2489,7 @@ const handleCopySelectedRows = () => {
       setCopiedMonthMetadata(() => monthMetadata);
       setHasClipboardData(() => true);
 
-      toast.success(`Copied ${structuredData.length} rows!`, {
+      toast.success(`Copied ${structuredData.length} rows with all fiscal year data!`, {
         autoClose: 3000,
       });
 
@@ -2298,6 +2504,109 @@ const handleCopySelectedRows = () => {
     });
 };
 
+// const handlePasteMultipleRows = () => {
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   const sortedDurations = [...durations]
+//     .filter((d) => {
+//       if (propFiscalYear === "All") return true;
+//       return d.year === parseInt(propFiscalYear);
+//     })
+//     .sort((a, b) => {
+//       if (a.year !== b.year) return a.year - b.year;
+//       return a.monthNo - b.monthNo;
+//     });
+
+//   const processedEntries = [];
+//   const processedAmountsArray = [];
+
+//   copiedRowsData.forEach((rowData) => {
+//     const [
+//       idTypeLabel,
+//       id,
+//       name,
+//       acctId,
+//       acctName,
+//       orgId,
+//       isRev,
+//       isBrd,
+//       status,
+//       ...monthValues
+//     ] = rowData;
+
+//     const idType =
+//       ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+//       idTypeLabel;
+
+//     let firstName = "";
+//     let lastName = "";
+
+//     if (idType === "Vendor" || idType === "Vendor Employee") {
+//       lastName = name;
+//     } else if (idType === "Employee") {
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0];
+//       lastName = nameParts.slice(1).join(" ");
+//     } else {
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       perHourRate: "",
+//       status: status || "ACT",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     const periodAmounts = {};
+//     const copiedAmountsMap = {};
+//     copiedMonthMetadata.forEach((meta, index) => {
+//       const key = `${meta.monthNo}_${meta.year}`;
+//       copiedAmountsMap[key] = monthValues[index];
+//     });
+
+//     sortedDurations.forEach((duration) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = copiedAmountsMap[uniqueKey];
+
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodAmounts[uniqueKey] = value;
+//       }
+//     });
+
+//     processedEntries.push(entry);
+//     processedAmountsArray.push(periodAmounts);
+//   });
+
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodAmountsArray(processedAmountsArray);
+
+//   processedEntries.forEach((entry, index) => {
+//     fetchSuggestionsForPastedEntry(index, entry);
+//   });
+
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+//   setCopiedMonthMetadata([]);
+
+//   toast.success(
+//     `Pasted ${processedEntries.length} entries for fiscal year ${propFiscalYear}!`,
+//     { autoClose: 3000 }
+//   );
+// };
 const handlePasteMultipleRows = () => {
   if (copiedRowsData.length === 0) {
     toast.error("No copied data available to paste", { autoClose: 2000 });
@@ -2308,15 +2617,11 @@ const handlePasteMultipleRows = () => {
     setShowNewForm(false);
   }
 
-  const sortedDurations = [...durations]
-    .filter((d) => {
-      if (propFiscalYear === "All") return true;
-      return d.year === parseInt(propFiscalYear);
-    })
-    .sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      return a.monthNo - b.monthNo;
-    });
+  // USE ALL DURATIONS (not filtered) - same as what was copied
+  const allDurations = [...durations].sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.monthNo - b.monthNo;
+  });
 
   const processedEntries = [];
   const processedAmountsArray = [];
@@ -2332,6 +2637,7 @@ const handlePasteMultipleRows = () => {
       isRev,
       isBrd,
       status,
+      total, // Added total column
       ...monthValues
     ] = rowData;
 
@@ -2366,15 +2672,11 @@ const handlePasteMultipleRows = () => {
     };
 
     const periodAmounts = {};
-    const copiedAmountsMap = {};
+    
+    // Map copied months directly using copiedMonthMetadata
     copiedMonthMetadata.forEach((meta, index) => {
-      const key = `${meta.monthNo}_${meta.year}`;
-      copiedAmountsMap[key] = monthValues[index];
-    });
-
-    sortedDurations.forEach((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      const value = copiedAmountsMap[uniqueKey];
+      const uniqueKey = `${meta.monthNo}_${meta.year}`;
+      const value = monthValues[index];
 
       if (value && value !== "0.00" && value !== "0" && value !== "") {
         periodAmounts[uniqueKey] = value;
@@ -2397,7 +2699,7 @@ const handlePasteMultipleRows = () => {
   setCopiedMonthMetadata([]);
 
   toast.success(
-    `Pasted ${processedEntries.length} entries for fiscal year ${propFiscalYear}!`,
+    `Pasted ${processedEntries.length} entries with all fiscal year data!`,
     { autoClose: 3000 }
   );
 };
