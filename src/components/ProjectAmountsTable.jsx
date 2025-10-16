@@ -101,28 +101,31 @@ const ProjectAmountsTable = ({
 const [editingRowIndex, setEditingRowIndex] = useState(null);
 const [hasUnsavedFieldChanges, setHasUnsavedFieldChanges] = useState(false);
 
+// Copy-paste functionality states
+const [selectedRows, setSelectedRows] = useState(new Set());
+const [showCopyButton, setShowCopyButton] = useState(false);
+const [hasClipboardData, setHasClipboardData] = useState(false);
+const [copiedRowsData, setCopiedRowsData] = useState([]);
+const [newEntries, setNewEntries] = useState([]);
+const [newEntryPeriodAmountsArray, setNewEntryPeriodAmountsArray] = useState([]);
+const [copiedMonthMetadata, setCopiedMonthMetadata] = useState([]);
+const [pastedEntrySuggestions, setPastedEntrySuggestions] = useState({});
+const [pastedEntryAccounts, setPastedEntryAccounts] = useState({});
+const [pastedEntryOrgs, setPastedEntryOrgs] = useState({});
+const isPastingRef = useRef(false);
+
+
 
   const isEditable = initialData.status === "In Progress";
   const planId = initialData.plId;
   const projectId = initialData.projId;
   const closedPeriod = initialData.closedPeriod;
-  // const isBudPlan = planType && planType.toUpperCase() === "BUD" ;
-  // const isFieldEditable =
-  //   planType &&
-  //   (planType.toUpperCase() === "BUD" || planType.toUpperCase() === "EAC");
-  // const isEAC = planType && planType.toUpperCase() === "EAC";
-  // After (apply everywhere in this component):
   const isBudPlan =
     (planType && planType.toUpperCase() === "BUD") ||
     planType?.toUpperCase() === "NBBUD";
   const isFieldEditable =
     planType && ["BUD", "NBBUD", "EAC"].includes(planType.toUpperCase());
   const isEAC = planType && planType.toUpperCase() === "EAC";
-  // const isFieldEditable = planType && planType.toUpperCase() === "BUD";
-
-  // const verticalScrollRef = useRef(null);
-  // const vfirstTableRef = useRef(null);
-  // const vlastTableRef = useRef(null);
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
   const scrollingLock = useRef(false);
@@ -405,201 +408,7 @@ useEffect(() => {
     }
   }, [showNewForm, isEditable]);
 
-  // useEffect(() => {
-  //   const fetchEmployees = async () => {
-  //     if (!projectId) {
-  //       console.warn("projectId is undefined, skipping employee fetch");
-  //       setEmployeeSuggestions([]);
-  //       return;
-  //     }
-  //     if (!showNewForm) {
-  //       console.log("New entry form is not open, skipping employee fetch");
-  //       setEmployeeSuggestions([]);
-  //       return;
-  //     }
-  //     console.log(`Fetching employees for projectId: ${projectId}`);
-  //     try {
-  //       const endpoint =
-  //         newEntry.idType === "Vendor" || newEntry.idType === "Vendor Employee"
-  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${projectId}`
-  //           : `${backendUrl}/Project/GetEmployeesByProject/${projectId}`;
-  //       const response = await axios.get(endpoint);
-  //       console.log("Employee suggestions response:", response.data);
-  //       const suggestions = Array.isArray(response.data)
-  //         ? response.data.map((emp) => {
-  //             if (newEntry.idType === "Vendor") {
-  //               return {
-  //                 emplId: emp.vendId,
-  //                 firstName: "",
-  //                 lastName: emp.employeeName || "",
-  //               };
-  //             } else if (newEntry.idType === "Vendor Employee") {
-  //               return {
-  //                 emplId: emp.empId,
-  //                 firstName: "",
-  //                 lastName: emp.employeeName || "",
-  //               };
-  //             } else {
-  //               const [lastName, firstName] = (emp.employeeName || "")
-  //                 .split(", ")
-  //                 .map((str) => str.trim());
-  //               return {
-  //                 emplId: emp.empId,
-  //                 firstName: firstName || "",
-  //                 lastName: lastName || "",
-  //                 orgId: emp.orgId,
-  //               };
-  //             }
-  //           })
-  //         : [];
-  //       setEmployeeSuggestions(suggestions);
-  //       console.log("Updated employeeSuggestions:", suggestions);
-  //     } catch (err) {
-  //       console.error("Error fetching employees:", err);
-  //       setEmployeeSuggestions([]);
-  //       toast.error(
-  //         `Failed to fetch ${
-  //           newEntry.idType === "Vendor" ||
-  //           newEntry.idType === "Vendor Employee"
-  //             ? "vendor "
-  //             : ""
-  //         }employee suggestions${
-  //           projectId
-  //             ? " for project ID " + projectId
-  //             : ". Project ID is missing."
-  //         }`,
-  //         {
-  //           toastId: "employee-fetch-error",
-  //           autoClose: 3000,
-  //         }
-  //       );
-  //     }
-  //   };
-
-  //   const fetchNonLaborAccounts = async () => {
-  //     if (!projectId) {
-  //       console.warn(
-  //         "projectId is undefined, skipping non-labor accounts fetch"
-  //       );
-  //       setNonLaborAccounts([]);
-  //       return;
-  //     }
-  //     if (!showNewForm) {
-  //       console.log(
-  //         "New entry form is not open, skipping non-labor accounts fetch"
-  //       );
-  //       setNonLaborAccounts([]);
-  //       return;
-  //     }
-  //     console.log(`Fetching non-labor accounts for projectId: ${projectId}`);
-  //     try {
-  //       const response = await axios.get(
-  //         `${backendUrl}/Project/GetAllProjectByProjId/${projectId}`
-  //       );
-  //       console.log("Non-labor accounts response:", response.data);
-  //       const data = Array.isArray(response.data)
-  //         ? response.data[0]
-  //         : response.data;
-  //       const accounts = Array.isArray(data.nonLaborAccounts)
-  //         ? data.nonLaborAccounts.map((account) => ({ id: account }))
-  //         : [];
-  //       setNonLaborAccounts(accounts);
-  //       console.log("Updated nonLaborAccounts:", accounts);
-  //     } catch (err) {
-  //       console.error("Error fetching non-labor accounts:", err);
-  //       setNonLaborAccounts([]);
-  //       toast.error(
-  //         `Failed to fetch non-labor accounts${
-  //           projectId
-  //             ? " for project ID " + projectId
-  //             : ". Project ID is missing."
-  //         }`,
-  //         {
-  //           toastId: "non-labor-accounts-error",
-  //           autoClose: 3000,
-  //         }
-  //       );
-  //     }
-  //   };
-
-  //   if (showNewForm) {
-  //     fetchEmployees();
-  //     fetchNonLaborAccounts();
-  //   } else {
-  //     setEmployeeSuggestions([]);
-  //     setNonLaborAccounts([]);
-  //   }
-  // }, [projectId, showNewForm, newEntry.idType]);
-
-  // const handleIdChange = (value) => {
-  //   console.log("handleIdChange called with value:", value);
-
-  //   // **FIRST CHECK: Duplicate ID check (highest priority)**
-  //   if (value.trim() !== "") {
-  //     const isDuplicateId = employees.some(
-  //       (emp) => emp.emple.emplId === value
-  //     );
-
-  //     if (isDuplicateId) {
-  //       toast.error("ID is already present in table so can't save.", {
-  //         toastId: "duplicate-id-error",
-  //         autoClose: 3000,
-  //       });
-  //       // Still update the input but show the error
-  //       setNewEntry((prev) => ({
-  //         ...prev,
-  //         id: value,
-  //         firstName: "",
-  //         lastName: "",
-  //         acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
-  //         orgId: "",
-  //       }));
-  //       return; // Exit early to prevent other validations
-  //     }
-  //   }
-
-  //   // **SECOND CHECK: Invalid Employee ID validation (only if not duplicate)**
-  //   if (newEntry.idType !== "Other" && value.length >= 3) {
-  //     // Check if any employee ID starts with typed value
-  //     const partialMatch = employeeSuggestions.some((emp) =>
-  //       emp.emplId.startsWith(value)
-  //     );
-
-  //     if (!partialMatch) {
-  //       toast.error("Invalid Employee ID, please select a valid one!", {
-  //         toastId: "invalid-employee-id",
-  //         autoClose: 3000,
-  //       });
-  //       // Still update the input but show the error
-  //       setNewEntry((prev) => ({
-  //         ...prev,
-  //         id: value,
-  //         firstName: "",
-  //         lastName: "",
-  //         acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
-  //         orgId: "",
-  //       }));
-  //       return; // Exit early
-  //     }
-  //   }
-
-  //   // **NORMAL PROCESSING: If no errors, proceed with employee selection**
-  //   const selectedEmployee = employeeSuggestions.find(
-  //     (emp) => emp.emplId === value
-  //   );
-  //   console.log("Selected employee:", selectedEmployee);
-
-  //   setNewEntry((prev) => ({
-  //     ...prev,
-  //     id: value,
-  //     firstName: selectedEmployee ? selectedEmployee.firstName || "" : "",
-  //     lastName: selectedEmployee ? selectedEmployee.lastName || "" : "",
-  //     acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
-  //     orgId: selectedEmployee?.orgId ? String(selectedEmployee.orgId) : "",
-  //   }));
-  //   console.log("Selected employee orgId:", selectedEmployee?.orgId);
-  // };
-
+  
   useEffect(() => {
     const formOpen = showNewForm || isEditable;
     const fetchEmployees = async () => {
@@ -802,6 +611,24 @@ setAccountOptionsWithNames(allAccountsWithNames);
     }
   }, [projectId, showNewForm, newEntry.idType, isEditable]);
 
+  // CORRECTED: Add keyboard listener for paste - MUST be unconditional
+useEffect(() => {
+  const handleKeyDown = async (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "v") {
+      // Only handle if conditions are met
+      if (hasClipboardData && copiedRowsData.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        handlePasteMultipleRows();
+      }
+    }
+  };
+
+  document.addEventListener("keydown", handleKeyDown);
+  return () => document.removeEventListener("keydown", handleKeyDown);
+}, [hasClipboardData, copiedRowsData, propFiscalYear, durations, showNewForm, projectId, planType]); // Add all dependencies
+
+
   const handleIdChange = (value) => {
     // console.log("handleIdChange called with value:", value);
 
@@ -898,17 +725,7 @@ setAccountOptionsWithNames(allAccountsWithNames);
     // console.log("Selected employee orgId:", selectedEmployee?.orgId);
   };
 
-  // const handleRowFieldChange = (rowIdx, field, value) => {
-  //   if (!isBudPlan || !isEditable) return;
-  //   setEditedRowData((prev) => ({
-  //     ...prev,
-  //     [rowIdx]: {
-  //       ...prev[rowIdx],
-  //       [field]: value,
-  //     },
-  //   }));
-  // };
-
+ 
   const handleRowFieldChange = (rowIdx, field, value) => {
     if (!isFieldEditable || !isEditable) return;
     setEditedRowData((prev) => ({
@@ -920,151 +737,7 @@ setAccountOptionsWithNames(allAccountsWithNames);
     }));
   };
 
-  // const handleRowFieldBlur = async (rowIdx, emp) => {
-  //   if (!isBudPlan || !isEditable) return;
-  //   if (!emp || !emp.emple) {
-  //     toast.error("Employee data is missing for update.");
-  //     return;
-  //   }
-
-  //   const edited = editedRowData[rowIdx] || {};
-  //   if (
-  //     edited.acctId === undefined &&
-  //     edited.orgId === undefined &&
-  //     edited.isRev === undefined &&
-  //     edited.isBrd === undefined
-  //   )
-  //     return;
-
-  //   const payload = {
-  //     dctId: emp.emple.dctId || 0,
-  //     plId: emp.emple.plId || 0,
-  //     accId: edited.acctId !== undefined ? edited.acctId : emp.emple.accId,
-  //     orgId: edited.orgId !== undefined ? edited.orgId : emp.emple.orgId,
-  //     type: emp.emple.type || "",
-  //     category: emp.emple.category || "",
-  //     amountType: emp.emple.amountType || "",
-  //     id: emp.emple.emplId || "",
-  //     isRev: edited.isRev !== undefined ? edited.isRev : emp.emple.isRev,
-  //     isBrd: edited.isBrd !== undefined ? edited.isBrd : emp.emple.isBrd,
-  //     createdBy: emp.emple.createdBy || "System",
-  //     lastModifiedBy: "System",
-  //   };
-
-  //   try {
-  //     await axios.put(
-  //       "${backendUrl}/DirectCost/UpdateDirectCost",
-  //       { ...payload, acctId: payload.accId },
-  //       { headers: { "Content-Type": "application/json" } }
-  //     );
-  //     setEditedRowData((prev) => {
-  //       const newData = { ...prev };
-  //       delete newData[rowIdx];
-  //       return newData;
-  //     });
-  //     setEmployees((prev) => {
-  //       const updated = [...prev];
-  //       updated[rowIdx] = {
-  //         ...updated[rowIdx],
-  //         emple: {
-  //           ...updated[rowIdx].emple,
-  //           ...payload,
-  //         },
-  //       };
-  //       return updated;
-  //     });
-  //     toast.success("Employee updated successfully!", {
-  //       toastId: `employee-update-${rowIdx}`,
-  //       autoClose: 2000,
-  //     });
-  //   } catch (err) {
-  //     toast.error(
-  //       "Failed to update row: " + (err.response?.data?.message || err.message)
-  //     );
-  //   }
-  // };
-
-  // const handleRowFieldBlur = async (rowIdx, emp) => {
-  //   if (!isBudPlan || !isEditable) return;
-  //   if (!emp || !emp.emple) {
-  //     toast.error("Employee data is missing for update.");
-  //     return;
-  //   }
-
-  //   const edited = editedRowData[rowIdx] || {};
-  //   if (
-  //     edited.acctId === undefined &&
-  //     edited.orgId === undefined &&
-  //     edited.isRev === undefined &&
-  //     edited.isBrd === undefined
-  //   )
-  //     return;
-
-  //   const payload = {
-  //     dctId: emp.emple.dctId || 0,
-  //     plId: emp.emple.plId || 0,
-  //     accId: edited.acctId !== undefined ? edited.acctId : emp.emple.accId,
-  //     orgId: edited.orgId !== undefined ? edited.orgId : emp.emple.orgId,
-  //     type: emp.emple.type || "",
-  //     category: emp.emple.category || "",
-  //     amountType: emp.emple.amountType || "",
-  //     id: emp.emple.emplId || "",
-  //     isRev: edited.isRev !== undefined ? edited.isRev : emp.emple.isRev,
-  //     isBrd: edited.isBrd !== undefined ? edited.isBrd : emp.emple.isBrd,
-  //     createdBy: emp.emple.createdBy || "System",
-  //     lastModifiedBy: "System",
-  //   };
-
-  //   // ✅ Add validation BEFORE saving
-  //   const validAccounts =
-  //     emp.idType === "Vendor" || emp.idType === "Vendor Employee"
-  //       ? subContractorNonLaborAccounts.map((a) => a.id || a.accountId || "")
-  //       : employeeNonLaborAccounts.map((a) => a.id || a.accountId || "");
-
-  //   if (payload.accId && !validAccounts.includes(payload.accId)) {
-  //     toast.error("Please select a valid account from suggestions");
-  //     return; // 🚫 stop here, don't call API or show success
-  //   }
-  //   // ✅ Validate orgId against organizationOptions
-  //   const validOrgs = organizationOptions.map((org) => org.value);
-  //   if (payload.orgId && !validOrgs.includes(payload.orgId)) {
-  //     toast.error("Please select a valid organization from suggestions");
-  //     return; // 🚫 block update
-  //   }
-
-  //   try {
-  //     await axios.put(
-  //       "${backendUrl}/DirectCost/UpdateDirectCost",
-  //       { ...payload, acctId: payload.accId },
-  //       { headers: { "Content-Type": "application/json" } }
-  //     );
-  //     setEditedRowData((prev) => {
-  //       const newData = { ...prev };
-  //       delete newData[rowIdx];
-  //       return newData;
-  //     });
-  //     setEmployees((prev) => {
-  //       const updated = [...prev];
-  //       updated[rowIdx] = {
-  //         ...updated[rowIdx],
-  //         emple: {
-  //           ...updated[rowIdx].emple,
-  //           ...payload,
-  //         },
-  //       };
-  //       return updated;
-  //     });
-  //     toast.success("Employee updated successfully!", {
-  //       toastId: `employee-update-${rowIdx}`,
-  //       autoClose: 2000,
-  //     });
-  //   } catch (err) {
-  //     toast.error(
-  //       "Failed to update row: " + (err.response?.data?.message || err.message)
-  //     );
-  //   }
-  // };
-
+ 
   const handleRowFieldBlur = async (rowIdx, emp) => {
     if (!isFieldEditable || !isEditable) return;
     if (!emp || !emp.emple) {
@@ -1146,46 +819,7 @@ setAccountOptionsWithNames(allAccountsWithNames);
     }
   };
 
-  // const getEmployeeRow = (emp, idx) => {
-  //   const monthAmounts = getMonthAmounts(emp);
-  //   const totalAmount = sortedDurations.reduce((sum, duration) => {
-  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //     const inputValue = inputValues[`${idx}_${uniqueKey}`];
-  //     const forecastValue = monthAmounts[uniqueKey]?.value;
-  //     const value =
-  //       inputValue !== undefined && inputValue !== ""
-  //         ? inputValue
-  //         : forecastValue;
-  //     return sum + (value && !isNaN(value) ? Number(value) : 0);
-  //   }, 0);
-
-  //   return {
-  //     idType: emp.emple.type || "Employee",
-  //     emplId: emp.emple.emplId || "-",
-  //     name:
-  //       emp.emple.category || emp.emple.firstName || emp.emple.lastName
-  //         ? emp.emple.category ||
-  //           `${emp.emple.lastName || ""}${
-  //             emp.emple.firstName && emp.emple.lastName ? ", " : ""
-  //           }${emp.emple.firstName || ""}`
-  //         : "-",
-  //     acctId: emp.emple.accId || "-",
-  //     orgId: emp.emple.orgId || "-",
-  //     isRev: emp.emple.isRev ? (
-  //       <span className="text-green-600 font-sm text-xl">✓</span>
-  //     ) : (
-  //       "-"
-  //     ),
-  //     isBrd: emp.emple.isBrd ? (
-  //       <span className="text-green-600 font-sm text-xl">✓</span>
-  //     ) : (
-  //       "-"
-  //     ),
-  //     status: emp.emple.status || "Act",
-  //     total: totalAmount.toFixed(2) || "-",
-  //   };
-  // };
-  
+ 
   const getEmployeeRow = (emp, idx) => {
   const monthAmounts = getMonthAmounts(emp);
   const totalAmount = sortedDurations.reduce((sum, duration) => {
@@ -1247,29 +881,7 @@ setAccountOptionsWithNames(allAccountsWithNames);
     return monthAmounts;
   };
 
-  // const handleInputChange = (empIdx, uniqueKey, newValue) => {
-  //   if (!isEditable) return;
-  //   const currentDuration = sortedDurations.find(
-  //     (d) => `${d.monthNo}_${d.year}` === uniqueKey
-  //   );
-  //   if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-  //     toast.warn("Cannot edit amounts for a closed period.", {
-  //       toastId: "closed-period-warning",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-  //   if (newValue === "" || /^\d*\.?\d*$/.test(newValue)) {
-  //     // console.log(
-  //     //   `Updating inputValues for ${empIdx}_${uniqueKey}: ${newValue}`
-  //     // );
-  //     setInputValues((prev) => ({
-  //       ...prev,
-  //       [`${empIdx}_${uniqueKey}`]: newValue,
-  //     }));
-  //   }
-  // };
-  
+ 
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
   if (!isEditable) return;
   
@@ -1307,988 +919,7 @@ setAccountOptionsWithNames(allAccountsWithNames);
   }
 };
 
-  // const handleForecastAmountBlur = async (empIdx, uniqueKey, value) => {
-  //   if (!isEditable) return;
-  //   const newValue = value === "" ? 0 : Number(value);
-  //   const emp = employees[empIdx];
-  //   const monthAmounts = getMonthAmounts(emp);
-  //   const forecast = monthAmounts[uniqueKey];
-  //   const originalForecastedAmount = forecast?.forecastedamt ?? 0;
-  //   const currentDuration = sortedDurations.find(
-  //     (d) => `${d.monthNo}_${d.year}` === uniqueKey
-  //   );
-
-  //   // console.log(
-  //   //   `handleForecastAmountBlur: empIdx=${empIdx}, uniqueKey=${uniqueKey}, newValue=${newValue}, original=${originalForecastedAmount}, month=${currentDuration?.monthNo}, year=${currentDuration?.year}`
-  //   // );
-
-  //   if (newValue === originalForecastedAmount) {
-  //     // console.log("No change in forecast amount, skipping API call");
-  //     return;
-  //   }
-
-  //   if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-  //     // console.log(`Cannot edit ${uniqueKey}: period closed`);
-  //     setInputValues((prev) => ({
-  //       ...prev,
-  //       [`${empIdx}_${uniqueKey}`]: String(originalForecastedAmount),
-  //     }));
-  //     toast.warn("Cannot edit amounts for a closed period.", {
-  //       toastId: "closed-period-warning",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-
-  //   const payload = {
-  //     forecastedamt: Number(newValue) || 0,
-  //     forecastid: Number(forecast?.forecastid ?? 0),
-  //     projId: forecast?.projId ?? projectId,
-  //     plId: forecast?.plId ?? planId,
-  //     emplId: forecast?.emplId ?? emp.emple.emplId,
-  //     dctId: forecast?.dctId ?? 0,
-  //     month: forecast?.month ?? currentDuration.monthNo,
-  //     year: forecast?.year ?? currentDuration.year,
-  //     totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-  //     burden: forecast?.burden ?? 0,
-  //     ccffRevenue: forecast?.ccffRevenue ?? 0,
-  //     tnmRevenue: forecast?.tnmRevenue ?? 0,
-  //     cost: forecast?.cost ?? 0,
-  //     fringe: forecast?.fringe ?? 0,
-  //     overhead: forecast?.overhead ?? 0,
-  //     gna: forecast?.gna ?? 0,
-  //     ...(planType === "EAC"
-  //       ? { actualamt: Number(newValue) || 0 }
-  //       : { forecastedamt: Number(newValue) || 0 }),
-  //     createdat: forecast?.createdat ?? new Date(0).toISOString(),
-  //     updatedat: new Date().toISOString().split("T")[0],
-  //     displayText: forecast?.displayText ?? "",
-  //   };
-
-  //   // console.log("UpdateForecastAmount payload:", payload);
-
-  //   try {
-  //     const response = await axios.put(
-  //       `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
-  //       payload,
-  //       { headers: { "Content-Type": "application/json" } }
-  //     );
-  //     setSuccessMessageText("Forecast updated!");
-  //     setShowSuccessMessage(true);
-  //     toast.success("Forecast amount updated successfully!", {
-  //       toastId: "forecast-update-success",
-  //       autoClose: 3000,
-  //     });
-
-  //     // Update local state with the response data for consistency
-  //     setEmployees((prev) => {
-  //       const updated = [...prev];
-  //       const updatedEmp = { ...updated[empIdx] };
-  //       const updatedForecasts = [...(updatedEmp.emple.plForecasts || [])];
-  //       const forecastIndex = updatedForecasts.findIndex(
-  //         (f) => f.month === payload.month && f.year === payload.year
-  //       );
-  //       const updatedForecast = response.data; // Assume API returns the updated forecast
-  //       if (forecastIndex >= 0) {
-  //         updatedForecasts[forecastIndex] = {
-  //           ...updatedForecasts[forecastIndex],
-  //           ...updatedForecast,
-  //           value:
-  //             planType === "EAC"
-  //               ? updatedForecast.actualamt
-  //               : updatedForecast.forecastedamt,
-  //         };
-  //       } else {
-  //         updatedForecasts.push({
-  //           ...updatedForecast,
-  //           value:
-  //             planType === "EAC"
-  //               ? updatedForecast.actualamt
-  //               : updatedForecast.forecastedamt,
-  //         });
-  //       }
-  //       updatedEmp.emple = {
-  //         ...updatedEmp.emple,
-  //         plForecasts: updatedForecasts,
-  //       };
-  //       updated[empIdx] = updatedEmp;
-  //       return updated;
-  //     });
-
-  //     // Clear the input value after successful update
-  //     setInputValues((prev) => {
-  //       const newInputs = { ...prev };
-  //       delete newInputs[`${empIdx}_${uniqueKey}`];
-  //       return newInputs;
-  //     });
-
-  //     // Trigger refetch to ensure UI syncs with server (like in ProjectHoursDetails)
-  //     if (onSaveSuccess) {
-  //       onSaveSuccess();
-  //     }
-  //   } catch (err) {
-  //     // console.error("API error:", err.response?.data || err);
-  //     setInputValues((prev) => ({
-  //       ...prev,
-  //       [`${empIdx}_${uniqueKey}`]: String(originalForecastedAmount),
-  //     }));
-  //     setSuccessMessageText("Failed to update forecast.");
-  //     setShowSuccessMessage(true);
-  //     toast.error(
-  //       "Failed to update forecast amount: " +
-  //         (err.response?.data?.message || err.message),
-  //       {
-  //         toastId: "forecast-update-error",
-  //         autoClose: 3000,
-  //       }
-  //     );
-  //   } finally {
-  //     setTimeout(() => setShowSuccessMessage(false), 2000);
-  //   }
-  // };
-
-//   const handleSaveAllAmounts = async () => {
-//   if (Object.keys(modifiedAmounts).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   const updates = [];
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     for (const key in modifiedAmounts) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthAmounts = getMonthAmounts(emp);
-//       const forecast = monthAmounts[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const payload = {
-//         forecastedamt: forecast?.forecastedamt ?? 0,
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: forecast?.projId ?? projectId,
-//         plId: forecast?.plId ?? planId,
-//         emplId: forecast?.emplId ?? emp?.emple?.emplId,
-//         dctId: forecast?.dctId ?? 0,
-//         month: forecast?.month ?? currentDuration?.monthNo,
-//         year: forecast?.year ?? currentDuration?.year,
-//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-//         burden: forecast?.burden ?? 0,
-//         ccffRevenue: forecast?.ccffRevenue ?? 0,
-//         tnmRevenue: forecast?.tnmRevenue ?? 0,
-//         cost: forecast?.cost ?? 0,
-//         fringe: forecast?.fringe ?? 0,
-//         overhead: forecast?.overhead ?? 0,
-//         gna: forecast?.gna ?? 0,
-//         ...(planType === "EAC"
-//           ? { actualamt: Number(newNumericValue) || 0 }
-//           : { forecastedamt: Number(newNumericValue) || 0 }),
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString().split("T")[0],
-//         displayText: forecast?.displayText ?? "",
-//       };
-
-//       updates.push(
-//         axios.put(
-//           `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
-//           payload,
-//           { headers: { "Content-Type": "application/json" } }
-//         ).then(() => {
-//           successCount++;
-//           // Update local state
-//           setEmployees((prev) => {
-//             const updated = [...prev];
-//             if (
-//               updated[empIdx] &&
-//               updated[empIdx].emple &&
-//               updated[empIdx].emple.plForecasts
-//             ) {
-//               const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//                 (f) => f.month === payload.month && f.year === payload.year
-//               );
-//               if (forecastIndex !== -1) {
-//                 if (planType === "EAC") {
-//                   updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
-//                 } else {
-//                   updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
-//                 }
-//               }
-//             }
-//             return updated;
-//           });
-//         }).catch(() => {
-//           errorCount++;
-//         })
-//       );
-//     }
-
-//     await Promise.all(updates);
-
-//     // Clear modified amounts and reset flags
-//     setModifiedAmounts({});
-//     setHasUnsavedAmountChanges(false);
-
-//     if (successCount > 0) {
-//       toast.success(`Successfully saved ${successCount} amount entries!`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be saved.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     toast.error(
-//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-amounts-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-//   const handleSaveAllAmounts = async () => {
-//   if (Object.keys(modifiedAmounts).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     // Prepare bulk payload array
-//     const bulkPayload = [];
-
-//     for (const key in modifiedAmounts) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthAmounts = getMonthAmounts(emp);
-//       const forecast = monthAmounts[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       // Create payload matching the bulk API structure
-//       const payload = {
-//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
-//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: forecast?.projId ?? projectId ?? "",
-//         plId: forecast?.plId ?? planId ?? 0,
-//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-//         dctId: forecast?.dctId ?? 0,
-//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
-//         year: forecast?.year ?? currentDuration?.year ?? 0,
-//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-//         fees: forecast?.fees ?? 0,
-//         burden: forecast?.burden ?? 0,
-//         ccffRevenue: forecast?.ccffRevenue ?? 0,
-//         tnmRevenue: forecast?.tnmRevenue ?? 0,
-//         revenue: forecast?.revenue ?? 0,
-//         cost: forecast?.cost ?? 0,
-//         forecastedCost: forecast?.forecastedCost ?? 0,
-//         fringe: forecast?.fringe ?? 0,
-//         overhead: forecast?.overhead ?? 0,
-//         gna: forecast?.gna ?? 0,
-//         materials: forecast?.materials ?? 0,
-//         forecastedhours: forecast?.forecastedhours ?? 0,
-//         actualhours: forecast?.actualhours ?? 0,
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString(),
-//         displayText: forecast?.displayText ?? "",
-//         acctId: emp?.emple?.accId ?? "",
-//         orgId: emp?.emple?.orgId ?? "",
-//         plc: emp?.emple?.plcGlcCode ?? "",
-//         empleId: emp?.emple?.id ?? 0,
-//         hrlyRate: emp?.emple?.perHourRate ?? 0,
-//         effectDt: new Date().toISOString().split('T')[0],
-//         emple: emp?.emple ? {
-//           id: emp.emple.id ?? 0,
-//           emplId: emp.emple.emplId ?? "",
-//           orgId: emp.emple.orgId ?? "",
-//           firstName: emp.emple.firstName ?? "",
-//           lastName: emp.emple.lastName ?? "",
-//           plcGlcCode: emp.emple.plcGlcCode ?? "",
-//           perHourRate: emp.emple.perHourRate ?? 0,
-//           salary: emp.emple.salary ?? 0,
-//           accId: emp.emple.accId ?? "",
-//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
-//           isRev: emp.emple.isRev ?? false,
-//           isBrd: emp.emple.isBrd ?? false,
-//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-//           type: emp.emple.type ?? "",
-//           status: emp.emple.status ?? "",
-//           plId: planId ?? 0,
-//           isWarning: emp.emple.isWarning ?? false,
-//           plForecasts: [],
-//           organization: emp.emple.organization ?? null,
-//           plProjectPlan: emp.emple.plProjectPlan ?? null
-//         } : null
-//       };
-
-//       bulkPayload.push(payload);
-//       successCount++; // Count valid entries
-//     }
-
-//     if (bulkPayload.length === 0) {
-//       toast.warning("No valid entries to save.", { autoClose: 3000 });
-//       return;
-//     }
-
-//     // Use bulk API endpoint
-//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
-//     console.log("Payload:", bulkPayload);
-    
-//     const response = await axios.put(
-//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
-//       bulkPayload,
-//       { headers: { "Content-Type": "application/json" } }
-//     );
-
-//     console.log("Bulk amount update response:", response.data);
-
-//     // Update local state for all successful updates
-//     setEmployees((prev) => {
-//       const updated = [...prev];
-      
-//       for (const key in modifiedAmounts) {
-//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
-//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
-        
-//         if (
-//           updated[empIdx] &&
-//           updated[empIdx].emple &&
-//           updated[empIdx].emple.plForecasts
-//         ) {
-//           const currentDuration = sortedDurations.find(
-//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//           );
-          
-//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
-//           );
-          
-//           if (forecastIndex !== -1) {
-//             if (planType === "EAC") {
-//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
-//             } else {
-//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
-//             }
-//           }
-//         }
-//       }
-      
-//       return updated;
-//     });
-
-//     // Clear modified amounts and reset flags
-//     setModifiedAmounts({});
-//     setHasUnsavedAmountChanges(false);
-
-//     toast.success(`Successfully saved ${successCount} amount entries!`, {
-//       autoClose: 3000,
-//     });
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be processed.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     console.error("Bulk amount update error:", err);
-//     toast.error(
-//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-amounts-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-  
-// const handleSaveAllAmounts = async () => {
-//   if (Object.keys(modifiedAmounts).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     // Prepare bulk payload array
-//     const bulkPayload = [];
-
-//     for (const key in modifiedAmounts) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthAmounts = getMonthAmounts(emp);
-//       const forecast = monthAmounts[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       // Create the plForecast object (this is what the API expects)
-//       const plForecast = {
-//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
-//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: forecast?.projId ?? projectId ?? "",
-//         plId: forecast?.plId ?? planId ?? 0,
-//         emplId: forecast?.emplId ?? emp?.emple?.emplId ?? "",
-//         dctId: forecast?.dctId ?? 0,
-//         month: forecast?.month ?? currentDuration?.monthNo ?? 0,
-//         year: forecast?.year ?? currentDuration?.year ?? 0,
-//         totalBurdenCost: forecast?.totalBurdenCost ?? 0,
-//         fees: forecast?.fees ?? 0,
-//         burden: forecast?.burden ?? 0,
-//         ccffRevenue: forecast?.ccffRevenue ?? 0,
-//         tnmRevenue: forecast?.tnmRevenue ?? 0,
-//         revenue: forecast?.revenue ?? 0,
-//         cost: forecast?.cost ?? 0,
-//         forecastedCost: forecast?.forecastedCost ?? 0,
-//         fringe: forecast?.fringe ?? 0,
-//         overhead: forecast?.overhead ?? 0,
-//         gna: forecast?.gna ?? 0,
-//         materials: forecast?.materials ?? 0,
-//         forecastedhours: forecast?.forecastedhours ?? 0,
-//         actualhours: forecast?.actualhours ?? 0,
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString(),
-//         displayText: forecast?.displayText ?? "",
-//         acctId: emp?.emple?.accId ?? "",
-//         orgId: emp?.emple?.orgId ?? "",
-//         plc: emp?.emple?.plcGlcCode ?? "",
-//         empleId: emp?.emple?.id ?? 0,
-//         hrlyRate: parseFloat(emp?.emple?.perHourRate ?? 0) || 0, // Fixed: ensure it's a valid number
-//         effectDt: new Date().toISOString().split('T')[0],
-//         emple: emp?.emple ? {
-//           id: emp.emple.id ?? 0,
-//           emplId: emp.emple.emplId ?? "",
-//           orgId: emp.emple.orgId ?? "",
-//           firstName: emp.emple.firstName ?? "",
-//           lastName: emp.emple.lastName ?? "",
-//           plcGlcCode: emp.emple.plcGlcCode ?? "",
-//           perHourRate: parseFloat(emp.emple.perHourRate ?? 0) || 0, // Fixed: ensure valid number
-//           salary: parseFloat(emp.emple.salary ?? 0) || 0,
-//           accId: emp.emple.accId ?? "",
-//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
-//           isRev: emp.emple.isRev ?? false,
-//           isBrd: emp.emple.isBrd ?? false,
-//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-//           type: emp.emple.type ?? "",
-//           status: emp.emple.status ?? "",
-//           plId: planId ?? 0,
-//           isWarning: emp.emple.isWarning ?? false,
-//           plForecasts: [],
-//           organization: emp.emple.organization ?? null,
-//           plProjectPlan: emp.emple.plProjectPlan ?? null
-//         } : null
-//       };
-
-//       // Add the plForecast object to the payload (this is the key fix)
-//       bulkPayload.push({
-//         plForecast: plForecast // ← This is what the API expects
-//       });
-      
-//       successCount++; // Count valid entries
-//     }
-
-//     if (bulkPayload.length === 0) {
-//       toast.warning("No valid entries to save.", { autoClose: 3000 });
-//       return;
-//     }
-
-//     // Use bulk API endpoint
-//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
-//     console.log("Payload:", bulkPayload);
-    
-//     const response = await axios.put(
-//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
-//       bulkPayload,
-//       { headers: { "Content-Type": "application/json" } }
-//     );
-
-//     console.log("Bulk amount update response:", response.data);
-
-//     // Update local state for all successful updates
-//     setEmployees((prev) => {
-//       const updated = [...prev];
-      
-//       for (const key in modifiedAmounts) {
-//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
-//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
-        
-//         if (
-//           updated[empIdx] &&
-//           updated[empIdx].emple &&
-//           updated[empIdx].emple.plForecasts
-//         ) {
-//           const currentDuration = sortedDurations.find(
-//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//           );
-          
-//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
-//           );
-          
-//           if (forecastIndex !== -1) {
-//             if (planType === "EAC") {
-//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
-//             } else {
-//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
-//             }
-//           }
-//         }
-//       }
-      
-//       return updated;
-//     });
-
-//     // Clear modified amounts and reset flags
-//     setModifiedAmounts({});
-//     setHasUnsavedAmountChanges(false);
-
-//     toast.success(`Successfully saved ${successCount} amount entries!`, {
-//       autoClose: 3000,
-//     });
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be processed.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     console.error("Bulk amount update error:", err);
-//     toast.error(
-//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-amounts-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-// const handleSaveAllAmounts = async () => {
-//   if (Object.keys(modifiedAmounts).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     // Prepare bulk payload array
-//     const bulkPayload = [];
-
-//     for (const key in modifiedAmounts) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthAmounts = getMonthAmounts(emp);
-//       const forecast = monthAmounts[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       // Create payload matching EXACT API structure
-//       const payload = {
-//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
-//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: String(forecast?.projId ?? projectId ?? ""),
-//         plId: Number(forecast?.plId ?? planId ?? 0),
-//         emplId: String(forecast?.emplId ?? emp?.emple?.emplId ?? ""),
-//         dctId: Number(forecast?.dctId ?? 0),
-//         month: Number(forecast?.month ?? currentDuration?.monthNo ?? 0),
-//         year: Number(forecast?.year ?? currentDuration?.year ?? 0),
-//         totalBurdenCost: Number(forecast?.totalBurdenCost ?? 0),
-//         fees: Number(forecast?.fees ?? 0),
-//         burden: Number(forecast?.burden ?? 0),
-//         ccffRevenue: Number(forecast?.ccffRevenue ?? 0),
-//         tnmRevenue: Number(forecast?.tnmRevenue ?? 0),
-//         revenue: Number(forecast?.revenue ?? 0),
-//         cost: Number(forecast?.cost ?? 0),
-//         forecastedCost: Number(forecast?.forecastedCost ?? 0),
-//         fringe: Number(forecast?.fringe ?? 0),
-//         overhead: Number(forecast?.overhead ?? 0),
-//         gna: Number(forecast?.gna ?? 0),
-//         materials: Number(forecast?.materials ?? 0),
-//         forecastedhours: Number(forecast?.forecastedhours ?? 0),
-//         actualhours: Number(forecast?.actualhours ?? 0),
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString(),
-//         displayText: String(forecast?.displayText ?? ""),
-//         acctId: String(emp?.emple?.accId ?? ""),
-//         orgId: String(emp?.emple?.orgId ?? ""),
-//         plc: String(emp?.emple?.plcGlcCode ?? ""),
-//         empleId: Number(emp?.emple?.id ?? 0),
-//         hrlyRate: Number(parseFloat(emp?.emple?.perHourRate ?? 0) || 0),
-//         effectDt: new Date().toISOString().split('T')[0],
-//         emple: emp?.emple ? {
-//           id: Number(emp.emple.id ?? 0),
-//           emplId: String(emp.emple.emplId ?? ""),
-//           orgId: String(emp.emple.orgId ?? ""),
-//           firstName: String(emp.emple.firstName ?? ""),
-//           lastName: String(emp.emple.lastName ?? ""),
-//           plcGlcCode: String(emp.emple.plcGlcCode ?? ""),
-//           perHourRate: Number(parseFloat(emp.emple.perHourRate ?? 0) || 0),
-//           salary: Number(parseFloat(emp.emple.salary ?? 0) || 0),
-//           accId: String(emp.emple.accId ?? ""),
-//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
-//           isRev: Boolean(emp.emple.isRev ?? false),
-//           isBrd: Boolean(emp.emple.isBrd ?? false),
-//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-//           type: String(emp.emple.type ?? ""),
-//           status: String(emp.emple.status ?? ""),
-//           plId: Number(planId ?? 0),
-//           isWarning: Boolean(emp.emple.isWarning ?? false),
-//           plForecasts: [],
-//           organization: emp.emple.organization || null,
-//           plProjectPlan: emp.emple.plProjectPlan || null
-//         } : null
-//       };
-
-//       // Add payload directly to array (NOT wrapped in plForecast)
-//       bulkPayload.push(payload);
-//       successCount++;
-//     }
-
-//     if (bulkPayload.length === 0) {
-//       toast.warning("No valid entries to save.", { autoClose: 3000 });
-//       return;
-//     }
-
-//     // Use bulk API endpoint
-//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
-//     console.log("Payload:", JSON.stringify(bulkPayload, null, 2));
-    
-//     const response = await axios.put(
-//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
-//       bulkPayload,
-//       { headers: { "Content-Type": "application/json" } }
-//     );
-
-//     console.log("Bulk amount update response:", response.data);
-
-//     // Update local state for all successful updates
-//     setEmployees((prev) => {
-//       const updated = [...prev];
-      
-//       for (const key in modifiedAmounts) {
-//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
-//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
-        
-//         if (
-//           updated[empIdx] &&
-//           updated[empIdx].emple &&
-//           updated[empIdx].emple.plForecasts
-//         ) {
-//           const currentDuration = sortedDurations.find(
-//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//           );
-          
-//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
-//           );
-          
-//           if (forecastIndex !== -1) {
-//             if (planType === "EAC") {
-//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
-//             } else {
-//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
-//             }
-//           }
-//         }
-//       }
-      
-//       return updated;
-//     });
-
-//     // Clear modified amounts and reset flags
-//     setModifiedAmounts({});
-//     setHasUnsavedAmountChanges(false);
-
-//     toast.success(`Successfully saved ${successCount} amount entries!`, {
-//       autoClose: 3000,
-//     });
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be processed.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//     // Trigger parent refresh
-//     if (onSaveSuccess) {
-//       onSaveSuccess();
-//     }
-
-//   } catch (err) {
-//     console.error("Bulk amount update error:", err);
-//     toast.error(
-//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-amounts-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
-// const handleSaveAllAmounts = async () => {
-//   if (Object.keys(modifiedAmounts).length === 0) {
-//     toast.info("No changes to save.", { autoClose: 2000 });
-//     return;
-//   }
-
-//   setIsLoading(true);
-//   let successCount = 0;
-//   let errorCount = 0;
-
-//   try {
-//     // Prepare bulk payload array
-//     const bulkPayload = [];
-
-//     for (const key in modifiedAmounts) {
-//       const { empIdx, uniqueKey, newValue, employee } = modifiedAmounts[key];
-      
-//       const newNumericValue = newValue === "" ? 0 : Number(newValue);
-//       const emp = employee;
-//       const monthAmounts = getMonthAmounts(emp);
-//       const forecast = monthAmounts[uniqueKey];
-
-//       if (!forecast || !forecast.forecastid) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       const currentDuration = sortedDurations.find(
-//         (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//       );
-
-//       if (!isMonthEditable(currentDuration, closedPeriod, planType)) {
-//         errorCount++;
-//         continue;
-//       }
-
-//       // Create payload matching EXACT API structure
-//       const payload = {
-//         forecastedamt: planType === "EAC" ? (forecast?.forecastedamt ?? 0) : Number(newNumericValue) || 0,
-//         actualamt: planType === "EAC" ? Number(newNumericValue) || 0 : (forecast?.actualamt ?? 0),
-//         forecastid: Number(forecast?.forecastid ?? 0),
-//         projId: String(forecast?.projId ?? projectId ?? ""),
-//         plId: Number(forecast?.plId ?? planId ?? 0),
-//         emplId: String(forecast?.emplId ?? emp?.emple?.emplId ?? ""),
-//         dctId: Number(forecast?.dctId ?? 0),
-//         month: Number(forecast?.month ?? currentDuration?.monthNo ?? 0),
-//         year: Number(forecast?.year ?? currentDuration?.year ?? 0),
-//         totalBurdenCost: Number(forecast?.totalBurdenCost ?? 0),
-//         fees: Number(forecast?.fees ?? 0),
-//         burden: Number(forecast?.burden ?? 0),
-//         ccffRevenue: Number(forecast?.ccffRevenue ?? 0),
-//         tnmRevenue: Number(forecast?.tnmRevenue ?? 0),
-//         revenue: Number(forecast?.revenue ?? 0),
-//         cost: Number(forecast?.cost ?? 0),
-//         forecastedCost: Number(forecast?.forecastedCost ?? 0),
-//         fringe: Number(forecast?.fringe ?? 0),
-//         overhead: Number(forecast?.overhead ?? 0),
-//         gna: Number(forecast?.gna ?? 0),
-//         materials: Number(forecast?.materials ?? 0),
-//         forecastedhours: Number(forecast?.forecastedhours ?? 0),
-//         actualhours: Number(forecast?.actualhours ?? 0),
-//         createdat: forecast?.createdat ?? new Date().toISOString(),
-//         updatedat: new Date().toISOString(),
-//         displayText: String(forecast?.displayText ?? ""),
-//         acctId: String(emp?.emple?.accId ?? ""),
-//         orgId: String(emp?.emple?.orgId ?? ""),
-//         plc: String(emp?.emple?.plcGlcCode ?? ""),
-//         empleId: Number(emp?.emple?.id ?? 0),
-//         hrlyRate: Number(parseFloat(emp?.emple?.perHourRate ?? 0) || 0),
-//         effectDt: new Date().toISOString().split('T')[0],
-//         emple: emp?.emple ? {
-//           id: Number(emp.emple.id ?? 0),
-//           emplId: String(emp.emple.emplId ?? ""),
-//           orgId: String(emp.emple.orgId ?? ""),
-//           firstName: String(emp.emple.firstName ?? ""),
-//           lastName: String(emp.emple.lastName ?? ""),
-//           plcGlcCode: String(emp.emple.plcGlcCode ?? ""),
-//           perHourRate: Number(parseFloat(emp.emple.perHourRate ?? 0) || 0),
-//           salary: Number(parseFloat(emp.emple.salary ?? 0) || 0),
-//           accId: String(emp.emple.accId ?? ""),
-//           hireDate: emp.emple.hireDate ?? new Date().toISOString().split('T')[0],
-//           isRev: Boolean(emp.emple.isRev ?? false),
-//           isBrd: Boolean(emp.emple.isBrd ?? false),
-//           createdAt: emp.emple.createdAt ?? new Date().toISOString(),
-//           type: String(emp.emple.type ?? ""),
-//           status: String(emp.emple.status ?? ""),
-//           plId: Number(planId ?? 0),
-//           isWarning: Boolean(emp.emple.isWarning ?? false),
-//           plForecasts: [],
-//           organization: emp.emple.organization || null,
-//           plProjectPlan: emp.emple.plProjectPlan || null
-//         } : null
-//       };
-
-//       bulkPayload.push(payload);
-//       successCount++;
-//     }
-
-//     if (bulkPayload.length === 0) {
-//       toast.warning("No valid entries to save.", { autoClose: 3000 });
-//       return;
-//     }
-
-//     // Use bulk API endpoint - NOT individual updates
-//     console.log("Calling bulk amount API:", `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`);
-//     console.log("Payload:", JSON.stringify(bulkPayload, null, 2));
-    
-//     const response = await axios.put(
-//       `${backendUrl}/Forecast/BulkUpdateForecastAmount/${planType}`,
-//       bulkPayload,
-//       { headers: { "Content-Type": "application/json" } }
-//     );
-
-//     console.log("Bulk amount update response:", response.data);
-
-//     // Update local state for all successful updates
-//     setEmployees((prev) => {
-//       const updated = [...prev];
-      
-//       for (const key in modifiedAmounts) {
-//         const { empIdx, uniqueKey, newValue } = modifiedAmounts[key];
-//         const newNumericValue = newValue === "" ? 0 : Number(newValue);
-        
-//         if (
-//           updated[empIdx] &&
-//           updated[empIdx].emple &&
-//           updated[empIdx].emple.plForecasts
-//         ) {
-//           const currentDuration = sortedDurations.find(
-//             (d) => `${d.monthNo}_${d.year}` === uniqueKey
-//           );
-          
-//           const forecastIndex = updated[empIdx].emple.plForecasts.findIndex(
-//             (f) => f.month === currentDuration?.monthNo && f.year === currentDuration?.year
-//           );
-          
-//           if (forecastIndex !== -1) {
-//             if (planType === "EAC") {
-//               updated[empIdx].emple.plForecasts[forecastIndex].actualamt = newNumericValue;
-//             } else {
-//               updated[empIdx].emple.plForecasts[forecastIndex].forecastedamt = newNumericValue;
-//             }
-//           }
-//         }
-//       }
-      
-//       return updated;
-//     });
-
-//     // Clear modified amounts and reset flags
-//     setModifiedAmounts({});
-//     setHasUnsavedAmountChanges(false);
-
-//     toast.success(`Successfully saved ${successCount} amount entries!`, {
-//       autoClose: 3000,
-//     });
-
-//     if (errorCount > 0) {
-//       toast.warning(`${errorCount} entries could not be processed.`, {
-//         autoClose: 3000,
-//       });
-//     }
-
-//   } catch (err) {
-//     console.error("Bulk amount update error:", err);
-//     toast.error(
-//       "Failed to save amounts: " + (err.response?.data?.message || err.message),
-//       {
-//         toastId: "save-amounts-error",
-//         autoClose: 3000,
-//       }
-//     );
-//   } finally {
-//     setIsLoading(false);
-//   }
-// };
-
+ 
 const handleSaveAllAmounts = async () => {
   if (Object.keys(modifiedAmounts).length === 0) {
     toast.info("No changes to save.", { autoClose: 2000 });
@@ -2663,382 +1294,7 @@ const handleCancelAllChanges = () => {
     setSourceRowIndex(null);
   };
 
-  // const handleSaveNewEntry = async () => {
-  //   if (!planId) {
-  //     toast.error("Plan ID is required to save a new entry.", {
-  //       toastId: "no-plan-id",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-
-  //   const payloadForecasts = durations.map((duration) => ({
-  //     forecastedamt:
-  //       Number(newEntryPeriodAmounts[`${duration.monthNo}_${duration.year}`]) ||
-  //       0,
-  //     forecastid: 0,
-  //     projId: projectId,
-  //     plId: planId,
-  //     emplId: newEntry.id,
-  //     dctId: 0,
-  //     month: duration.monthNo,
-  //     year: duration.year,
-  //     totalBurdenCost: 0,
-  //     fees: 0,
-  //     burden: 0,
-  //     ccffRevenue: 0,
-  //     tnmRevenue: 0,
-  //     revenue: 0,
-  //     cost: 0,
-  //     fringe: 0,
-  //     overhead: 0,
-  //     gna: 0,
-  //     forecastedhours: 0,
-  //     updatedat: new Date().toISOString().split("T")[0],
-  //     displayText: "",
-  //     acctId: newEntry.acctId,
-  //     orgId: newEntry.orgId,
-  //     hrlyRate: Number(newEntry.perHourRate) || 0,
-  //     // effectDt: new Date().toISOString(),
-  //     effectDt: null,
-  //   }));
-
-  //   const payload = {
-  //     dctId: 0,
-  //     plId: planId,
-  //     acctId: newEntry.acctId || "",
-  //     orgId: newEntry.orgId || "",
-  //     notes: "",
-  //     category: newEntry.name || "Test",
-  //     amountType: "",
-  //     id: newEntry.id,
-  //     type: newEntry.idType || "Employee",
-  //     isRev: newEntry.isRev || false,
-  //     isBrd: newEntry.isBrd || false,
-  //     status: newEntry.status || "Act",
-  //     createdBy: "System",
-  //     lastModifiedBy: "System",
-  //     plForecasts: payloadForecasts,
-  //     plDct: {},
-  //   };
-
-  //   console.log("AddNewDirectCost payload for new entry:", payload);
-
-  //   try {
-  //     const response = await axios.post(
-  //       "${backendUrl}/DirectCost/AddNewDirectCost",
-  //       payload,
-  //       { headers: { "Content-Type": "application/json" } }
-  //     );
-
-  //     console.log("Save response:", response.status, response.data);
-
-  //     const newEmployee = {
-  //       emple: {
-  //         empleId: newEntry.id,
-  //         emplId: newEntry.id,
-  //         firstName: newEntry.firstName || "",
-  //         lastName: newEntry.lastName || "",
-  //         accId: newEntry.acctId || "",
-  //         orgId: newEntry.orgId || "",
-  //         perHourRate: Number(newEntry.perHourRate) || 0,
-  //         isRev: newEntry.isRev || false,
-  //         isBrd: newEntry.isBrd || false,
-  //         status: newEntry.status || "Act",
-  //         type: newEntry.idType || "Employee",
-  //         plForecasts: payloadForecasts.map((forecast) => ({
-  //           ...forecast,
-  //           forecastid:
-  //             response.data?.plForecasts?.find(
-  //               (f) => f.month === forecast.month && f.year === forecast.year
-  //             )?.forecastid || 0,
-  //           createdat: new Date().toISOString(),
-  //         })),
-  //       },
-  //     };
-
-  //     setEmployees((prevEmployees) => {
-  //       const employeeMap = new Map();
-  //       prevEmployees.forEach((emp) => {
-  //         const emplId = emp.emple.emplId || `auto-${Math.random()}`;
-  //         employeeMap.set(emplId, emp);
-  //       });
-  //       employeeMap.set(newEntry.id, newEmployee);
-  //       return Array.from(employeeMap.values());
-  //     });
-
-  //     setSuccessMessageText("Entry saved successfully!");
-  //     setShowSuccessMessage(true);
-  //     setShowNewForm(false);
-  //     setNewEntry({
-  //       id: "",
-  //       firstName: "",
-  //       lastName: "",
-  //       isRev: false,
-  //       isBrd: false,
-  //       idType: "",
-  //       acctId: "",
-  //       orgId: "",
-  //       perHourRate: "",
-  //       status: "Act",
-  //     });
-  //     // setNewEntryPeriodAmounts({});
-  //     setEmployeeSuggestions([]);
-  //     setNonLaborAccounts([]);
-
-  //     if (onSaveSuccess) {
-  //       console.log("Calling onSaveSuccess");
-  //       onSaveSuccess();
-  //     }
-
-  //     toast.success("New entry saved and added to table!", {
-  //       toastId: "save-entry-success",
-  //       autoClose: 3000,
-  //     });
-  //   } catch (err) {
-  //     const errorMessage = err.response?.data?.errors
-  //       ? Object.entries(err.response.data.errors)
-  //           .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-  //           .join("; ")
-  //       : err.response?.data?.message || err.message;
-  //     console.error("Save error:", err.response?.data || err);
-  //     setSuccessMessageText("Failed to save entry.");
-  //     setShowSuccessMessage(true);
-  //     toast.error(`Failed to save new entry: ${errorMessage}`, {
-  //       toastId: "save-entry-error",
-  //       autoClose: 5000,
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //     setTimeout(() => setShowSuccessMessage(false), 2000);
-  //   }
-  // };
-
-  // const handleSaveNewEntry = async () => {
-  //   if (!planId) {
-  //     toast.error("Plan ID is required to save a new entry.", {
-  //       toastId: "no-plan-id",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-
-  //   // Check for empty ID
-  //   if (!newEntry.id || newEntry.id.trim() === "") {
-  //     toast.error("ID is required to save a new entry.", {
-  //       toastId: "empty-id-error",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-
-  //   // Check for duplicate ID
-  //   // const isDuplicateId = employees.some(
-  //   //   (emp) => emp.emple.emplId === newEntry.id
-  //   // );
-
-  //   // if (isDuplicateId) {
-  //   //   toast.error("ID is already present in table so can't save.", {
-  //   //     toastId: "duplicate-id-error",
-  //   //     autoClose: 3000,
-  //   //   });
-  //   //   return;
-  //   // }
-  //   // Only check for duplicate ID if NOT "Other"
-  //   // if (newEntry.idType !== "Other") {
-  //   //   const isDuplicateId = employees.some(
-  //   //     (emp) => emp.emple.emplId === newEntry.id
-  //   //   );
-
-  //   //   if (isDuplicateId) {
-  //   //     toast.error("ID is already present in table so can't save.", {
-  //   //       toastId: "duplicate-id-error",
-  //   //       autoClose: 3000,
-  //   //     });
-  //   //     return;
-  //   //   }
-  //   // }
-  //   // if (newEntry.idType !== "Other") {
-  //   // const isDuplicateId = employees.some((emp) => {
-  //   //   const emple = emp.emple;
-  //   //   if (!emple) return false;
-  //   //   return (
-  //   //     emple.emplId === newEntry.id &&
-  //   //     emple.accId === newEntry.acctId &&
-  //   //     emple.orgId === newEntry.orgId
-  //   //   );
-  //   // });
-
-  //   const isDuplicateId = employees.some((emp) => {
-  //     const emple = emp.emple;
-  //     if (!emple) return false;
-  //     return emple.emplId === newEntry.id;
-  //   });
-
-  //   if (isDuplicateId) {
-  //     toast.error(
-  //       "An entry with this ID, Account, and Org already exists; cannot save duplicate.",
-  //       {
-  //         toastId: "duplicate-id-error",
-  //         autoClose: 3000,
-  //       }
-  //     );
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-
-  //   const payloadForecasts = durations.map((duration) => ({
-  //     forecastedamt:
-  //       Number(newEntryPeriodAmounts[`${duration.monthNo}_${duration.year}`]) ||
-  //       0,
-  //     forecastid: 0,
-  //     projId: projectId,
-  //     plId: planId,
-  //     emplId: newEntry.id,
-  //     dctId: 0,
-  //     month: duration.monthNo,
-  //     year: duration.year,
-  //     totalBurdenCost: 0,
-  //     fees: 0,
-  //     burden: 0,
-  //     ccffRevenue: 0,
-  //     tnmRevenue: 0,
-  //     revenue: 0,
-  //     cost: 0,
-  //     fringe: 0,
-  //     overhead: 0,
-  //     gna: 0,
-  //     forecastedhours: 0,
-  //     updatedat: new Date().toISOString().split("T")[0],
-  //     displayText: "",
-  //     acctId: newEntry.acctId,
-  //     orgId: newEntry.orgId,
-  //     hrlyRate: Number(newEntry.perHourRate) || 0,
-  //     effectDt: null,
-  //   }));
-
-  //   const payload = {
-  //     dctId: 0,
-  //     plId: planId,
-  //     acctId: newEntry.acctId || "",
-  //     orgId: newEntry.orgId || "",
-  //     notes: "",
-  //     // category: newEntry.name || "",
-  //     category:
-  //       newEntry.lastName && newEntry.firstName
-  //         ? `${newEntry.lastName}, ${newEntry.firstName}`
-  //         : newEntry.lastName || newEntry.firstName || "",
-
-  //     amountType: "",
-  //     id: newEntry.id,
-  //     type: newEntry.idType || "Employee",
-  //     isRev: newEntry.isRev || false,
-  //     isBrd: newEntry.isBrd || false,
-  //     status: newEntry.status || "Act",
-  //     createdBy: "System",
-  //     lastModifiedBy: "System",
-  //     plForecasts: payloadForecasts,
-  //     plDct: {},
-  //   };
-
-  //   // console.log("AddNewDirectCost payload for new entry:", payload);
-
-  //   try {
-  //     const response = await axios.post(
-  //       `${backendUrl}/DirectCost/AddNewDirectCost`,
-  //       payload,
-  //       { headers: { "Content-Type": "application/json" } }
-  //     );
-
-  //     // console.log("Save response:", response.status, response.data);
-
-  //     const newEmployee = {
-  //       emple: {
-  //         empleId: newEntry.id,
-  //         emplId: newEntry.id,
-  //         firstName: newEntry.firstName || "",
-  //         lastName: newEntry.lastName || "",
-  //         accId: newEntry.acctId || "",
-  //         orgId: newEntry.orgId || "",
-  //         perHourRate: Number(newEntry.perHourRate) || 0,
-  //         isRev: newEntry.isRev || false,
-  //         isBrd: newEntry.isBrd || false,
-  //         status: newEntry.status || "Act",
-  //         type: newEntry.idType || "Employee",
-  //         category:
-  //           newEntry.lastName && newEntry.firstName
-  //             ? `${newEntry.lastName}, ${newEntry.firstName}`
-  //             : newEntry.lastName || newEntry.firstName || "", // Add this line
-  //         plForecasts: payloadForecasts.map((forecast) => ({
-  //           ...forecast,
-  //           forecastid:
-  //             response.data?.plForecasts?.find(
-  //               (f) => f.month === forecast.month && f.year === forecast.year
-  //             )?.forecastid || 0,
-  //           createdat: new Date().toISOString(),
-  //         })),
-  //       },
-  //     };
-
-  //     setEmployees((prevEmployees) => {
-  //       const employeeMap = new Map();
-  //       prevEmployees.forEach((emp) => {
-  //         const emplId = emp.emple.emplId || `auto-${Math.random()}`;
-  //         employeeMap.set(emplId, emp);
-  //       });
-  //       employeeMap.set(newEntry.id, newEmployee);
-  //       return Array.from(employeeMap.values());
-  //     });
-
-  //     setSuccessMessageText("Entry saved successfully!");
-  //     setShowSuccessMessage(true);
-  //     setShowNewForm(false);
-  //     setNewEntry({
-  //       id: "",
-  //       firstName: "",
-  //       lastName: "",
-  //       isRev: false,
-  //       isBrd: false,
-  //       idType: "",
-  //       acctId: "",
-  //       orgId: "",
-  //       perHourRate: "",
-  //       status: "Act",
-  //     });
-  //     setEmployeeSuggestions([]);
-  //     setNonLaborAccounts([]);
-
-  //     if (onSaveSuccess) {
-  //       // console.log("Calling onSaveSuccess");
-  //       onSaveSuccess();
-  //     }
-
-  //     toast.success("New entry saved and added to table!", {
-  //       toastId: "save-entry-success",
-  //       autoClose: 3000,
-  //     });
-  //   } catch (err) {
-  //     const errorMessage = err.response?.data?.errors
-  //       ? Object.entries(err.response.data.errors)
-  //           .map(([field, messages]) => `${field}: ${messages.join(", ")}`)
-  //           .join("; ")
-  //       : err.response?.data?.message || err.message;
-  //     // console.error("Save error:", err.response?.data || err);
-  //     setSuccessMessageText("Failed to save entry.");
-  //     setShowSuccessMessage(true);
-  //     toast.error(`Failed to save new entry: ${errorMessage}`, {
-  //       toastId: "save-entry-error",
-  //       autoClose: 5000,
-  //     });
-  //   } finally {
-  //     setIsLoading(false);
-  //     setTimeout(() => setShowSuccessMessage(false), 2000);
-  //   }
-  // };
-
+ 
   const handleSaveNewEntry = async () => {
   if (!planId) {
     toast.error("Plan ID is required to save a new entry.", {
@@ -3256,34 +1512,293 @@ const handleCancelAllChanges = () => {
 };
 
 
-  // const handleRowClick = (actualEmpIdx) => {
-  //   if (!isEditable) return;
-  //   setSelectedRowIndex(
-  //     actualEmpIdx === selectedRowIndex ? null : actualEmpIdx
-  //   );
-  //   setSelectedColumnKey(null);
-  //   setReplaceScope(actualEmpIdx === selectedRowIndex ? "all" : "row");
-  //   if (showNewForm) setSourceRowIndex(actualEmpIdx);
-  // };
+const handleSaveMultiplePastedEntries = async () => {
+  if (newEntries.length === 0) {
+    toast.info("No pasted entries to save", { autoClose: 2000 });
+    return;
+  }
 
-  const handleRowClick = (actualEmpIdx) => {
-    if (!isEditable) return;
+  if (!planId) {
+    toast.error("Plan ID is required to save entries.", { toastId: "no-plan-id", autoClose: 3000 });
+    return;
+  }
 
-    setSelectedRowIndex(
-      actualEmpIdx === selectedRowIndex ? null : actualEmpIdx
-    );
+  setIsLoading(true);
+  let successCount = 0;
+  let errorCount = 0;
+  const errors = [];
+  const successfulIndices = []; // Track which entries were saved successfully
 
-    // Use employees instead of Employees
-    const selectedEmployee = employees[actualEmpIdx];
-    setSelectedEmployeeId(
-      selectedEmployee ? selectedEmployee.emple.dctId : null
-    );
+  try {
+    // Loop through each pasted entry
+    for (let entryIndex = 0; entryIndex < newEntries.length; entryIndex++) {
+      const entry = newEntries[entryIndex];
+      const periodAmounts = newEntryPeriodAmountsArray[entryIndex] || {};
 
-    setSelectedColumnKey(null);
-    setReplaceScope(actualEmpIdx === selectedRowIndex ? "all" : "row");
-    if (showNewForm) setSourceRowIndex(actualEmpIdx);
-  };
+      // SAME VALIDATION AS handleSaveNewEntry
+      // 1. Check for empty ID
+      if (!entry.id || entry.id.trim() === "") {
+        errors.push(`Entry ${entryIndex + 1}: ID is required`);
+        errorCount++;
+        continue;
+      }
 
+      // 2. Check for valid employee ID (not for "Other" type)
+      if (entry.idType !== "Other") {
+        const isValidEmployeeId = (pastedEntrySuggestions[entryIndex] || []).some(
+          (emp) => emp.emplId === entry.id
+        );
+        if (!isValidEmployeeId) {
+          errors.push(`Entry ${entryIndex + 1}: Invalid employee ID "${entry.id}"`);
+          errorCount++;
+          continue;
+        }
+      }
+
+      // 3. Check for valid account
+      if (entry.acctId) {
+        const validAccounts =
+          entry.idType === "Vendor" || entry.idType === "Vendor Employee"
+            ? (pastedEntryAccounts[entryIndex] || []).map((a) => a.id || a.accountId)
+            : (pastedEntryAccounts[entryIndex] || []).map((a) => a.id || a.accountId);
+
+        if (!validAccounts.includes(entry.acctId)) {
+          errors.push(`Entry ${entryIndex + 1}: Invalid account "${entry.acctId}"`);
+          errorCount++;
+          continue;
+        }
+      }
+
+      // 4. Check for valid organization
+      if (entry.orgId) {
+        const validOrgs = (pastedEntryOrgs[entryIndex] || []).map((org) => org.value);
+        if (!validOrgs.includes(entry.orgId)) {
+          errors.push(`Entry ${entryIndex + 1}: Invalid organization "${entry.orgId}"`);
+          errorCount++;
+          continue;
+        }
+      }
+
+      // 5. Check for duplicate ID
+      const isDuplicateId = employees.some((emp) => {
+        const emple = emp.emple;
+        if (!emple) return false;
+        return emple.emplId === entry.id;
+      });
+
+      if (isDuplicateId) {
+        errors.push(`Entry ${entryIndex + 1}: ID "${entry.id}" already exists in table`);
+        errorCount++;
+        continue;
+      }
+
+      // SAME PAYLOAD STRUCTURE AS handleSaveNewEntry
+      const payloadForecasts = durations.map((duration) => ({
+        forecastedamt: Number(periodAmounts[`${duration.monthNo}_${duration.year}`]) || 0,
+        forecastid: 0,
+        projId: projectId,
+        plId: planId,
+        emplId: entry.id,
+        dctId: 0,
+        month: duration.monthNo,
+        year: duration.year,
+        totalBurdenCost: 0,
+        fees: 0,
+        burden: 0,
+        ccffRevenue: 0,
+        tnmRevenue: 0,
+        revenue: 0,
+        cost: 0,
+        fringe: 0,
+        overhead: 0,
+        gna: 0,
+        forecastedhours: 0,
+        updatedat: new Date().toISOString().split("T")[0],
+        displayText: "",
+        acctId: entry.acctId,
+        orgId: entry.orgId,
+        hrlyRate: 0,
+        effectDt: null,
+      }));
+
+      const payload = {
+        dctId: 0,
+        plId: planId,
+        acctId: entry.acctId || "",
+        orgId: entry.orgId || "",
+        notes: "",
+        category:
+          entry.lastName && entry.firstName
+            ? `${entry.lastName}, ${entry.firstName}`
+            : entry.lastName || entry.firstName || "",
+        amountType: "",
+        id: entry.id,
+        type: entry.idType || "Employee",
+        isRev: entry.isRev || false,
+        isBrd: entry.isBrd || false,
+        status: entry.status || "Act",
+        createdBy: "System",
+        lastModifiedBy: "System",
+        plForecasts: payloadForecasts,
+        plDct: "",
+      };
+
+      // SAME API CALL AS handleSaveNewEntry
+      try {
+        const response = await axios.post(`${backendUrl}/DirectCost/AddNewDirectCost`, payload, {
+          headers: { "Content-Type": "application/json" },
+        });
+
+        // Add to local state
+        const newEmployee = {
+          emple: {
+            empleId: entry.id,
+            emplId: entry.id,
+            firstName: entry.firstName || "",
+            lastName: entry.lastName || "",
+            accId: entry.acctId || "",
+            orgId: entry.orgId || "",
+            perHourRate: 0,
+            isRev: entry.isRev || false,
+            isBrd: entry.isBrd || false,
+            status: entry.status || "Act",
+            type: entry.idType || "Employee",
+            category:
+              entry.lastName && entry.firstName
+                ? `${entry.lastName}, ${entry.firstName}`
+                : entry.lastName || entry.firstName || "",
+            plForecasts: payloadForecasts.map((forecast) => ({
+              ...forecast,
+              forecastid:
+                response.data?.plForecasts?.find(
+                  (f) => f.month === forecast.month && f.year === forecast.year
+                )?.forecastid || 0,
+              createdat: new Date().toISOString(),
+            })),
+          },
+        };
+
+        setEmployees((prevEmployees) => {
+          const employeeMap = new Map();
+          prevEmployees.forEach((emp) => {
+            const emplId = emp.emple.emplId || `auto-${Math.random()}`;
+            employeeMap.set(emplId, emp);
+          });
+          employeeMap.set(entry.id, newEmployee);
+          return Array.from(employeeMap.values());
+        });
+
+        successCount++;
+        successfulIndices.push(entryIndex); // Mark this entry as successfully saved
+      } catch (err) {
+        const errorMessage = err.response?.data?.message || err.message;
+        errors.push(`Entry ${entryIndex + 1}: ${errorMessage}`);
+        errorCount++;
+      }
+    }
+
+    // ONLY REMOVE SUCCESSFULLY SAVED ENTRIES
+    if (successfulIndices.length > 0) {
+      setNewEntries((prev) => prev.filter((_, idx) => !successfulIndices.includes(idx)));
+      setNewEntryPeriodAmountsArray((prev) => prev.filter((_, idx) => !successfulIndices.includes(idx)));
+      
+      // Also clean up suggestions for removed entries
+      setPastedEntrySuggestions((prev) => {
+        const updated = { ...prev };
+        successfulIndices.forEach((idx) => delete updated[idx]);
+        // Re-index remaining entries
+        const reindexed = {};
+        Object.keys(updated).forEach((key) => {
+          const oldIdx = parseInt(key);
+          const newIdx = oldIdx - successfulIndices.filter(si => si < oldIdx).length;
+          reindexed[newIdx] = updated[key];
+        });
+        return reindexed;
+      });
+      
+      setPastedEntryAccounts((prev) => {
+        const updated = { ...prev };
+        successfulIndices.forEach((idx) => delete updated[idx]);
+        const reindexed = {};
+        Object.keys(updated).forEach((key) => {
+          const oldIdx = parseInt(key);
+          const newIdx = oldIdx - successfulIndices.filter(si => si < oldIdx).length;
+          reindexed[newIdx] = updated[key];
+        });
+        return reindexed;
+      });
+      
+      setPastedEntryOrgs((prev) => {
+        const updated = { ...prev };
+        successfulIndices.forEach((idx) => delete updated[idx]);
+        const reindexed = {};
+        Object.keys(updated).forEach((key) => {
+          const oldIdx = parseInt(key);
+          const newIdx = oldIdx - successfulIndices.filter(si => si < oldIdx).length;
+          reindexed[newIdx] = updated[key];
+        });
+        return reindexed;
+      });
+    }
+
+    // Show results
+    if (successCount > 0) {
+      toast.success(`Successfully saved ${successCount} entries!`, { autoClose: 3000 });
+      if (onSaveSuccess) {
+        onSaveSuccess();
+      }
+    }
+
+    if (errorCount > 0) {
+      toast.error(
+        `Failed to save ${errorCount} entries:\n${errors.slice(0, 3).join("\n")}${
+          errors.length > 3 ? `\n...and ${errors.length - 3} more` : ""
+        }`,
+        { toastId: "save-pasted-error", autoClose: 5000 }
+      );
+    }
+  } catch (err) {
+    toast.error(`Failed to save pasted entries: ${err.message}`, {
+      toastId: "save-pasted-error",
+      autoClose: 3000,
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+
+const handleRowClick = (actualEmpIdx) => {
+  if (!isEditable) return;
+
+  // Toggle selection in selectedRowIndex for UI highlighting
+  setSelectedRowIndex((prev) => (prev === actualEmpIdx ? null : actualEmpIdx));
+
+  // Use employees instead of Employees
+  const selectedEmployee = employees[actualEmpIdx];
+  setSelectedEmployeeId(selectedEmployee ? selectedEmployee.emple.dctId : null);
+  setSelectedColumnKey(null);
+  setReplaceScope(actualEmpIdx === selectedRowIndex ? "all" : "row");
+
+  if (showNewForm) {
+    setSourceRowIndex(actualEmpIdx);
+  }
+
+  // ADD THIS: Toggle row selection for copy functionality
+  setSelectedRows((prev) => {
+    const newSelection = new Set(prev);
+    if (newSelection.has(actualEmpIdx)) {
+      newSelection.delete(actualEmpIdx);
+    } else {
+      newSelection.add(actualEmpIdx);
+    }
+    setShowCopyButton(newSelection.size > 0);
+    return newSelection;
+  });
+};
+
+
+ 
   const handleDeleteEmployee = async (dctId) => {
     if (!dctId) {
       toast.error("No employee selected for deletion");
@@ -3324,225 +1839,7 @@ const handleCancelAllChanges = () => {
     setReplaceScope(uniqueKey === selectedColumnKey ? "all" : "column");
   };
 
-  // const handleFindReplace = async () => {
-  //   if (
-  //     !isEditable ||
-  //     findValue === "" ||
-  //     (replaceScope === "row" && selectedRowIndex === null) ||
-  //     (replaceScope === "column" && selectedColumnKey === null)
-  //   ) {
-  //     toast.warn("Please select a valid scope and enter a value to find.", {
-  //       toastId: "find-replace-warning",
-  //       autoClose: 3000,
-  //     });
-  //     return;
-  //   }
-
-  //   // Show loading state
-  //   setIsLoading(true);
-
-  //   const updates = [];
-  //   const updatedInputValues = { ...inputValues };
-  //   let replacementsCount = 0;
-  //   let skippedCount = 0;
-
-  //   for (const empIdx in employees) {
-  //     const emp = employees[empIdx];
-  //     const actualEmpIdx = parseInt(empIdx, 10);
-
-  //     if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) {
-  //       continue;
-  //     }
-
-  //     for (const duration of sortedDurations) {
-  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
-
-  //       if (replaceScope === "column" && uniqueKey !== selectedColumnKey) {
-  //         continue;
-  //       }
-
-  //       if (!isMonthEditable(duration, closedPeriod, planType)) {
-  //         continue;
-  //       }
-
-  //       const currentInputKey = `${actualEmpIdx}_${uniqueKey}`;
-
-  //       // Get the actual displayed value
-  //       let displayedValue;
-  //       if (inputValues[currentInputKey] !== undefined) {
-  //         displayedValue = String(inputValues[currentInputKey]);
-  //       } else {
-  //         const monthAmounts = getMonthAmounts(emp);
-  //         const forecast = monthAmounts[uniqueKey];
-  //         if (forecast && forecast.value !== undefined) {
-  //           displayedValue = String(forecast.value);
-  //         } else {
-  //           displayedValue = "0";
-  //         }
-  //       }
-
-  //       const findValueTrimmed = findValue.trim();
-  //       const displayedValueTrimmed = displayedValue.trim();
-
-  //       // Matching logic
-  //       let isMatch = false;
-
-  //       if (findValueTrimmed === "0") {
-  //         const numValue = parseFloat(displayedValueTrimmed);
-  //         isMatch =
-  //           displayedValueTrimmed === "" ||
-  //           displayedValueTrimmed === "0" ||
-  //           (!isNaN(numValue) && numValue === 0);
-  //       } else {
-  //         isMatch = displayedValueTrimmed === findValueTrimmed;
-
-  //         if (!isMatch) {
-  //           const findNum = parseFloat(findValueTrimmed);
-  //           const displayNum = parseFloat(displayedValueTrimmed);
-  //           if (!isNaN(findNum) && !isNaN(displayNum)) {
-  //             isMatch = findNum === displayNum;
-  //           }
-  //         }
-  //       }
-
-  //       if (isMatch) {
-  //         const newValue = replaceValue.trim();
-  //         const newNumericValue =
-  //           newValue === "" ? 0 : parseFloat(newValue) || 0;
-
-  //         const forecast = getMonthAmounts(emp)[uniqueKey];
-
-  //         // Only proceed if we have a valid forecast with forecastid
-  //         if (forecast && forecast.forecastid) {
-  //           const originalValue =
-  //             planType === "EAC"
-  //               ? forecast.actualamt ?? 0
-  //               : forecast.forecastedamt ?? 0;
-
-  //           if (newNumericValue !== originalValue) {
-  //             updatedInputValues[currentInputKey] = newValue;
-  //             replacementsCount++;
-
-  //             const payload = {
-  //               forecastid: Number(forecast.forecastid),
-  //               projId: forecast.projId || projectId,
-  //               plId: forecast.plId || planId,
-  //               emplId: forecast.emplId || "",
-  //               dctId: forecast.dctId || 0,
-  //               month: forecast.month || duration.monthNo,
-  //               year: forecast.year || duration.year,
-  //               totalBurdenCost: forecast.totalBurdenCost || 0,
-  //               burden: forecast.burden || 0,
-  //               ccffRevenue: forecast.ccffRevenue || 0,
-  //               tnmRevenue: forecast.tnmRevenue || 0,
-  //               cost: forecast.cost || 0,
-  //               fringe: forecast.fringe || 0,
-  //               overhead: forecast.overhead || 0,
-  //               gna: forecast.gna || 0,
-  //               forecastedhours: forecast.forecastedhours || 0,
-  //               updatedat: new Date().toISOString().split("T")[0],
-  //               displayText: forecast.displayText || "",
-  //               [planType === "EAC" ? "actualamt" : "forecastedamt"]:
-  //                 newNumericValue,
-  //             };
-
-  //             updates.push(
-  //               axios
-  //                 .put(
-  //                   `${backendUrl}/Forecast/UpdateForecastAmount/${planType}`,
-  //                   payload,
-  //                   { headers: { "Content-Type": "application/json" } }
-  //                 )
-  //                 .catch((err) => {
-  //                   // console.error(
-  //                   //   "Failed update for payload:",
-  //                   //   payload,
-  //                   //   err?.response?.data || err.message
-  //                   // );
-  //                 })
-  //             );
-  //           }
-  //         } else {
-  //           // Skip cells without existing forecasts and count them
-  //           // console.log(
-  //           //   `Skipping cell without forecast: employee ${emp.emple?.emplId} for ${duration.monthNo}/${duration.year}`
-  //           // );
-  //           skippedCount++;
-  //         }
-  //       }
-  //     }
-  //   }
-
-  //   // console.log(
-  //   //   `Total replacements to make: ${replacementsCount}, Skipped: ${skippedCount}`
-  //   // );
-
-  //   setInputValues(updatedInputValues);
-  //   try {
-  //     if (updates.length > 0) {
-  //       await Promise.all(updates);
-  //     }
-
-  //     // Update local state only for cells that were actually updated
-  //     setEmployees((prev) => {
-  //       const updated = [...prev];
-  //       for (const empIdx in updated) {
-  //         const emp = updated[empIdx];
-  //         for (const duration of sortedDurations) {
-  //           const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //           const currentInputKey = `${empIdx}_${uniqueKey}`;
-  //           if (updatedInputValues[currentInputKey] !== undefined) {
-  //             if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
-  //               const forecast = emp.emple.plForecasts.find(
-  //                 (f) =>
-  //                   f.month === duration.monthNo && f.year === duration.year
-  //               );
-  //               if (forecast) {
-  //                 const newValue =
-  //                   parseFloat(updatedInputValues[currentInputKey]) || 0;
-  //                 if (planType === "EAC") {
-  //                   forecast.actualamt = newValue;
-  //                 } else {
-  //                   forecast.forecastedamt = newValue;
-  //                 }
-  //               }
-  //             }
-  //           }
-  //         }
-  //       }
-  //       return updated;
-  //     });
-
-  //     if (replacementsCount > 0) {
-  //       toast.success(`Successfully replaced ${replacementsCount} cells.`, {
-  //         autoClose: 2000,
-  //       });
-  //     }
-
-  //     if (replacementsCount === 0 && skippedCount === 0) {
-  //       toast.info("No cells replaced.", { autoClose: 2000 });
-  //     }
-  //   } catch (err) {
-  //     toast.error(
-  //       "Failed to replace values: " +
-  //         (err.response?.data?.message || err.message),
-  //       {
-  //         toastId: "replace-error",
-  //         autoClose: 3000,
-  //       }
-  //     );
-  //   } finally {
-  //     // Hide loading state
-  //     setIsLoading(false);
-  //     setShowFindReplace(false);
-  //     setFindValue("");
-  //     setReplaceValue("");
-  //     setSelectedRowIndex(null);
-  //     setSelectedColumnKey(null);
-  //     setReplaceScope("all");
-  //   }
-  // };
-  
+ 
   const handleFindReplace = async () => {
   if (
     !isEditable ||
@@ -3875,872 +2172,673 @@ const calculateColumnTotals = () => {
   return columnTotals;
 };
 
+// Function to handle row selection
+const handleRowSelection = (rowIndex, isSelected) => {
+  setSelectedRows((prev) => {
+    const newSelection = new Set(prev);
+    if (isSelected) {
+      newSelection.add(rowIndex);
+    } else {
+      newSelection.delete(rowIndex);
+    }
+    setShowCopyButton(newSelection.size > 0);
+    return newSelection;
+  });
+};
 
-  // return (
-  //   <div className="relative p-4 font-inter w-full synchronized-tables-outer">
-  //     {/* <h2 className="text-xs font-semibold mb-3 text-gray-800">Amounts</h2> */}
-  //     <div className="w-full flex justify-between mb-4 gap-2">
-  //       <div className="flex-grow"></div>
-  //       <div className="flex gap-2">
-  //         {Object.values(hiddenRows).some(Boolean) && (
-  //           <button
-  //             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-  //             onClick={showHiddenRows}
-  //           >
-  //             Show Hidden Rows
-  //           </button>
-  //         )}
-  //         {isEditable && (
-  //           <>
-  //             <button
-  //               onClick={() => setShowNewForm((prev) => !prev)}
-  //               className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
-  //             >
-  //               {showNewForm ? "Cancel" : "New"}
-  //             </button>
-  //             {!showNewForm && ( // Hide Find/Replace while creating new entry
-  //               <>
-  //               <button
-  //                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-  //                 onClick={() => isEditable && setShowFindReplace(true)}
-  //               >
-  //                 Find / Replace
-  //               </button>
-  //               <button
-  //                     className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs font-medium"
-  //                     onClick={() => {
-  //                       if (!selectedEmployeeId) {
-  //                         toast.error("Please select an employee to delete");
-  //                         return;
-  //                       }
-  //                       handleDeleteEmployee(selectedEmployeeId);
-  //                     }}
-  //                   >
-  //                     Delete
-  //                   </button>
-  //               </>
-  //             )}
-  //             {showNewForm && (
-  //               <button
-  //                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-  //                 onClick={() => isEditable && setShowFillValues(true)}
-  //               >
-  //                 Fill Values
-  //               </button>
-  //             )}
-  //           </>
-  //         )}
-  //         {showNewForm && (
-  //           <button
-  //             onClick={handleSaveNewEntry}
-  //             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
-  //           >
-  //             Save Entry
-  //           </button>
-  //         )}
-  //       </div>
-  //     </div>
+// Function to select/deselect all rows
+const handleSelectAll = (isSelected) => {
+  if (isSelected) {
+    const allRowIndices = new Set();
+    employees.forEach((_, index) => {
+      if (!hiddenRows[index]) {
+        allRowIndices.add(index);
+      }
+    });
+    setSelectedRows(allRowIndices);
+    setShowCopyButton(true);
+  } else {
+    setSelectedRows(new Set());
+    setShowCopyButton(false);
+  }
+};
 
-  //     {showFillValues && (
-  //       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-  //         <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-sm">
-  //           <h3 className="text-lg font-semibold mb-4">
-  //             Fill Values to selected record/s
-  //           </h3>
-  //           <div className="mb-4">
-  //             <label className="block text-gray-700 text-xs font-medium mb-1">
-  //               Select Fill Method
-  //             </label>
-  //             <select
-  //               value={fillMethod}
-  //               onChange={(e) => setFillMethod(e.target.value)}
-  //               className="w-full border border-gray-300 rounded-md p-2 text-xs"
-  //             >
-  //               <option value="None">None</option>
-  //               <option value="Copy From Source Record">
-  //                 Copy from source record
-  //               </option>
-  //             </select>
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block text-gray-700 text-xs font-medium mb-1">
-  //               Start Period
-  //             </label>
-  //             <input
-  //               type="text"
-  //               value={startDate}
-  //               readOnly
-  //               className="w-full border border-gray-300 rounded-md p-2 text-xs bg-gray-100 cursor-not-allowed"
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block text-gray-700 text-xs font-medium mb-1">
-  //               End Period
-  //             </label>
-  //             <input
-  //               type="text"
-  //               value={endDate}
-  //               readOnly
-  //               className="w-full border border-gray-300 rounded-md p-2 text-xs bg-gray-100 cursor-not-allowed"
-  //             />
-  //           </div>
-  //           <div className="flex justify-end gap-3">
-  //             <button
-  //               type="button"
-  //               onClick={() => {
-  //                 setShowFillValues(false);
-  //                 setFillMethod("None");
-  //                 setSourceRowIndex(null);
-  //               }}
-  //               className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 text-xs"
-  //             >
-  //               Close
-  //             </button>
-  //             <button
-  //               type="button"
-  //               onClick={handleFillValues}
-  //               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs"
-  //             >
-  //               Fill
-  //             </button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )}
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
 
-  //     {employees.length === 0 && !showNewForm && sortedDurations.length > 0 ? (
-  //       <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded text-xs">
-  //         No forecast data available for this plan.
-  //       </div>
-  //     ) : (
-  //       <div className="synchronized-tables-container">
-  //         <div className="synchronized-table-scroll">
-  //           <table className="table-fixed text-xs text-left min-w-max border border-gray-300 rounded-lg">
-  //             <thead className="sticky-thead">
-  //               <tr
-  //                 style={{
-  //                   height: `${ROW_HEIGHT_DEFAULT}px`,
-  //                   lineHeight: "normal",
-  //                 }}
-  //               >
-  //                 {EMPLOYEE_COLUMNS.map((col) => (
-  //                   <th
-  //                     key={col.key}
-  //                     className="p-1.5 border border-gray-200 whitespace-nowrap text-xs text-gray-900 font-normal min-w-[70px]" // Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px]
-  //                   >
-  //                     {col.label}
-  //                   </th>
-  //                 ))}
-  //               </tr>
-  //             </thead>
-  //             <tbody>
-  //               {showNewForm && (
-  //                 <tr
-  //                   key="new-entry"
-  //                   className="bg-gray-50"
-  //                   style={{
-  //                     height: `${ROW_HEIGHT_DEFAULT}px`,
-  //                     lineHeight: "normal",
-  //                   }}
-  //                 >
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <select
-  //                       name="idType"
-  //                       value={newEntry.idType || ""}
-  //                       onChange={(e) =>
-  //                         setNewEntry({ ...newEntry, idType: e.target.value })
-  //                       }
-  //                       className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-  //                     >
-  //                       {ID_TYPE_OPTIONS.map((opt) => (
-  //                         <option key={opt.value} value={opt.value}>
-  //                           {opt.label}
-  //                         </option>
-  //                       ))}
-  //                     </select>
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="text"
-  //                       name="id"
-  //                       value={newEntry.id}
-  //                       onChange={(e) => handleIdChange(e.target.value)}
-  //                       className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-  //                       list="employee-id-list"
-  //                       placeholder="Enter ID"
-  //                     />
-  //                     <datalist id="employee-id-list">
-  //                       {employeeSuggestions
-  //                         .filter(
-  //                           (emp) =>
-  //                             emp.emplId && typeof emp.emplId === "string"
-  //                         )
-  //                         .map((emp, index) => (
-  //                           <option
-  //                             key={`${emp.emplId}-${index}`}
-  //                             value={emp.emplId}
-  //                           >
-  //                             {emp.lastName && emp.firstName
-  //                               ? `${emp.lastName}, ${emp.firstName}`
-  //                               : emp.lastName || emp.firstName || emp.emplId}
-  //                           </option>
-  //                         ))}
-  //                     </datalist>
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="text"
-  //                       name="name"
-  //                       value={
-  //                         newEntry.lastName && newEntry.firstName
-  //                           ? `${newEntry.lastName}, ${newEntry.firstName}`
-  //                           : newEntry.lastName || newEntry.firstName || ""
-  //                       }
-  //                       readOnly
-  //                       className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-  //                       placeholder="Name (auto-filled)"
-  //                     />
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="text"
-  //                       name="acctId"
-  //                       value={newEntry.acctId}
-  //                       onChange={(e) =>
-  //                         isBudPlan &&
-  //                         setNewEntry({ ...newEntry, acctId: e.target.value })
-  //                       }
-  //                       className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-  //                         !isBudPlan ? "bg-gray-100 cursor-not-allowed" : ""
-  //                       }`}
-  //                       list="account-list"
-  //                       placeholder="Enter Account"
-  //                       readOnly={!isBudPlan}
-  //                     />
-  //                     <datalist id="account-list">
-  //                       {nonLaborAccounts.map((account, index) => (
-  //                         <option
-  //                           key={`${account.id}-${index}`}
-  //                           value={account.id}
-  //                         >
-  //                           {account.id}
-  //                         </option>
-  //                       ))}
-  //                     </datalist>
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="text"
-  //                       name="orgId"
-  //                       value={newEntry.orgId}
-  //                       onChange={(e) =>
-  //                         isBudPlan &&
-  //                         setNewEntry({ ...newEntry, orgId: e.target.value })
-  //                       }
-  //                       className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-  //                         !isBudPlan ? "bg-gray-100 cursor-not-allowed" : ""
-  //                       }`}
-  //                       placeholder="Enter Organization"
-  //                       readOnly={!isBudPlan}
-  //                     />
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="checkbox"
-  //                       name="isRev"
-  //                       checked={newEntry.isRev}
-  //                       onChange={(e) =>
-  //                         isBudPlan &&
-  //                         setNewEntry({ ...newEntry, isRev: e.target.checked })
-  //                       }
-  //                       className={`w-4 h-4 ${
-  //                         !isBudPlan ? "cursor-not-allowed" : ""
-  //                       }`}
-  //                       disabled={!isBudPlan}
-  //                     />
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="checkbox"
-  //                       name="isBrd"
-  //                       checked={newEntry.isBrd}
-  //                       onChange={(e) =>
-  //                         isBudPlan &&
-  //                         setNewEntry({ ...newEntry, isBrd: e.target.checked })
-  //                       }
-  //                       className={`w-4 h-4 ${
-  //                         !isBudPlan ? "cursor-not-allowed" : ""
-  //                       }`}
-  //                       disabled={!isBudPlan}
-  //                     />
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     <input
-  //                       type="text"
-  //                       name="status"
-  //                       value={newEntry.status}
-  //                       onChange={(e) =>
-  //                         setNewEntry({ ...newEntry, status: e.target.value })
-  //                       }
-  //                       className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-  //                       placeholder="Enter Status"
-  //                     />
-  //                   </td>
-  //                   <td className="border border-gray-300 px-1.5 py-0.5">
-  //                     {" "}
-  //                     {/* Changed px-2 to px-1.5 */}
-  //                     {Object.values(newEntryPeriodAmounts)
-  //                       .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
-  //                       .toFixed(2)}
-  //                   </td>
-  //                 </tr>
-  //               )}
-  //               {employees
-  //                 .filter((_, idx) => !hiddenRows[idx])
-  //                 .map((emp, idx) => {
-  //                   const actualEmpIdx = employees.findIndex((e) => e === emp);
-  //                   const row = getEmployeeRow(emp, actualEmpIdx);
-  //                   const uniqueRowKey = `${
-  //                     emp.emple.emplId || "emp"
-  //                   }-${actualEmpIdx}`;
-  //                   return (
-  //                     <tr
-  //                       key={uniqueRowKey}
-  //                       className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
-  //                         selectedRowIndex === actualEmpIdx
-  //                           ? "bg-yellow-100"
-  //                           : "even:bg-gray-50"
-  //                       }`}
-  //                       style={{
-  //                         height: `${ROW_HEIGHT_DEFAULT}px`,
-  //                         lineHeight: "normal",
-  //                         cursor: isEditable ? "pointer" : "default",
-  //                       }}
-  //                       onClick={() => handleRowClick(actualEmpIdx)}
-  //                     >
-  //                       {EMPLOYEE_COLUMNS.map((col) => {
-  //                         if (isBudPlan && isEditable) {
-  //                           if (col.key === "acctId") {
-  //                             return (
-  //                               <td
-  //                                 key={`${uniqueRowKey}-acctId`}
-  //                                 className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]"
-  //                               >
-  //                                 {" "}
-  //                                 {/* Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px] */}
-  //                                 <input
-  //                                   type="text"
-  //                                   value={
-  //                                     editedRowData[actualEmpIdx]?.acctId !==
-  //                                     undefined
-  //                                       ? editedRowData[actualEmpIdx].acctId
-  //                                       : row.acctId
-  //                                   }
-  //                                   onChange={(e) =>
-  //                                     handleRowFieldChange(
-  //                                       actualEmpIdx,
-  //                                       "acctId",
-  //                                       e.target.value
-  //                                     )
-  //                                   }
-  //                                   onBlur={() =>
-  //                                     handleRowFieldBlur(actualEmpIdx, emp)
-  //                                   }
-  //                                   className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-  //                                 />
-  //                               </td>
-  //                             );
-  //                           }
-  //                           if (col.key === "orgId") {
-  //                             return (
-  //                               <td
-  //                                 key={`${uniqueRowKey}-orgId`}
-  //                                 className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]"
-  //                               >
-  //                                 {" "}
-  //                                 {/* Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px] */}
-  //                                 <input
-  //                                   type="text"
-  //                                   value={
-  //                                     editedRowData[actualEmpIdx]?.orgId !==
-  //                                     undefined
-  //                                       ? editedRowData[actualEmpIdx].orgId
-  //                                       : row.orgId
-  //                                   }
-  //                                   onChange={(e) =>
-  //                                     handleRowFieldChange(
-  //                                       actualEmpIdx,
-  //                                       "orgId",
-  //                                       e.target.value
-  //                                     )
-  //                                   }
-  //                                   onBlur={() =>
-  //                                     handleRowFieldBlur(actualEmpIdx, emp)
-  //                                   }
-  //                                   className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-  //                                 />
-  //                               </td>
-  //                             );
-  //                           }
-  //                           if (col.key === "isRev") {
-  //                             return (
-  //                               <td
-  //                                 key={`${uniqueRowKey}-isRev`}
-  //                                 className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px] text-center"
-  //                               >
-  //                                 {" "}
-  //                                 {/* Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px] */}
-  //                                 <input
-  //                                   type="checkbox"
-  //                                   checked={
-  //                                     editedRowData[actualEmpIdx]?.isRev !==
-  //                                     undefined
-  //                                       ? editedRowData[actualEmpIdx].isRev
-  //                                       : emp.emple.isRev
-  //                                   }
-  //                                   onChange={(e) =>
-  //                                     handleRowFieldChange(
-  //                                       actualEmpIdx,
-  //                                       "isRev",
-  //                                       e.target.checked
-  //                                     )
-  //                                   }
-  //                                   onBlur={() =>
-  //                                     handleRowFieldBlur(actualEmpIdx, emp)
-  //                                   }
-  //                                   className="w-4 h-4"
-  //                                 />
-  //                               </td>
-  //                             );
-  //                           }
-  //                           if (col.key === "isBrd") {
-  //                             return (
-  //                               <td
-  //                                 key={`${uniqueRowKey}-isBrd`}
-  //                                 className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px] text-center"
-  //                               >
-  //                                 {" "}
-  //                                 {/* Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px] */}
-  //                                 <input
-  //                                   type="checkbox"
-  //                                   checked={
-  //                                     editedRowData[actualEmpIdx]?.isBrd !==
-  //                                     undefined
-  //                                       ? editedRowData[actualEmpIdx].isBrd
-  //                                       : emp.emple.isBrd
-  //                                   }
-  //                                   onChange={(e) =>
-  //                                     handleRowFieldChange(
-  //                                       actualEmpIdx,
-  //                                       "isBrd",
-  //                                       e.target.checked
-  //                                     )
-  //                                   }
-  //                                   onBlur={() =>
-  //                                     handleRowFieldBlur(actualEmpIdx, emp)
-  //                                   }
-  //                                   className="w-4 h-4"
-  //                                 />
-  //                               </td>
-  //                             );
-  //                           }
-  //                         }
-  //                         return (
-  //                           <td
-  //                             key={`${uniqueRowKey}-${col.key}`}
-  //                             className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]"
-  //                           >
-  //                             {" "}
-  //                             {/* Changed p-2 to p-1.5, min-w-[80px] to min-w-[70px] */}
-  //                             {row[col.key]}
-  //                           </td>
-  //                         );
-  //                       })}
-  //                     </tr>
-  //                   );
-  //                 })}
-  //             </tbody>
-  //           </table>
-  //         </div>
-  //         <div className="synchronized-table-scroll">
-  //           <table className="min-w-full text-xs text-center border-collapse border border-gray-300 rounded-lg">
-  //             <thead className="sticky-thead">
-  //               <tr
-  //                 style={{
-  //                   height: `${ROW_HEIGHT_DEFAULT}px`,
-  //                   lineHeight: "normal",
-  //                 }}
-  //               >
-  //                 {sortedDurations.map((duration) => {
-  //                   const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //                   return (
-  //                     <th
-  //                       key={uniqueKey}
-  //                       className={`px-2 py-1.5 border border-gray-200 text-center min-w-[80px] text-xs text-gray-900 font-normal ${
-  //                         /* Changed py-2 px-3 to px-2 py-1.5, min-w-[100px] to min-w-[80px] */
-  //                         selectedColumnKey === uniqueKey ? "bg-yellow-100" : ""
-  //                       }`}
-  //                       style={{ cursor: isEditable ? "pointer" : "default" }}
-  //                       onClick={() => handleColumnHeaderClick(uniqueKey)}
-  //                     >
-  //                       <div className="flex flex-col items-center justify-center h-full">
-  //                         <span className="whitespace-nowrap text-xs text-gray-900 font-normal">
-  //                           {duration.month}
-  //                         </span>
-  //                       </div>
-  //                     </th>
-  //                   );
-  //                 })}
-  //               </tr>
-  //             </thead>
-  //             <tbody>
-  //               {showNewForm && (
-  //                 <tr
-  //                   key="new-entry"
-  //                   className="bg-gray-50"
-  //                   style={{
-  //                     height: `${ROW_HEIGHT_DEFAULT}px`,
-  //                     lineHeight: "normal",
-  //                   }}
-  //                 >
-  //                   {sortedDurations.map((duration) => {
-  //                     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //                     const isInputEditable =
-  //                       isEditable &&
-  //                       isMonthEditable(duration, closedPeriod, planType);
-  //                     return (
-  //                       <td
-  //                         key={`new-${uniqueKey}`}
-  //                         className={`px-2 py-1.5 border-r border-gray-200 text-center min-w-[80px] ${
-  //                           /* Changed py-2 px-3 to px-2 py-1.5, min-w-[100px] to min-w-[80px] */
-  //                           planType === "EAC"
-  //                             ? isInputEditable
-  //                               ? "bg-green-50"
-  //                               : "bg-gray-200"
-  //                             : ""
-  //                         }`}
-  //                       >
-  //                         <input
-  //                           type="text"
-  //                           inputMode="numeric"
-  //                           value={newEntryPeriodAmounts[uniqueKey] || ""}
-  //                           onChange={(e) =>
-  //                             isInputEditable &&
-  //                             setNewEntryPeriodAmounts((prev) => ({
-  //                               ...prev,
-  //                               [uniqueKey]: e.target.value.replace(
-  //                                 /[^0-9.]/g,
-  //                                 ""
-  //                               ),
-  //                             }))
-  //                           }
-  //                           className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
-  //                             /* Changed w-[55px] h-[20px] to w-[50px] h-[18px] */
-  //                             !isInputEditable
-  //                               ? "cursor-not-allowed text-gray-400"
-  //                               : "text-gray-700"
-  //                           }`}
-  //                           disabled={!isInputEditable}
-  //                           placeholder="Enter Amount"
-  //                         />
-  //                       </td>
-  //                     );
-  //                   })}
-  //                 </tr>
-  //               )}
-  //               {employees
-  //                 .filter((_, idx) => !hiddenRows[idx])
-  //                 .map((emp, idx) => {
-  //                   const actualEmpIdx = employees.findIndex((e) => e === emp);
-  //                   const monthAmounts = getMonthAmounts(emp);
-  //                   const uniqueRowKey = `${
-  //                     emp.emple.emplId || "emp"
-  //                   }-${actualEmpIdx}`;
-  //                   return (
-  //                     <tr
-  //                       key={uniqueRowKey}
-  //                       className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
-  //                         selectedRowIndex === actualEmpIdx
-  //                           ? "bg-yellow-100"
-  //                           : "even:bg-gray-50"
-  //                       }`}
-  //                       style={{
-  //                         height: `${ROW_HEIGHT_DEFAULT}px`,
-  //                         lineHeight: "normal",
-  //                         cursor: isEditable ? "pointer" : "default",
-  //                       }}
-  //                       onClick={() => handleRowClick(actualEmpIdx)}
-  //                     >
-  //                       {sortedDurations.map((duration) => {
-  //                         const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //                         const forecast = monthAmounts[uniqueKey];
-  //                         const value =
-  //                           inputValues[`${actualEmpIdx}_${uniqueKey}`] ??
-  //                           (forecast?.value !== undefined
-  //                             ? forecast.value
-  //                             : "0");
-  //                         const isInputEditable =
-  //                           isEditable &&
-  //                           isMonthEditable(duration, closedPeriod, planType);
-  //                         return (
-  //                           <td
-  //                             key={`${uniqueRowKey}-${uniqueKey}`}
-  //                             className={`px-2 py-1.5 border-r border-gray-200 text-center min-w-[80px] ${
-  //                               /* Changed py-2 px-3 to px-2 py-1.5, min-w-[100px] to min-w-[80px] */
-  //                               selectedColumnKey === uniqueKey
-  //                                 ? "bg-yellow-100"
-  //                                 : ""
-  //                             } ${
-  //                               planType === "EAC"
-  //                                 ? isInputEditable
-  //                                   ? "bg-green-50"
-  //                                   : "bg-gray-200"
-  //                                 : ""
-  //                             }`}
-  //                           >
-  //                             <input
-  //                               type="text"
-  //                               inputMode="numeric"
-  //                               className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
-  //                                 /* Changed w-[55px] h-[20px] to w-[50px] h-[18px] */
-  //                                 !isInputEditable
-  //                                   ? "cursor-not-allowed text-gray-400"
-  //                                   : "text-gray-700"
-  //                               }`}
-  //                               value={value}
-  //                               onChange={(e) =>
-  //                                 handleInputChange(
-  //                                   actualEmpIdx,
-  //                                   uniqueKey,
-  //                                   e.target.value.replace(/[^0-9.]/g, "")
-  //                                 )
-  //                               }
-  //                               onBlur={(e) =>
-  //                                 handleForecastAmountBlur(
-  //                                   actualEmpIdx,
-  //                                   uniqueKey,
-  //                                   e.target.value
-  //                                 )
-  //                               }
-  //                               disabled={!isInputEditable}
-  //                               placeholder="Enter Amount"
-  //                             />
-  //                           </td>
-  //                         );
-  //                       })}
-  //                     </tr>
-  //                   );
-  //                 })}
-  //             </tbody>
-  //           </table>
-  //         </div>
-  //       </div>
-  //     )}
+//   const sortedDurations = durations.sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
 
-  //     {showFindReplace && (
-  //       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
-  //         <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-sm">
-  //           <h3 className="text-lg font-semibold mb-4">
-  //             Find and Replace Amounts
-  //           </h3>
-  //           <div className="mb-3">
-  //             <label
-  //               htmlFor="findValue"
-  //               className="block text-gray-700 text-xs font-medium mb-1"
-  //             >
-  //               Find:
-  //             </label>
-  //             <input
-  //               type="text"
-  //               id="findValue"
-  //               className="w-full border border-gray-300 rounded-md p-2 text-xs"
-  //               value={findValue}
-  //               onChange={(e) => setFindValue(e.target.value)}
-  //               placeholder="Value to find (e.g., 100 or empty)"
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label
-  //               htmlFor="replaceValue"
-  //               className="block text-gray-700 text-xs font-medium mb-1"
-  //             >
-  //               Replace with:
-  //             </label>
-  //             <input
-  //               type="text"
-  //               id="replaceValue"
-  //               className="w-full border border-gray-300 rounded-md p-2 text-xs"
-  //               value={replaceValue}
-  //               onChange={(e) =>
-  //                 setReplaceValue(e.target.value.replace(/[^0-9.]/g, ""))
-  //               }
-  //               placeholder="New value (e.g., 120 or empty)"
-  //             />
-  //           </div>
-  //           <div className="mb-4">
-  //             <label className="block text-gray-700 text-xs font-medium mb-1">
-  //               Scope:
-  //             </label>
-  //             <div className="flex gap-4 flex-wrap">
-  //               <label className="inline-flex items-center text-xs cursor-pointer">
-  //                 <input
-  //                   type="radio"
-  //                   className="form-radio text-blue-600"
-  //                   name="replaceScope"
-  //                   value="all"
-  //                   checked={replaceScope === "all"}
-  //                   onChange={(e) => setReplaceScope(e.target.value)}
-  //                 />
-  //                 <span className="ml-2">All</span>
-  //               </label>
-  //               <label className="inline-flex items-center text-xs cursor-pointer">
-  //                 <input
-  //                   type="radio"
-  //                   className="form-radio text-blue-600"
-  //                   name="replaceScope"
-  //                   value="row"
-  //                   checked={replaceScope === "row"}
-  //                   onChange={(e) => setReplaceScope(e.target.value)}
-  //                   disabled={selectedRowIndex === null}
-  //                 />
-  //                 <span className="ml-2">
-  //                   Selected Row (
-  //                   {selectedRowIndex !== null
-  //                     ? employees[selectedRowIndex]?.emple.emplId
-  //                     : "N/A"}
-  //                   )
-  //                 </span>
-  //               </label>
-  //               <label className="inline-flex items-center text-xs cursor-pointer">
-  //                 <input
-  //                   type="radio"
-  //                   className="form-radio text-blue-600"
-  //                   name="replaceScope"
-  //                   value="column"
-  //                   checked={replaceScope === "column"}
-  //                   onChange={(e) => setReplaceScope(e.target.value)}
-  //                   disabled={selectedColumnKey === null}
-  //                 />
-  //                 <span className="ml-2">
-  //                   Selected Column (
-  //                   {selectedColumnKey
-  //                     ? sortedDurations.find(
-  //                         (d) => `${d.monthNo}_${d.year}` === selectedColumnKey
-  //                       )?.month
-  //                     : "N/A"}
-  //                   )
-  //                 </span>
-  //               </label>
-  //             </div>
-  //           </div>
-  //           <div className="flex justify-end gap-3">
-  //             <button
-  //               type="button"
-  //               onClick={() => {
-  //                 setShowFindReplace(false);
-  //                 setSelectedRowIndex(null);
-  //                 setSelectedColumnKey(null);
-  //                 setReplaceScope("all");
-  //               }}
-  //               className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 text-xs"
-  //             >
-  //               Cancel
-  //             </button>
-  //             <button
-  //               type="button"
-  //               onClick={handleFindReplace}
-  //               className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs cursor-pointer"
-  //             >
-  //               Replace All
-  //             </button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     )}
-  //   </div>
-  // );
+//   const headers = [
+//     "ID Type",
+//     "ID",
+//     "Name",
+//     "Account",
+//     "Account Name",
+//     "Organization",
+//     "Rev",
+//     "Brd",
+//     "Status",
+//   ];
+
+//   // Store month metadata for matching during paste
+//   const monthMetadata = [];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//     monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = employees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+//         employeeRow.status,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthAmounts = getMonthAmounts(emp);
+//         const forecastValue = monthAmounts[uniqueKey]?.value;
+//         const value =
+//           inputValue !== undefined && inputValue !== ""
+//             ? inputValue
+//             : forecastValue || "0.00";
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       setCopiedRowsData(() => structuredData);
+//       setCopiedMonthMetadata(() => monthMetadata);
+//       setHasClipboardData(() => true);
+
+//       toast.success(`Copied ${structuredData.length} rows!`, {
+//         autoClose: 3000,
+//       });
+
+//       Promise.resolve().then(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       });
+//     })
+//     .catch((err) => {
+//       console.error("Copy failed:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
+
+// const handleCopySelectedRows = () => {
+//   if (selectedRows.size === 0) {
+//     toast.info("No rows selected to copy.", { autoClose: 2000 });
+//     return;
+//   }
+
+//   // COPY ALL DURATIONS (not filtered by fiscal year) - use spread to avoid mutation
+//   const sortedDurations = [...durations].sort((a, b) => {
+//     if (a.year !== b.year) return a.year - b.year;
+//     return a.monthNo - b.monthNo;
+//   });
+
+//   const headers = [
+//     "ID Type",
+//     "ID",
+//     "Name",
+//     "Account",
+//     "Account Name",
+//     "Organization",
+//     "Rev",
+//     "Brd",
+//     "Status",
+//     "Total",
+//   ];
+
+//   // Store month metadata for matching during paste
+//   const monthMetadata = [];
+
+//   sortedDurations.forEach((duration) => {
+//     const monthName = new Date(
+//       duration.year,
+//       duration.monthNo - 1
+//     ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+//     headers.push(monthName);
+//     monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+//   });
+
+//   const copyData = [headers];
+//   const structuredData = [];
+
+//   selectedRows.forEach((rowIndex) => {
+//     const emp = employees[rowIndex];
+//     if (emp && emp.emple && !hiddenRows[rowIndex]) {
+//       const employeeRow = getEmployeeRow(emp, rowIndex);
+//       const rowData = [
+//         employeeRow.idType,
+//         employeeRow.emplId,
+//         employeeRow.name,
+//         employeeRow.acctId,
+//         employeeRow.acctName,
+//         employeeRow.orgId,
+//         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev === true ? "✓" : "-",
+//         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd === true ? "✓" : "-",
+//         employeeRow.status,
+//         employeeRow.total,
+//       ];
+
+//       sortedDurations.forEach((duration) => {
+//         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+//         const monthAmounts = getMonthAmounts(emp);
+//         const forecastValue = monthAmounts[uniqueKey]?.value;
+        
+//         // Format the value properly
+//         let value = "0.00";
+//         if (inputValue !== undefined && inputValue !== "" && inputValue !== null) {
+//           value = parseFloat(inputValue).toFixed(2);
+//         } else if (forecastValue !== undefined && forecastValue !== "" && forecastValue !== null) {
+//           value = parseFloat(forecastValue).toFixed(2);
+//         }
+        
+//         rowData.push(value);
+//       });
+
+//       copyData.push(rowData);
+//       structuredData.push(rowData);
+//     }
+//   });
+
+//   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+//   navigator.clipboard
+//     .writeText(tsvContent)
+//     .then(() => {
+//       setCopiedRowsData(() => structuredData);
+//       setCopiedMonthMetadata(() => monthMetadata);
+//       setHasClipboardData(() => true);
+
+//       toast.success(`Copied ${structuredData.length} rows with all fiscal year data!`, {
+//         autoClose: 3000,
+//       });
+
+//       Promise.resolve().then(() => {
+//         setSelectedRows(new Set());
+//         setShowCopyButton(false);
+//       });
+//     })
+//     .catch((err) => {
+//       console.error("Copy failed:", err);
+//       toast.error("Failed to copy data.", { autoClose: 3000 });
+//     });
+// };
+const handleCopySelectedRows = () => {
+  if (selectedRows.size === 0) {
+    toast.info("No rows selected to copy.", { autoClose: 2000 });
+    return;
+  }
+
+  // COPY ALL DURATIONS (not filtered by fiscal year) - use spread to avoid mutation
+  const sortedDurations = [...durations].sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.monthNo - b.monthNo;
+  });
+
+  const headers = [
+    "ID Type",
+    "ID",
+    "Name",
+    "Account",
+    "Account Name",
+    "Organization",
+    "Rev",
+    "Brd",
+    "Status",
+    "Total",
+  ];
+
+  // Store month metadata for matching during paste
+  const monthMetadata = [];
+
+  // GENERATE MONTH NAMES CORRECTLY
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  
+  sortedDurations.forEach((duration) => {
+    // Use direct month mapping instead of Date object
+    const monthName = `${monthNames[duration.monthNo - 1]} ${duration.year}`;
+    headers.push(monthName);
+    monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+  });
+
+  const copyData = [headers];
+  const structuredData = [];
+
+  selectedRows.forEach((rowIndex) => {
+    const emp = employees[rowIndex];
+    if (emp && emp.emple && !hiddenRows[rowIndex]) {
+      const employeeRow = getEmployeeRow(emp, rowIndex);
+      const rowData = [
+        employeeRow.idType,
+        employeeRow.emplId,
+        employeeRow.name,
+        employeeRow.acctId,
+        employeeRow.acctName,
+        employeeRow.orgId,
+        typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev === true ? "✓" : "-",
+        typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd === true ? "✓" : "-",
+        employeeRow.status,
+        employeeRow.total,
+      ];
+
+      sortedDurations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+        const monthAmounts = getMonthAmounts(emp);
+        const forecastValue = monthAmounts[uniqueKey]?.value;
+        
+        // Format the value properly
+        let value = "0.00";
+        if (inputValue !== undefined && inputValue !== "" && inputValue !== null) {
+          value = parseFloat(inputValue).toFixed(2);
+        } else if (forecastValue !== undefined && forecastValue !== "" && forecastValue !== null) {
+          value = parseFloat(forecastValue).toFixed(2);
+        }
+        
+        rowData.push(value);
+      });
+
+      copyData.push(rowData);
+      structuredData.push(rowData);
+    }
+  });
+
+  const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+  navigator.clipboard
+    .writeText(tsvContent)
+    .then(() => {
+      setCopiedRowsData(() => structuredData);
+      setCopiedMonthMetadata(() => monthMetadata);
+      setHasClipboardData(() => true);
+
+      toast.success(`Copied ${structuredData.length} rows with all fiscal year data!`, {
+        autoClose: 3000,
+      });
+
+      Promise.resolve().then(() => {
+        setSelectedRows(new Set());
+        setShowCopyButton(false);
+      });
+    })
+    .catch((err) => {
+      console.error("Copy failed:", err);
+      toast.error("Failed to copy data.", { autoClose: 3000 });
+    });
+};
+
+// const handlePasteMultipleRows = () => {
+//   if (copiedRowsData.length === 0) {
+//     toast.error("No copied data available to paste", { autoClose: 2000 });
+//     return;
+//   }
+
+//   if (showNewForm) {
+//     setShowNewForm(false);
+//   }
+
+//   const sortedDurations = [...durations]
+//     .filter((d) => {
+//       if (propFiscalYear === "All") return true;
+//       return d.year === parseInt(propFiscalYear);
+//     })
+//     .sort((a, b) => {
+//       if (a.year !== b.year) return a.year - b.year;
+//       return a.monthNo - b.monthNo;
+//     });
+
+//   const processedEntries = [];
+//   const processedAmountsArray = [];
+
+//   copiedRowsData.forEach((rowData) => {
+//     const [
+//       idTypeLabel,
+//       id,
+//       name,
+//       acctId,
+//       acctName,
+//       orgId,
+//       isRev,
+//       isBrd,
+//       status,
+//       ...monthValues
+//     ] = rowData;
+
+//     const idType =
+//       ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+//       idTypeLabel;
+
+//     let firstName = "";
+//     let lastName = "";
+
+//     if (idType === "Vendor" || idType === "Vendor Employee") {
+//       lastName = name;
+//     } else if (idType === "Employee") {
+//       const nameParts = name.split(" ");
+//       firstName = nameParts[0];
+//       lastName = nameParts.slice(1).join(" ");
+//     } else {
+//       firstName = name;
+//     }
+
+//     const entry = {
+//       id: id,
+//       firstName: firstName,
+//       lastName: lastName,
+//       idType: idType,
+//       acctId: acctId,
+//       orgId: orgId,
+//       perHourRate: "",
+//       status: status || "ACT",
+//       isRev: isRev === "✓",
+//       isBrd: isBrd === "✓",
+//     };
+
+//     const periodAmounts = {};
+//     const copiedAmountsMap = {};
+//     copiedMonthMetadata.forEach((meta, index) => {
+//       const key = `${meta.monthNo}_${meta.year}`;
+//       copiedAmountsMap[key] = monthValues[index];
+//     });
+
+//     sortedDurations.forEach((duration) => {
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//       const value = copiedAmountsMap[uniqueKey];
+
+//       if (value && value !== "0.00" && value !== "0" && value !== "") {
+//         periodAmounts[uniqueKey] = value;
+//       }
+//     });
+
+//     processedEntries.push(entry);
+//     processedAmountsArray.push(periodAmounts);
+//   });
+
+//   setNewEntries(processedEntries);
+//   setNewEntryPeriodAmountsArray(processedAmountsArray);
+
+//   processedEntries.forEach((entry, index) => {
+//     fetchSuggestionsForPastedEntry(index, entry);
+//   });
+
+//   setHasClipboardData(false);
+//   setCopiedRowsData([]);
+//   setCopiedMonthMetadata([]);
+
+//   toast.success(
+//     `Pasted ${processedEntries.length} entries for fiscal year ${propFiscalYear}!`,
+//     { autoClose: 3000 }
+//   );
+// };
+const handlePasteMultipleRows = () => {
+  if (copiedRowsData.length === 0) {
+    toast.error("No copied data available to paste", { autoClose: 2000 });
+    return;
+  }
+
+  if (showNewForm) {
+    setShowNewForm(false);
+  }
+
+  // USE ALL DURATIONS (not filtered) - same as what was copied
+  const allDurations = [...durations].sort((a, b) => {
+    if (a.year !== b.year) return a.year - b.year;
+    return a.monthNo - b.monthNo;
+  });
+
+  const processedEntries = [];
+  const processedAmountsArray = [];
+
+  copiedRowsData.forEach((rowData) => {
+    const [
+      idTypeLabel,
+      id,
+      name,
+      acctId,
+      acctName,
+      orgId,
+      isRev,
+      isBrd,
+      status,
+      total, // Added total column
+      ...monthValues
+    ] = rowData;
+
+    const idType =
+      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+      idTypeLabel;
+
+    let firstName = "";
+    let lastName = "";
+
+    if (idType === "Vendor" || idType === "Vendor Employee") {
+      lastName = name;
+    } else if (idType === "Employee") {
+      const nameParts = name.split(" ");
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(" ");
+    } else {
+      firstName = name;
+    }
+
+    const entry = {
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      idType: idType,
+      acctId: acctId,
+      orgId: orgId,
+      perHourRate: "",
+      status: status || "ACT",
+      isRev: isRev === "✓",
+      isBrd: isBrd === "✓",
+    };
+
+    const periodAmounts = {};
+    
+    // Map copied months directly using copiedMonthMetadata
+    copiedMonthMetadata.forEach((meta, index) => {
+      const uniqueKey = `${meta.monthNo}_${meta.year}`;
+      const value = monthValues[index];
+
+      if (value && value !== "0.00" && value !== "0" && value !== "") {
+        periodAmounts[uniqueKey] = value;
+      }
+    });
+
+    processedEntries.push(entry);
+    processedAmountsArray.push(periodAmounts);
+  });
+
+  setNewEntries(processedEntries);
+  setNewEntryPeriodAmountsArray(processedAmountsArray);
+
+  processedEntries.forEach((entry, index) => {
+    fetchSuggestionsForPastedEntry(index, entry);
+  });
+
+  setHasClipboardData(false);
+  setCopiedRowsData([]);
+  setCopiedMonthMetadata([]);
+
+  toast.success(
+    `Pasted ${processedEntries.length} entries with all fiscal year data!`,
+    { autoClose: 3000 }
+  );
+};
+
+const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  if (planType === "NBBUD") return;
+
+  const encodedProjectId = encodeURIComponent(projectId);
+  const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  if (entry.idType && entry.idType !== "") {
+    try {
+      const endpoint =
+        entry.idType === "Vendor" || entry.idType === "Vendor Employee"
+          ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+          : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+      const response = await axios.get(endpoint);
+      const suggestions = Array.isArray(response.data)
+        ? response.data.map((emp) => {
+            if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
+              return {
+                emplId: emp.vendId || emp.empId,
+                firstName: "",
+                lastName: emp.employeeName,
+                orgId: emp.orgId || "",
+                acctId: emp.acctId || "",
+              };
+            } else {
+              const [lastName, firstName] = (emp.employeeName || "")
+                .split(", ")
+                .map((str) => str.trim());
+              return {
+                emplId: emp.empId,
+                firstName: firstName || "",
+                lastName: lastName || "",
+                orgId: emp.orgId || "",
+                acctId: emp.acctId || "",
+              };
+            }
+          })
+        : [];
+
+      setPastedEntrySuggestions((prev) => ({
+        ...prev,
+        [entryIndex]: suggestions,
+      }));
+    } catch (err) {
+      console.error(`Failed to fetch pasted entry suggestions for index ${entryIndex}:`, err);
+    }
+  }
+
+  try {
+    const response = await axios.get(
+      `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+    );
+    const data = Array.isArray(response.data) ? response.data[0] : response.data;
+
+    let accountsWithNames = [];
+    if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
+      accountsWithNames = Array.isArray(data.subContractorNonLaborAccounts)
+        ? data.subContractorNonLaborAccounts.map((account) => ({
+            id: account.accountId || account,
+            name: account.acctName || account.accountId || String(account),
+          }))
+        : [];
+    } else {
+      accountsWithNames = Array.isArray(data.employeeNonLaborAccounts)
+        ? data.employeeNonLaborAccounts.map((account) => ({
+            id: account.accountId || account,
+            name: account.acctName || account.accountId || String(account),
+          }))
+        : [];
+    }
+
+    setPastedEntryAccounts((prev) => ({
+      ...prev,
+      [entryIndex]: accountsWithNames,
+    }));
+
+    const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+    const orgOptions = Array.isArray(orgResponse.data)
+      ? orgResponse.data.map((org) => ({
+          value: org.orgId,
+          label: org.orgId,
+        }))
+      : [];
+
+    setPastedEntryOrgs((prev) => ({
+      ...prev,
+      [entryIndex]: orgOptions,
+    }));
+  } catch (err) {
+    console.error(`Failed to fetch pasted entry options for index ${entryIndex}:`, err);
+  }
+};
+
+// Add keyboard listener for paste
+
+
+const addNewEntryForm = () => {
+  const newEntry = {
+    id: "",
+    firstName: "",
+    lastName: "",
+    isRev: false,
+    isBrd: false,
+    idType: "",
+    acctId: "",
+    orgId: "",
+    perHourRate: "",
+    status: "Act",
+  };
+  setNewEntries((prev) => [...prev, newEntry]);
+  setNewEntryPeriodAmountsArray((prev) => [...prev, {}]);
+};
+
+const removeNewEntryForm = (index) => {
+  setNewEntries((prev) => prev.filter((_, i) => i !== index));
+  setNewEntryPeriodAmountsArray((prev) => prev.filter((_, i) => i !== index));
+};
+
+const updateNewEntry = (index, updates) => {
+  setNewEntries((prev) =>
+    prev.map((entry, i) => (i === index ? { ...entry, ...updates } : entry))
+  );
+};
+
+const updateNewEntryPeriodAmounts = (index, periodAmounts) => {
+  setNewEntryPeriodAmountsArray((prev) =>
+    prev.map((amounts, i) =>
+      i === index ? { ...amounts, ...periodAmounts } : amounts
+    )
+  );
+};
+
 
   return (
     <div className="relative p-4 font-inter w-full synchronized-tables-outer">
-      {/* <h2 className="text-xs font-semibold mb-3 text-gray-800">Amounts</h2> */}
-      {/* <div className="w-full flex justify-between mb-4 gap-2">
-        <div className="flex-grow">
-          <div className="flex gap-2">
-            {Object.values(hiddenRows).some(Boolean) && (
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-                onClick={showHiddenRows}
-              >
-                Show Hidden Rows
-              </button>
-            )}
-            {isEditable && (
-              <>
-                <button
-                  onClick={() => setShowNewForm((prev) => !prev)}
-                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
-                >
-                  {showNewForm ? "Cancel" : "New"}
-                </button>
-                {!showNewForm && ( // Hide Find/Replace while creating new entry
-                  <>
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-                      onClick={() => isEditable && setShowFindReplace(true)}
-                    >
-                      Find / Replace
-                    </button>
-                    <button
-                      className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition text-xs font-medium"
-                      onClick={() => {
-                        if (!selectedEmployeeId) {
-                          toast.error("Please select an employee to delete");
-                          return;
-                        }
-                        handleDeleteEmployee(selectedEmployeeId);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </>
-                )}
-                {showNewForm && (
-                  <button
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition text-xs font-medium"
-                    onClick={() => isEditable && setShowFillValues(true)}
-                  >
-                    Fill Values
-                  </button>
-                )}
-              </>
-            )}
-            {showNewForm && (
-              <button
-                onClick={handleSaveNewEntry}
-                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
-              >
-                Save Entry
-              </button>
-            )}
-          </div>
-        </div>
-      </div> */}
       <div className="w-full flex justify-between mb-4 gap-2">
         <div className="flex-grow"></div>
       <div className="flex gap-2">
@@ -4755,36 +2853,110 @@ const calculateColumnTotals = () => {
   
   {isEditable && (
     <button
+  onClick={() => {
+    if (showNewForm) {
+      // Cancel new form
+      setShowNewForm(false);
+      setNewEntry({
+        id: "",
+        firstName: "",
+        lastName: "",
+        isRev: false,
+        isBrd: false,
+        idType: "",
+        acctId: "",
+        orgId: "",
+        perHourRate: "",
+        status: "Act",
+      });
+      setNewEntryPeriodAmounts({});
+      setEmployeeSuggestions([]);
+      setEmployeeNonLaborAccounts([]);
+      setSubContractorNonLaborAccounts([]);
+    } else if (newEntries.length > 0) {
+      // Cancel pasted entries
+      setNewEntries([]);
+      setNewEntryPeriodAmountsArray([]);
+      setPastedEntrySuggestions({});
+      setPastedEntryAccounts({});
+      setPastedEntryOrgs({});
+      toast.info("Cancelled pasted entries", { autoClose: 1500 });
+    } else {
+      // Show new form
+      setShowNewForm(true);
+    }
+  }}
+  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+>
+  {showNewForm || newEntries.length > 0 ? "Cancel" : "New"}
+</button>
+
+  )}
+
+  {/* Copy/Paste Buttons */}
+{showCopyButton && newEntries.length === 0 && (
+  <button
+    onClick={handleCopySelectedRows}
+    className="px-4 py-2 bg-green-600 text-white text-xs font-semibold rounded-md hover:bg-green-700"
+  >
+    Copy Selected ({selectedRows.size})
+  </button>
+)}
+
+{/* Paste button - only show when has clipboard data and NOT in new form mode */}
+{hasClipboardData && !showNewForm && newEntries.length === 0 && (
+  <button
+    onClick={handlePasteMultipleRows}
+    className="px-4 py-2 bg-purple-600 text-white text-xs font-semibold rounded-md hover:bg-purple-700"
+  >
+    Paste ({copiedRowsData.length} rows)
+  </button>
+)}
+
+{/* Save Entry Button - Shows for BOTH single new form AND pasted entries */}
+  {/* {(showNewForm || newEntries.length > 0) && (
+    <button
       onClick={() => {
-        if (showNewForm) {
-          // Cancel: clear form and hide
-          setShowNewForm(false);
-          setNewEntry({
-            id: "",
-            firstName: "",
-            lastName: "",
-            isRev: false,
-            isBrd: false,
-            idType: "",
-            acctId: "",
-            orgId: "",
-            perHourRate: "",
-            status: "Act",
-          });
-          setNewEntryPeriodAmounts({});
-          setEmployeeSuggestions([]);
-          setEmployeeNonLaborAccounts([]);
-          setSubContractorNonLaborAccounts([]);
+        if (newEntries.length > 0) {
+          // Save all pasted entries using existing logic
+          handleSaveNewEntry(); // You'll need to modify this to handle multiple
         } else {
-          // Show new form
-          setShowNewForm(true);
+          // Save single new entry
+          handleSaveNewEntry();
         }
       }}
       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
     >
-      {showNewForm ? "Cancel" : "New"}
+      {newEntries.length > 0 ? `Save All (${newEntries.length})` : "Save Entry"}
     </button>
-  )}
+  )} */}
+  {/* Save Entry Button - Shows for BOTH single new form AND pasted entries */}
+{(showNewForm || newEntries.length > 0) && (
+  <button
+    onClick={() => {
+      if (newEntries.length > 0) {
+        // Save all pasted entries using NEW function
+        handleSaveMultiplePastedEntries();
+      } else {
+        // Save single new entry
+        handleSaveNewEntry();
+      }
+    }}
+    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
+    disabled={isLoading}
+  >
+    {isLoading
+      ? "Saving..."
+      : newEntries.length > 0
+      ? `Save All (${newEntries.length})`
+      : "Save Entry"}
+  </button>
+)}
+
+
+
+
+
   
   {!showNewForm && (
     <button
@@ -4812,14 +2984,14 @@ const calculateColumnTotals = () => {
     Delete
   </button>
   
-  {showNewForm && (
+  {/* {showNewForm && (
     <button
       onClick={handleSaveNewEntry}
       className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs font-medium"
     >
       Save Entry
     </button>
-  )}
+  )} */}
   
   {showNewForm && (
     <button
@@ -4864,7 +3036,10 @@ const calculateColumnTotals = () => {
   </>
 )}
 
-  
+
+
+
+
   
 </div>
 
@@ -5376,6 +3551,250 @@ const calculateColumnTotals = () => {
                     </td>
                   </tr>
                 )}
+
+                {/* Pasted Entries */}
+{/* Pasted Entries */}
+{newEntries.length > 0 &&
+  newEntries.map((entry, entryIndex) => (
+    <React.Fragment key={`pasted-entry-${entryIndex}`}>
+      <tr className="bg-yellow-50" style={{ height: `${ROW_HEIGHT_DEFAULT}px` }}>
+        {/* ID Type - Dropdown (EDITABLE) */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <select
+            value={entry.idType}
+            onChange={(e) => {
+              updateNewEntry(entryIndex, { 
+                idType: e.target.value, 
+                id: "", 
+                firstName: "", 
+                lastName: "",
+                acctId: "",
+                orgId: ""
+              });
+              // Fetch suggestions for new ID type
+              fetchSuggestionsForPastedEntry(entryIndex, { 
+                ...entry, 
+                idType: e.target.value 
+              });
+            }}
+            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+          >
+            {ID_TYPE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+        </td>
+        
+        {/* ID - Input with Suggestions (EDITABLE) */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <input
+            type="text"
+            value={entry.id}
+            onChange={(e) => {
+              const value = e.target.value;
+              updateNewEntry(entryIndex, { id: value });
+              
+              // Auto-fill name if employee is selected from suggestions
+              const selectedEmployee = (pastedEntrySuggestions[entryIndex] || []).find(
+                (emp) => emp.emplId === value
+              );
+              if (selectedEmployee) {
+                updateNewEntry(entryIndex, {
+                  id: value,
+                  firstName: selectedEmployee.firstName || "",
+                  lastName: selectedEmployee.lastName || "",
+                  orgId: selectedEmployee.orgId || entry.orgId,
+                  acctId: selectedEmployee.acctId || entry.acctId,
+                });
+              }
+            }}
+            list={`employee-id-list-${entryIndex}`}
+            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+            placeholder="Enter ID"
+          />
+          {entry.idType !== "Other" && (
+            <datalist id={`employee-id-list-${entryIndex}`}>
+              {(pastedEntrySuggestions[entryIndex] || [])
+                .filter((emp) => emp.emplId && typeof emp.emplId === "string")
+                .map((emp, idx) => (
+                  <option key={`${emp.emplId}-${idx}`} value={emp.emplId}>
+                    {emp.lastName && emp.firstName
+                      ? `${emp.lastName}, ${emp.firstName}`
+                      : emp.lastName || emp.firstName || emp.emplId}
+                  </option>
+                ))}
+            </datalist>
+          )}
+        </td>
+        
+        {/* Name - Auto-filled or Editable for "Other" */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <input
+            type="text"
+            value={
+              entry.idType === "Other"
+                ? (entry.firstName || "") + (entry.lastName ? " " + entry.lastName : "")
+                : entry.lastName && entry.firstName
+                ? `${entry.lastName}, ${entry.firstName}`
+                : entry.lastName || entry.firstName || ""
+            }
+            readOnly={entry.idType !== "Other"}
+            className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+              entry.idType === "Other"
+                ? "bg-white cursor-text"
+                : "bg-gray-100 cursor-not-allowed"
+            }`}
+            placeholder="Name (auto-filled or editable for 'Other')"
+            onChange={(e) => {
+              if (entry.idType === "Other") {
+                const fullName = e.target.value.trim();
+                const parts = fullName.split(" ");
+                const firstName = parts[0] || "";
+                const lastName = parts.slice(1).join(" ") || "";
+                updateNewEntry(entryIndex, { firstName, lastName });
+              }
+            }}
+          />
+        </td>
+        
+        {/* Account - Editable with Suggestions */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <input
+            type="text"
+            value={entry.acctId}
+            onChange={(e) => 
+              isFieldEditable && updateNewEntry(entryIndex, { acctId: e.target.value })
+            }
+            onBlur={(e) => {
+              const val = e.target.value.trim();
+              const validAccounts = (pastedEntryAccounts[entryIndex] || []).map(
+                (a) => a.id || a.accountId || ""
+              );
+              
+              if (val !== "" && !validAccounts.includes(val)) {
+                toast.error("Please select a valid account from suggestions");
+                updateNewEntry(entryIndex, { acctId: "" });
+              }
+            }}
+            list={`account-list-${entryIndex}`}
+            className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+              !isFieldEditable ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
+            placeholder="Enter Account"
+            readOnly={!isFieldEditable}
+          />
+          <datalist id={`account-list-${entryIndex}`}>
+            {(pastedEntryAccounts[entryIndex] || []).map((account, idx) => {
+              const valueText = account.id || account.accountId || "";
+              return (
+                <option key={`${valueText}-${idx}`} value={valueText} />
+              );
+            })}
+          </datalist>
+        </td>
+        
+        {/* Account Name - Auto-filled (READ-ONLY) */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <input
+            type="text"
+            value={(() => {
+              const accountWithName = (pastedEntryAccounts[entryIndex] || []).find(
+                (acc) => acc.id === entry.acctId
+              );
+              return accountWithName ? accountWithName.name : "";
+            })()}
+            readOnly
+            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+            placeholder="Account Name (auto-filled)"
+          />
+        </td>
+        
+        {/* Organization - Editable with Suggestions */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <input
+            type="text"
+            value={entry.orgId}
+            onChange={(e) => 
+              isFieldEditable && updateNewEntry(entryIndex, { orgId: e.target.value })
+            }
+            onBlur={(e) => {
+              const val = e.target.value.trim();
+              const validOrgs = (pastedEntryOrgs[entryIndex] || []).map(
+                (org) => org.value
+              );
+              
+              if (val !== "" && !validOrgs.includes(val)) {
+                toast.error("Please select a valid organization from suggestions");
+                updateNewEntry(entryIndex, { orgId: "" });
+              }
+            }}
+            list={`org-list-${entryIndex}`}
+            className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+              !isFieldEditable ? "bg-gray-100 cursor-not-allowed" : ""
+            }`}
+            placeholder="Enter Organization"
+            readOnly={!isFieldEditable}
+          />
+          <datalist id={`org-list-${entryIndex}`}>
+            {(pastedEntryOrgs[entryIndex] || []).map((org, idx) => (
+              <option key={`${org.value}-${idx}`} value={org.value}>
+                {org.label}
+              </option>
+            ))}
+          </datalist>
+        </td>
+        
+        {/* Rev - Checkbox */}
+        <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+          <input
+            type="checkbox"
+            checked={entry.isRev}
+            onChange={(e) => 
+              isFieldEditable && updateNewEntry(entryIndex, { isRev: e.target.checked })
+            }
+            className={`w-4 h-4 ${!isFieldEditable ? "cursor-not-allowed" : ""}`}
+            disabled={!isFieldEditable}
+          />
+        </td>
+        
+        {/* Brd - Checkbox */}
+        <td className="border border-gray-300 px-1.5 py-0.5 text-center">
+          <input
+            type="checkbox"
+            checked={entry.isBrd}
+            onChange={(e) => 
+              isFieldEditable && updateNewEntry(entryIndex, { isBrd: e.target.checked })
+            }
+            className={`w-4 h-4 ${!isFieldEditable ? "cursor-not-allowed" : ""}`}
+            disabled={!isFieldEditable}
+          />
+        </td>
+        
+        {/* Status */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          <input
+            type="text"
+            value={entry.status}
+            onChange={(e) => updateNewEntry(entryIndex, { status: e.target.value })}
+            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+            placeholder="Enter Status"
+            disabled={entry.idType === "Other"}
+            readOnly={entry.idType === "Other"}
+          />
+        </td>
+        
+        {/* Total */}
+        <td className="border border-gray-300 px-1.5 py-0.5">
+          {Object.values(newEntryPeriodAmountsArray[entryIndex] || {})
+            .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+            .toFixed(2)}
+        </td>
+      </tr>
+    </React.Fragment>
+  ))}
+
                 {employees
                   .filter((_, idx) => !hiddenRows[idx])
                   .map((emp, idx) => {
@@ -5386,12 +3805,14 @@ const calculateColumnTotals = () => {
                     }-${actualEmpIdx}`;
                     return (
                       <tr
-                        key={uniqueRowKey}
-                        className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
-                          selectedRowIndex === actualEmpIdx
-                            ? "bg-yellow-100"
-                            : "even:bg-gray-50"
-                        }`}
+                       key={uniqueRowKey}
+  className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
+    selectedRows.has(actualEmpIdx)
+      ? "bg-blue-100"  // Selected row background
+      : selectedRowIndex === actualEmpIdx
+      ? "bg-yellow-100"
+      : "even:bg-gray-50"
+  }`}
                         style={{
                           height: `${ROW_HEIGHT_DEFAULT}px`,
                           lineHeight: "normal",
@@ -5626,15 +4047,24 @@ const calculateColumnTotals = () => {
                       </tr>
                     );
                   })}
-                  {/* <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
-  <td 
-    className="border border-gray-300 px-1.5 py-0.5 text-xs font-bold bg-gray-200 text-center" 
-    colSpan={EMPLOYEE_COLUMNS.length}
-  >
-    Total Hours:
-  </td>
-</tr> */}
+                
               </tbody>
+               <tfoot>
+                <tr
+                  className="bg-gray-200 font-normal text-center text-gray-200 "
+                  style={{
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 20,
+                    height: `${ROW_HEIGHT_DEFAULT}px`,
+                    // height: "25px",
+                    lineHeight: "normal",
+                    borderTop: "2px solid #d1d5db", // tailwind gray-300
+                  }}
+                >
+                  <td colSpan={EMPLOYEE_COLUMNS.length}> Total Hours</td>
+                </tr>
+              </tfoot>
             </table>
           </div>
           <div
@@ -5678,6 +4108,60 @@ const calculateColumnTotals = () => {
                 </tr>
               </thead>
               <tbody>
+                {/* Pasted Entries in Second Table */}
+{newEntries.length > 0 &&
+  newEntries.map((entry, entryIndex) => (
+    <tr
+      key={`pasted-duration-${entryIndex}`}
+      className="bg-yellow-50"
+      style={{
+        height: `${ROW_HEIGHT_DEFAULT}px`,
+        lineHeight: "normal",
+      }}
+    >
+      {sortedDurations.map((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const isInputEditable =
+          isEditable &&
+          isMonthEditable(duration, closedPeriod, planType);
+        const value = newEntryPeriodAmountsArray[entryIndex]?.[uniqueKey] || "";
+
+        return (
+          <td
+            key={`pasted-${entryIndex}-${uniqueKey}`}
+            className={`px-2 py-1.5 border-r border-gray-200 text-center min-w-[80px] ${
+              planType === "EAC"
+                ? isInputEditable
+                  ? "bg-green-50"
+                  : "bg-gray-200"
+                : ""
+            }`}
+          >
+            <input
+              type="text"
+              inputMode="numeric"
+              value={value}
+              onChange={(e) => {
+                if (isInputEditable) {
+                  updateNewEntryPeriodAmounts(entryIndex, {
+                    [uniqueKey]: e.target.value.replace(/[^0-9.]/g, ""),
+                  });
+                }
+              }}
+              className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+                !isInputEditable
+                  ? "cursor-not-allowed text-gray-400"
+                  : "text-gray-700"
+              }`}
+              disabled={!isInputEditable}
+              placeholder="0.00"
+            />
+          </td>
+        );
+      })}
+    </tr>
+  ))}
+
                 {showNewForm && (
                   <tr
                     key="new-entry"
@@ -5743,17 +4227,19 @@ const calculateColumnTotals = () => {
                     return (
                       <tr
                         key={uniqueRowKey}
-                        className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
-                          selectedRowIndex === actualEmpIdx
-                            ? "bg-yellow-100"
-                            : "even:bg-gray-50"
-                        }`}
-                        style={{
-                          height: `${ROW_HEIGHT_DEFAULT}px`,
-                          lineHeight: "normal",
-                          cursor: isEditable ? "pointer" : "default",
-                        }}
-                        onClick={() => handleRowClick(actualEmpIdx)}
+  className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
+    selectedRows.has(actualEmpIdx)
+      ? "bg-blue-100"  // Selected row background
+      : selectedRowIndex === actualEmpIdx
+      ? "bg-yellow-100"
+      : "even:bg-gray-50"
+  }`}
+  style={{
+    height: `${ROW_HEIGHT_DEFAULT}px`,
+    lineHeight: "normal",
+    cursor: isEditable ? "pointer" : "default",
+  }}
+  onClick={() => handleRowClick(actualEmpIdx)}
                       >
                         {sortedDurations.map((duration) => {
                           const uniqueKey = `${duration.monthNo}_${duration.year}`;
@@ -5815,7 +4301,19 @@ const calculateColumnTotals = () => {
                       </tr>
                     );
                   })}
-                  <tr className="bg-gray-100 font-semibold border-t-2 border-gray-400">
+                  
+              </tbody>
+              <tfoot>
+                <tr className="bg-gray-200 font-bold text-center"
+                  style={{
+                    position: "sticky",
+                    bottom: 0,
+                    zIndex: 20,
+                    height: `${ROW_HEIGHT_DEFAULT}px`,
+                    // height: "10px",
+                    lineHeight: "normal",
+                    borderTop: "2px solid #d1d5db", // tailwind gray-300
+                  }}>
   {sortedDurations.map((duration) => {
     const uniqueKey = `${duration.monthNo}_${duration.year}`;
     const columnTotals = calculateColumnTotals();
@@ -5824,14 +4322,14 @@ const calculateColumnTotals = () => {
     return (
       <td
         key={`total-${uniqueKey}`}
-        className="px-2 py-1.5 border-r border-gray-200 text-center min-w-80px text-xs font-bold bg-gray-200"
+        className="border border-gray-300 px-1.5 py-0.5 text-center sticky bottom-0 text-xs font-bold bg-gray-200"
       >
         {total.toFixed(2)}
       </td>
     );
   })}
 </tr>
-              </tbody>
+</tfoot>
             </table>
           </div>
         </div>
