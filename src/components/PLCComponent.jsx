@@ -720,8 +720,68 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     }
   };
 
+  // const handleDeleteSelected = async () => {
+  //   // Collect the synthetic IDs selected in the UI
+  //   const selectedSyntheticIds = Object.entries(selectedRows)
+  //     .filter(([id, selected]) => selected)
+  //     .map(([id]) => id);
+
+  //   if (selectedSyntheticIds.length === 0) {
+  //     toast.warn("No rows selected for deletion.");
+  //     return;
+  //   }
+
+  //   if (
+  //     !window.confirm("Are you sure you want to delete selected billing rates?")
+  //   ) {
+  //     return;
+  //   }
+
+  //   // Map synthetic IDs to their corresponding original backend IDs
+  //   const selectedOriginalIds = selectedSyntheticIds
+  //     .map((syntheticId) => {
+  //       const matchingItem = billingRatesSchedule.find(
+  //         (item) => item.id === syntheticId
+  //       );
+  //       return matchingItem ? matchingItem.originalId || matchingItem.id : null;
+  //     })
+  //     .filter((id) => id !== null);
+
+  //   setLoading(true);
+
+  //   try {
+  //     // Send original backend IDs in the bulk delete API
+  //     await axios.delete(`${backendUrl}/api/ProjectPlcRates/bulk-delete`, {
+  //       data: selectedOriginalIds,
+  //     });
+
+  //     // Filter out deleted items using synthetic IDs (used for UI state and rendering)
+  //     setBillingRatesSchedule((prev) =>
+  //       prev.filter((rate) => !selectedSyntheticIds.includes(rate.id))
+  //     );
+
+  //     setEditBillRate((prev) => {
+  //       const newItems = { ...prev };
+  //       selectedSyntheticIds.forEach((id) => delete newItems[id]);
+  //       return newItems;
+  //     });
+
+  //     setEditProjectPlcFields((prev) => {
+  //       const newItems = { ...prev };
+  //       selectedSyntheticIds.forEach((id) => delete newItems[id]);
+  //       return newItems;
+  //     });
+
+  //     toast.success("Selected billing rates deleted successfully!");
+  //     setSelectedRows({});
+  //   } catch (error) {
+  //     toast.error(`Failed to delete billing rates: ${error.message}`);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleDeleteSelected = async () => {
-    // Collect the synthetic IDs selected in the UI
     const selectedSyntheticIds = Object.entries(selectedRows)
       .filter(([id, selected]) => selected)
       .map(([id]) => id);
@@ -737,43 +797,25 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       return;
     }
 
-    // Map synthetic IDs to their corresponding original backend IDs
     const selectedOriginalIds = selectedSyntheticIds
       .map((syntheticId) => {
         const matchingItem = billingRatesSchedule.find(
           (item) => item.id === syntheticId
         );
-        return matchingItem ? matchingItem.originalId || matchingItem.id : null;
+        return matchingItem ? matchingItem.originalId : null;
       })
       .filter((id) => id !== null);
 
     setLoading(true);
-
     try {
-      // Send original backend IDs in the bulk delete API
       await axios.delete(`${backendUrl}/api/ProjectPlcRates/bulk-delete`, {
         data: selectedOriginalIds,
       });
-
-      // Filter out deleted items using synthetic IDs (used for UI state and rendering)
       setBillingRatesSchedule((prev) =>
         prev.filter((rate) => !selectedSyntheticIds.includes(rate.id))
       );
-
-      setEditBillRate((prev) => {
-        const newItems = { ...prev };
-        selectedSyntheticIds.forEach((id) => delete newItems[id]);
-        return newItems;
-      });
-
-      setEditProjectPlcFields((prev) => {
-        const newItems = { ...prev };
-        selectedSyntheticIds.forEach((id) => delete newItems[id]);
-        return newItems;
-      });
-
-      toast.success("Selected billing rates deleted successfully!");
       setSelectedRows({});
+      toast.success("Selected billing rates deleted successfully!");
     } catch (error) {
       toast.error(`Failed to delete billing rates: ${error.message}`);
     } finally {
@@ -791,6 +833,132 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
     });
   };
 
+  // const handleSaveNewRate = async () => {
+  //   if (!newRate || !newRate.plc || !newRate.startDate || !newRate.billRate) {
+  //     toast.error(
+  //       "Please fill all required fields (PLC, Bill Rate, Start Date)."
+  //     );
+  //     return;
+  //   }
+
+  //   if (isNaN(newRate.billRate) || Number(newRate.billRate) <= 0) {
+  //     toast.error("Bill Rate must be a valid number greater than 0.");
+  //     return;
+  //   }
+
+  //   // if (
+  //   //   newRate.startDate &&
+  //   //   newRate.endDate &&
+  //   //   new Date(newRate.startDate) > new Date(newRate.endDate)
+  //   // ) {
+  //   //   toast.error("End Date cannot be before Start Date.");
+  //   //   return;
+  //   // }
+
+  //   if (
+  //     newRate.startDate &&
+  //     newRate.endDate &&
+  //     new Date(newRate.startDate) > new Date(newRate.endDate)
+  //   ) {
+  //     toast.error("End Date cannot be before Start Date.");
+  //     return;
+  //   }
+
+  //   // ✅ Project boundaries
+  //   const projectStart = new Date(selectedPlan.projStartDt);
+  //   const projectEnd = new Date(selectedPlan.projEndDt);
+
+  //   if (newRate.startDate) {
+  //     const start = new Date(newRate.startDate);
+
+  //     if (start < projectStart) {
+  //       toast.error("Start Date cannot be before Project Start Date.");
+  //       return;
+  //     }
+
+  //     if (start > projectEnd) {
+  //       toast.error("Start Date cannot be after Project End Date.");
+  //       return;
+  //     }
+  //   }
+
+  //   if (newRate.endDate) {
+  //     const end = new Date(newRate.endDate);
+
+  //     if (end < projectStart) {
+  //       toast.error("End Date cannot be before Project Start Date.");
+  //       return;
+  //     }
+
+  //     if (end > projectEnd) {
+  //       toast.error("End Date cannot be after Project End Date.");
+  //       return;
+  //     }
+  //   }
+
+  //   setLoading(true);
+  //   try {
+  //     await axios.post(`${backendUrl}/api/ProjectPlcRates`, {
+  //       id: 0,
+  //       projId: selectedProjectId,
+  //       laborCategoryCode: newRate.plc,
+  //       costRate: parseFloat(newRate.billRate) * 0.65,
+  //       billingRate: parseFloat(newRate.billRate),
+  //       effectiveDate: newRate.startDate,
+  //       endDate: newRate.endDate || null,
+  //       sBillRtTypeCd: newRate.rateType,
+  //       isActive: true,
+  //       modifiedBy: "admin",
+  //       createdAt: new Date().toISOString(),
+  //       updatedAt: new Date().toISOString(),
+  //     });
+  //     setNewRate(null);
+  //     const fetchResponse = await axios.get(
+  //       `${backendUrl}/api/ProjectPlcRates`
+  //     );
+  //     const filteredData = fetchResponse.data.filter((item) =>
+  //       item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
+  //     );
+  //     setBillingRatesSchedule(
+  //       filteredData.map((item) => ({
+  //         id: item.id,
+  //         plc: item.laborCategoryCode,
+  //         billRate: item.billingRate,
+  //         // rateType: item.rateType || "Select",
+  //         rateType: item.sBillRtTypeCd || "Select",
+  //         startDate: formatDate(item.effectiveDate),
+  //         endDate: formatDate(item.endDate),
+  //       }))
+  //     );
+  //     const newEditBillRate = {};
+  //     const newEditProjectPlcFields = {};
+  //     filteredData.forEach((item) => {
+  //       newEditBillRate[item.id] = item.billingRate;
+  //       newEditProjectPlcFields[item.id] = {
+  //         rateType: item.rateType || "Select",
+  //         startDate: formatDate(item.effectiveDate),
+  //         endDate: formatDate(item.endDate),
+  //       };
+  //     });
+  //     setEditBillRate(newEditBillRate);
+  //     setEditProjectPlcFields(newEditProjectPlcFields);
+
+  //     toast.success("New billing rate added successfully!");
+  //   } catch (error) {
+  //     // console.error(
+  //     //   "Error adding billing rate:",
+  //     //   error.response ? error.response.data : error.message
+  //     // );
+  //     toast.error(
+  //       `Failed to add billing rate: ${
+  //         error.response?.data?.message || error.message
+  //       }`
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSaveNewRate = async () => {
     if (!newRate || !newRate.plc || !newRate.startDate || !newRate.billRate) {
       toast.error(
@@ -804,15 +972,6 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       return;
     }
 
-    // if (
-    //   newRate.startDate &&
-    //   newRate.endDate &&
-    //   new Date(newRate.startDate) > new Date(newRate.endDate)
-    // ) {
-    //   toast.error("End Date cannot be before Start Date.");
-    //   return;
-    // }
-
     if (
       newRate.startDate &&
       newRate.endDate &&
@@ -822,18 +981,16 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       return;
     }
 
-    // ✅ Project boundaries
+    // Project boundaries
     const projectStart = new Date(selectedPlan.projStartDt);
     const projectEnd = new Date(selectedPlan.projEndDt);
 
     if (newRate.startDate) {
       const start = new Date(newRate.startDate);
-
       if (start < projectStart) {
         toast.error("Start Date cannot be before Project Start Date.");
         return;
       }
-
       if (start > projectEnd) {
         toast.error("Start Date cannot be after Project End Date.");
         return;
@@ -842,12 +999,10 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
 
     if (newRate.endDate) {
       const end = new Date(newRate.endDate);
-
       if (end < projectStart) {
         toast.error("End Date cannot be before Project Start Date.");
         return;
       }
-
       if (end > projectEnd) {
         toast.error("End Date cannot be after Project End Date.");
         return;
@@ -870,42 +1025,56 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
+
       setNewRate(null);
+
+      // Fetch refreshed table data for current project
       const fetchResponse = await axios.get(
         `${backendUrl}/api/ProjectPlcRates`
       );
       const filteredData = fetchResponse.data.filter((item) =>
         item.projId.toLowerCase().startsWith(selectedProjectId.toLowerCase())
       );
+
       setBillingRatesSchedule(
         filteredData.map((item) => ({
           id: item.id,
           plc: item.laborCategoryCode,
           billRate: item.billingRate,
-          // rateType: item.rateType || "Select",
           rateType: item.sBillRtTypeCd || "Select",
           startDate: formatDate(item.effectiveDate),
           endDate: formatDate(item.endDate),
         }))
       );
+
+      // --- New: Auto-select new record after save ---
+      if (filteredData.length > 0) {
+        // Find the highest id (assuming new records get highest id)
+        const newest = filteredData.reduce(
+          (a, b) => (a.id > b.id ? a : b),
+          filteredData[0]
+        );
+        setSelectedRows({ [newest.id]: true }); // Auto-select
+      } else {
+        setSelectedRows({});
+      }
+
+      // Update edit arrays
       const newEditBillRate = {};
       const newEditProjectPlcFields = {};
       filteredData.forEach((item) => {
         newEditBillRate[item.id] = item.billingRate;
         newEditProjectPlcFields[item.id] = {
-          rateType: item.rateType || "Select",
+          rateType: item.sBillRtTypeCd || "Select",
           startDate: formatDate(item.effectiveDate),
           endDate: formatDate(item.endDate),
         };
       });
       setEditBillRate(newEditBillRate);
       setEditProjectPlcFields(newEditProjectPlcFields);
+      fetchBillingRates();
       toast.success("New billing rate added successfully!");
     } catch (error) {
-      // console.error(
-      //   "Error adding billing rate:",
-      //   error.response ? error.response.data : error.message
-      // );
       toast.error(
         `Failed to add billing rate: ${
           error.response?.data?.message || error.message
@@ -1057,6 +1226,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       });
       setEditEmployeeBillRate(newEditEmployeeBillRate);
       setEditEmployeeFields(newEditEmployeeFields);
+      fetchEmployeeBillingRates();
       toast.success("Added Sucessfully");
     } catch (error) {
       // console.error(
@@ -1581,6 +1751,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
       });
       setEditVendorBillRate(newEditVendorBillRate);
       setEditVendorFields(newEditVendorFields);
+      fetchVendorBillingRates();
       toast.success("Added Successfully!");
     } catch (error) {
       // console.error(
