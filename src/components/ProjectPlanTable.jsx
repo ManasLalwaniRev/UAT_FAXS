@@ -1060,7 +1060,7 @@ const ProjectPlanTable = ({
         }`}
       >
         <div className="flex justify-between items-center mb-2 gap-1">
-          <div className="flex gap-0.5 flex-wrap items-center ">
+          <div className="flex gap-1 flex-wrap items-center ">
             {plans.length > 0 && (
               <>
                 {/* Create Budget */}
@@ -1369,32 +1369,25 @@ const ProjectPlanTable = ({
           </div>
         </div>
 
-        <div className="w-full border border-gray-300 rounded-lg bg-white overflow-hidden">
-          <div
-            className="w-full overflow-auto"
-            style={{
-              maxHeight: "320px",
-              minHeight: "300px",
-              border: "1px solid #e5e7eb",
-              borderRadius: "0.5rem",
-              background: "#fff",
-            }}
-          >
-            <table className="w-full table-auto text-xs text-left border-collapse border">
-              <thead className="bg-gray-100 text-gray-800 sticky top-0 z-10">
+        <div className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto h-85">
+            <table className="min-w-full table-auto divide-y divide-gray-200">
+              <thead className="bg-gray-200 sticky top-0">
                 <tr>
-                  <th className="p-2 border font-normal">Export</th>
+                  <th className="px-4 py-2 text-center text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Export
+                  </th>
                   {columns.map((col) => (
                     <th
                       key={col}
-                      className="p-1 border font-normal text-center"
+                      className="px-4 py-2 text-xs font-bold text-gray-600 uppercase tracking-widern whitespace-nowrap text-center"
                     >
                       {COLUMN_LABELS[col] || col}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="bg-white divide-y divide-gray-100">
                 {filteredPlans.map((plan, idx) => (
                   <tr
                     key={`plan-${plan.plId || idx}-${plan.projId || "unknown"}`}
@@ -1402,41 +1395,16 @@ const ProjectPlanTable = ({
                       selectedPlan &&
                       selectedPlan.plId === plan.plId &&
                       selectedPlan.projId === plan.projId
-                        ? "bg-blue-100 hover:bg-blue-200 border-l-4 border-l-blue-600"
+                        ? "bg-blue-200 hover:bg-blue-300 "
                         : "even:bg-gray-50 hover:bg-blue-50"
                     }`}
+                    //border-l-4 border-l-blue-600
                     onClick={() => {
                       handleRowClick(plan);
                       getMasterAndRelatedProjects(plans, plan.projId);
                     }}
                   >
-                    {/* <td className="p-1 border text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExportPlan(plan);
-                        }}
-                        className="text-blue-600 hover:text-blue-800"
-                        title="Export Plan"
-                        disabled={!plan.projId || !plan.version || !plan.plType}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 cursor-pointer"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 4v12m0 0l-3-3m3 3l3-3m-2 8H5a2 2 0 01-2-2V3a2 2 0 012-2h14a2 2 0 012 2v16a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                      </button>
-                    </td> */}
-                    <td className="p-1 border text-center">
+                    <td className="px-1 py-1 h-1 text-xs text-gray-700  text-center">
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1505,98 +1473,24 @@ const ProjectPlanTable = ({
                     {columns.map((col) => (
                       <td
                         key={col}
-                        className={`p-1 border font-normal ${
-                          col === "status" && plan.status === "Submitted"
-                            ? "bg-yellow-100 text-black font-bold"
-                            : col === "status" && plan.status === "In Progress"
-                            ? "bg-red-100 text-black font-bold"
-                            : col === "status" && plan.status === "Approved"
-                            ? "bg-green-100 text-black font-bold"
-                            : col === "status" && plan.status === "Concluded"
-                            ? "bg-blue-200 text-black font-bold"
-                            : ""
-                        }
-                          ${
-                            col === "status"
-                              ? "whitespace-nowrap text-center"
-                              : ""
-                          }
-                          ${
-                            col === "projId" || col === "projName"
-                              ? "break-words"
-                              : ""
-                          }
-                          ${
-                            col === "createdAt" ||
-                            col === "updatedAt" ||
-                            col === "closedPeriod"
-                              ? "whitespace-nowrap"
-                              : ""
-                          }`}
-                        style={
-                          col === "status"
-                            ? { minWidth: "80px", maxWidth: "100px" }
-                            : col === "projId"
-                            ? { minWidth: "100px", maxWidth: "150px" }
-                            : col === "projName"
-                            ? { minWidth: "120px", maxWidth: "180px" }
-                            : col === "closedPeriod"
-                            ? { minWidth: "80px", maxWidth: "100px" }
-                            : col === "createdAt" || col === "updatedAt"
-                            ? { minWidth: "160px", maxWidth: "200px" }
-                            : {}
-                        }
+                        className={` text-xs h-1 px-1 py-1 text-center text-gray-700
+                            
+    
+                ${col === "projId" || col === "projName" ? "break-words" : ""}
+                ${
+                  col === "createdAt" ||
+                  col === "updatedAt" ||
+                  col === "closedPeriod"
+                    ? "whitespace-nowrap"
+                    : ""
+                }
+              `}
                       >
                         {col === "closedPeriod" ? (
                           formatDateOnly(plan[col])
                         ) : col === "createdAt" || col === "updatedAt" ? (
                           formatDateWithTime(plan[col])
                         ) : col === "versionCode" ? (
-                          //   <input
-                          //     type="text"
-                          //     value={
-                          //       editingVersionCodeIdx === idx
-                          //         ? editingVersionCodeValue
-                          //         : plan.versionCode || ""
-                          //     }
-                          //     autoFocus={editingVersionCodeIdx === idx}
-                          //     onClick={(e) => {
-                          //       e.stopPropagation();
-                          //       setEditingVersionCodeIdx(idx);
-                          //       setEditingVersionCodeValue(plan.versionCode || "");
-                          //     }}
-                          //     onChange={(e) =>
-                          //       setEditingVersionCodeValue(e.target.value)
-                          //     }
-                          //     onBlur={() => {
-                          //       if (editingVersionCodeIdx === idx) {
-                          //         handleVersionCodeChange(
-                          //           idx,
-                          //           editingVersionCodeValue
-                          //         );
-                          //         setEditingVersionCodeIdx(null);
-                          //       }
-                          //     }}
-                          //     onKeyDown={(e) => {
-                          //       if (e.key === "Enter") {
-                          //         handleVersionCodeChange(
-                          //           idx,
-                          //           editingVersionCodeValue
-                          //         );
-                          //         setEditingVersionCodeIdx(null);
-                          //       } else if (e.key === "Escape") {
-                          //         setEditingVersionCodeIdx(null);
-                          //       }
-                          //     }}
-                          //     className={`border border-gray-300 rounded px-2 py-1 w-24 text-xs hover:border-blue-500 focus:border-blue-500 focus:outline-none ${
-                          //       !plan.plType || !plan.version
-                          //         ? "bg-gray-100 cursor-not-allowed"
-                          //         : "bg-white"
-                          //     }`}
-                          //     style={{ minWidth: 60, maxWidth: 120 }}
-                          //     disabled={!plan.plType || !plan.version}
-                          //   />
-                          // In the table cell for versionCode
                           <input
                             type="text"
                             value={
@@ -1617,7 +1511,6 @@ const ProjectPlanTable = ({
                             }
                             onBlur={() => {
                               if (editingVersionCodeIdx === idx) {
-                                // Only call API if value actually changed
                                 if (
                                   editingVersionCodeValue !== plan.versionCode
                                 ) {
@@ -1631,7 +1524,6 @@ const ProjectPlanTable = ({
                             }}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
-                                // Only call API if value actually changed
                                 if (
                                   editingVersionCodeValue !== plan.versionCode
                                 ) {
@@ -1645,7 +1537,7 @@ const ProjectPlanTable = ({
                                 setEditingVersionCodeIdx(null);
                                 setEditingVersionCodeValue(
                                   plan.versionCode || ""
-                                ); // Reset to original value
+                                );
                               }
                             }}
                             className={`border border-gray-300 rounded px-2 py-1 w-20 text-xs hover:border-blue-500 focus:border-blue-500 focus:outline-none ${
@@ -1653,7 +1545,6 @@ const ProjectPlanTable = ({
                                 ? "bg-gray-100 cursor-not-allowed"
                                 : "bg-white"
                             }`}
-                            style={{ minWidth: 50, maxWidth: 100 }}
                             disabled={!plan.plType || !plan.version}
                           />
                         ) : typeof plan[col] === "boolean" ? (
@@ -1671,6 +1562,26 @@ const ProjectPlanTable = ({
                             }}
                             className="cursor-pointer"
                           />
+                        ) : col === "status" ? (
+                          <span
+                            className={`
+          inline-block rounded-2xl px-4 py-1 whitespace-nowrap
+          ${
+            plan.status === "Submitted"
+              ? "bg-yellow-100 text-black"
+              : plan.status === "In Progress"
+              ? "bg-red-100 text-black"
+              : plan.status === "Approved"
+              ? "bg-green-100 text-black"
+              : plan.status === "Concluded"
+              ? "bg-blue-200 text-black"
+              : ""
+          }
+        `}
+                            style={{ minWidth: 90, textAlign: "center" }}
+                          >
+                            {plan.status}
+                          </span>
                         ) : (
                           plan[col] || ""
                         )}
@@ -1682,7 +1593,6 @@ const ProjectPlanTable = ({
             </table>
           </div>
         </div>
-
         {showForm && (
           <ProjectPlanForm
             projectId={fullProjectId.current || projectId}

@@ -2248,7 +2248,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
   }
 
   return (
-    <div className="border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16 text-xs">
+    <div className=" rounded-xl shadow-lg border border-gray-200  p-2 sm:p-4 min-h-[150px] scroll-mt-16 text-xs">
       {/* <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -2356,11 +2356,11 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-          <table className="w-full text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-gray-100">
+        <div className="overflow-x-auto overflow-y-auto max-h-64 rounded-xl shadow-lg border border-gray-200">
+          <table className="w-full table">
+            <thead className="sticky top-0 z-10 thead">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal text-center">
+                <th className="th-thead">
                   <input
                     type="checkbox"
                     checked={
@@ -2387,22 +2387,22 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     }}
                   />
                 </th>
-                <th className="border p-2  ">PLC</th>
-                <th className="border p-2 ">Bill Rate</th>
-                <th className="border p-2  ">Rate Type</th>
-                <th className="border p-2 ">Start Date</th>
-                <th className="border p-2  ">End Date</th>
+                <th className="th-thead  ">PLC</th>
+                <th className="th-thead  ">Bill Rate</th>
+                <th className="th-thead   ">Rate Type</th>
+                <th className="th-thead  ">Start Date</th>
+                <th className="th-thead   ">End Date</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="tbody">
               {newRate && (
                 <tr
                   key="new-rate"
                   className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
                 >
                   {/* New Rate Inputs unchanged */}
-                  <td className="border p-2 text-center"></td>
-                  <td className="border p-2 sm:w-1/5">
+                  <td className="tbody-td"></td>
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newRate.plc || ""}
@@ -2428,7 +2428,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2 sm:w-1/5">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newRate.billRate || ""}
@@ -2454,7 +2454,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-1 border rounded text-xs"
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/5">
+                  <td className="tbody-td">
                     <select
                       value={newRate.rateType}
                       onChange={(e) =>
@@ -2469,7 +2469,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </select>
                   </td>
-                  <td className="border p-2 sm:w-1/5">
+                  <td className="tbody-td">
                     <input
                       type="date"
                       value={newRate.startDate || ""}
@@ -2481,7 +2481,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       max={selectedPlan.projEndDt}
                     />
                   </td>
-                  <td className="border p-2 sm:w-1/5">
+                  <td className="tbody-td">
                     <input
                       type="date"
                       value={newRate.endDate || ""}
@@ -2499,13 +2499,13 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
 
               {loadingPLC ? (
                 <tr key="loading">
-                  <td colSpan="7" className="border p-2 text-center">
+                  <td colSpan="7" className="tbody-td">
                     Loading...
                   </td>
                 </tr>
               ) : billingRatesSchedule.length === 0 ? (
                 <tr key="no-data">
-                  <td colSpan="6" className="border p-2 text-center">
+                  <td colSpan="6" className="tbody-td">
                     No data available
                   </td>
                 </tr>
@@ -2515,7 +2515,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     key={item.id}
                     className="sm:table-row flex flex-col sm:flex-row mb-2 sm:mb-0"
                   >
-                    <td className="border p-2 sm:w-1/12 text-center">
+                    <td className="tbody-td ">
                       <input
                         type="checkbox"
                         checked={!!selectedRows[item.id]}
@@ -2527,8 +2527,8 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         }}
                       />
                     </td>
-                    <td className="border p-2 sm:w-1/8">{item.plc}</td>
-                    <td className="border p-2 sm:w-1/5">
+                    <td className="tbody-td">{item.plc}</td>
+                    <td className="tbody-td">
                       {isEditing ? (
                         <input
                           type="text"
@@ -2559,11 +2559,9 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
-                    <td className="border p-2 sm:w-1/5">{item.rateType}</td>
-                    <td className="border p-2 sm:w-1/5">{item.startDate}</td>
-                    <td className="border p-2 sm:w-1/5">
-                      {item.endDate || ""}
-                    </td>
+                    <td className="tbody-td">{item.rateType}</td>
+                    <td className="tbody-td">{item.startDate}</td>
+                    <td className="tbody-td">{item.endDate || ""}</td>
                     {/* <td className="border p-2 sm:w-1/5"></td> */}
                   </tr>
                 ))
@@ -2678,11 +2676,11 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-          <table className="w-full text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-gray-100">
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-center">
+        <div className="overflow-x-auto overflow-y-auto max-h-64 rounded-xl shadow-lg border border-gray-200">
+          <table className="w-full table">
+            <thead className="sticky top-0 z-10 thead">
+              <tr>
+                <th className="th-thead">
                   <input
                     type="checkbox"
                     checked={
@@ -2709,22 +2707,22 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     }}
                   />
                 </th>
-                <th className="border p-2">Employee</th>
-                <th className="border p-2">Employee Name</th>
-                <th className="border p-2">PLC</th>
-                <th className="border p-2">PLC Description</th>
-                <th className="border p-2">Bill Rate</th>
-                <th className="border p-2">Rate Type</th>
-                <th className="border p-2">Start Date</th>
-                <th className="border p-2">End Date</th>
+                <th className="th-thead">Employee</th>
+                <th className="th-thead">Employee Name</th>
+                <th className="bth-thead">PLC</th>
+                <th className="th-thead">PLC Description</th>
+                <th className="th-thead">Bill Rate</th>
+                <th className="th-thead">Rate Type</th>
+                <th className="th-thead">Start Date</th>
+                <th className="th-thead">End Date</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="tbody">
               {newEmployeeRate && (
                 <tr>
                   {/* Checkbox column for alignment */}
-                  <td className="border p-2 text-center"></td>
-                  <td className="border p-2">
+                  <td className="tbody-td"></td>
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newEmployeeRate.empId || ""}
@@ -2743,10 +2741,10 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     {newEmployeeRate.employeeName || ""}
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newEmployeeRate.plc || ""}
@@ -2768,12 +2766,12 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     {plcs.find(
                       (plc) => plc.laborCategoryCode === newEmployeeRate.plc
                     )?.description || ""}
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newEmployeeRate.billRate || ""}
@@ -2799,7 +2797,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-1 border rounded text-xs"
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <select
                       value={newEmployeeRate.rateType}
                       onChange={(e) =>
@@ -2814,7 +2812,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </select>
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="date"
                       value={newEmployeeRate.startDate || ""}
@@ -2826,7 +2824,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       max={selectedPlan.projEndDt}
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="date"
                       value={newEmployeeRate.endDate || ""}
@@ -2845,20 +2843,20 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
 
               {loadingEmployee ? (
                 <tr>
-                  <td colSpan="9" className="border p-2 text-center">
+                  <td colSpan="9" className="tbody-td">
                     Loading...
                   </td>
                 </tr>
               ) : employeeBillingRates.length === 0 && !newEmployeeRate ? (
                 <tr>
-                  <td colSpan="9" className="border p-2 text-center">
+                  <td colSpan="9" className="tbody-td">
                     No data available
                   </td>
                 </tr>
               ) : (
                 employeeBillingRates.map((item) => (
                   <tr key={item.id}>
-                    <td className="border p-2 text-center">
+                    <td className="tbody-td">
                       <input
                         type="checkbox"
                         checked={!!selectedEmployeeRows[item.id]}
@@ -2870,14 +2868,14 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         }}
                       />
                     </td>
-                    <td className="border p-2">{item.empId}</td>
-                    <td className="border p-2">{item.employeeName}</td>
-                    <td className="border p-2">{item.plc}</td>
-                    <td className="border p-2">
+                    <td className="tbody-td">{item.empId}</td>
+                    <td className="tbody-td">{item.employeeName}</td>
+                    <td className="tbody-td">{item.plc}</td>
+                    <td className="tbody-td">
                       {plcs.find((plc) => plc.laborCategoryCode === item.plc)
                         ?.description || item.plcDescription}
                     </td>
-                    <td className="border p-2">
+                    <td className="tbody-td">
                       {isEmployeeEditing ? (
                         <input
                           type="text"
@@ -2910,9 +2908,9 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
-                    <td className="border p-2">{item.rateType}</td>
-                    <td className="border p-2">{item.startDate}</td>
-                    <td className="border p-2">{item.endDate || ""}</td>
+                    <td className="tbody-td">{item.rateType}</td>
+                    <td className="tbody-td">{item.startDate}</td>
+                    <td className="tbody-td">{item.endDate || ""}</td>
                   </tr>
                 ))
               )}
@@ -3014,11 +3012,11 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-          <table className="w-full text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-gray-100">
-              <tr className="bg-gray-100">
-                <th className="border p-2 text-center">
+        <div className="overflow-x-auto overflow-y-auto max-h-64 rounded-xl shadow-lg border border-gray-200">
+          <table className="w-full table">
+            <thead className="sticky top-0 z-10 thead">
+              <tr>
+                <th className="th-thead">
                   <input
                     type="checkbox"
                     checked={
@@ -3047,24 +3045,24 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                     }}
                   />
                 </th>
-                <th className="border p-2">Vendor</th>
-                <th className="border p-2">Vendor Name</th>
-                <th className="border p-2">Vendor Employee ID</th>
-                <th className="border p-2">Vendor Employee Name</th>
-                <th className="border p-2">PLC</th>
-                <th className="border p-2">PLC Description</th>
-                <th className="border p-2">Bill Rate</th>
-                <th className="border p-2">Rate Type</th>
-                <th className="border p-2">Start Date</th>
-                <th className="border p-2">End Date</th>
+                <th className="th-thead">Vendor</th>
+                <th className="th-thead">Vendor Name</th>
+                <th className="th-thead">Vendor Employee ID</th>
+                <th className="th-thead">Vendor Employee Name</th>
+                <th className="th-thead">PLC</th>
+                <th className="th-thead">PLC Description</th>
+                <th className="th-thead">Bill Rate</th>
+                <th className="th-thead">Rate Type</th>
+                <th className="th-thead">Start Date</th>
+                <th className="th-thead">End Date</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="tbody">
               {newVendorRate && (
                 <tr>
                   {/* Checkbox column for alignment */}
-                  <td className="border p-2 text-center"></td>
-                  <td className="border p-2">
+                  <td className="tbody-td"></td>
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newVendorRate.vendorId || ""}
@@ -3101,7 +3099,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newVendorRate.vendorName || ""}
@@ -3112,7 +3110,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs bg-gray-100"
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newVendorRate.vendorEmployee || ""}
@@ -3126,7 +3124,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs bg-gray-100"
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newVendorRate.vendorEmployeeName || ""}
@@ -3140,7 +3138,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs bg-gray-100"
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newVendorRate.plc || ""}
@@ -3162,12 +3160,12 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </datalist>
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     {plcs.find(
                       (plc) => plc.laborCategoryCode === newVendorRate.plc
                     )?.description || ""}
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="text"
                       value={newVendorRate.billRate || ""}
@@ -3199,7 +3197,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       className="w-full p-2 border rounded text-xs"
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <select
                       value={newVendorRate.rateType}
                       onChange={(e) =>
@@ -3214,7 +3212,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       ))}
                     </select>
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="date"
                       value={newVendorRate.startDate || ""}
@@ -3226,7 +3224,7 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                       max={selectedPlan.projEndDt}
                     />
                   </td>
-                  <td className="border p-2">
+                  <td className="tbody-td">
                     <input
                       type="date"
                       value={newVendorRate.endDate || ""}
@@ -3242,20 +3240,20 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
               )}
               {loadingVendor ? (
                 <tr>
-                  <td colSpan="11" className="border p-2 text-center">
+                  <td colSpan="11" className="tbody-td">
                     Loading...
                   </td>
                 </tr>
               ) : vendorBillingRates.length === 0 && !newVendorRate ? (
                 <tr>
-                  <td colSpan="11" className="border p-2 text-center">
+                  <td colSpan="11" className="tbody-td">
                     No data available
                   </td>
                 </tr>
               ) : (
                 vendorBillingRates.map((item) => (
                   <tr key={item.id}>
-                    <td className="border p-2 text-center">
+                    <td className="tbody-td text-center">
                       <input
                         type="checkbox"
                         checked={!!selectedVendorRows[item.id]}
@@ -3267,16 +3265,16 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         }}
                       />
                     </td>
-                    <td className="border p-2">{item.vendorId}</td>
-                    <td className="border p-2">{item.vendorName}</td>
-                    <td className="border p-2">{item.vendorEmployee}</td>
-                    <td className="border p-2">{item.vendorEmployeeName}</td>
-                    <td className="border p-2">{item.plc}</td>
-                    <td className="border p-2">
+                    <td className="tbody-td">{item.vendorId}</td>
+                    <td className="tbody-td">{item.vendorName}</td>
+                    <td className="tbody-td">{item.vendorEmployee}</td>
+                    <td className="tbody-td">{item.vendorEmployeeName}</td>
+                    <td className="tbody-td">{item.plc}</td>
+                    <td className="tbody-td">
                       {plcs.find((plc) => plc.laborCategoryCode === item.plc)
                         ?.description || item.plcDescription}
                     </td>
-                    <td className="border p-2">
+                    <td className="tbody-td">
                       {isVendorEditing ? (
                         <input
                           type="text"
@@ -3308,9 +3306,9 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
                         <span>{item.billRate}</span>
                       )}
                     </td>
-                    <td className="border p-2">{item.rateType}</td>
-                    <td className="border p-2">{item.startDate}</td>
-                    <td className="border p-2">{item.endDate}</td>
+                    <td className="tbody-td">{item.rateType}</td>
+                    <td className="tbody-td">{item.startDate}</td>
+                    <td className="tbody-td">{item.endDate}</td>
                   </tr>
                 ))
               )}
