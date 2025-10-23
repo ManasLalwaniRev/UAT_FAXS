@@ -257,7 +257,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
   };
 
   return (
-    <div className=" p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16">
+    <div className=" p-2 sm:p-4 bg-gray rounded shadow min-h-[150px] scroll-mt-16">
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -312,23 +312,19 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
           </div>
         </div>
 
-        <div className="max-h-[400px] overflow-x-auto overflow-y-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead className="bg-gray-100 sticky top-0 z-10">
-              <tr className="bg-gray-100">
-                <th className="border p-2 font-normal">Fiscal Year</th>
-                <th className="border p-2 font-normal min-w-[60px]">Period</th>
-                <th className="border p-2 font-normal min-w-[150px]">
-                  End Date
-                </th>
-                <th className="border p-2 font-normal min-w-[100px]">
-                  Fixed Revenue Amount
-                </th>
-                <th className="border p-2 font-normal">Revenue Adjustment</th>
-                <th className="border p-2 font-normal">Description</th>
+        <div className="max-h-[400px] overflow-x-auto overflow-y-auto border-line">
+          <table className="w-full table">
+            <thead className="thead sticky top-0 z-10">
+              <tr>
+                <th className="th-thead">Fiscal Year</th>
+                <th className="th-thead min-w-[60px]">Period</th>
+                <th className="th-thead min-w-[150px]">End Date</th>
+                <th className="th-thead min-w-[100px]">Fixed Revenue Amount</th>
+                <th className="th-thead">Revenue Adjustment</th>
+                <th className="th-thead">Description</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="tbody">
               {loading ? (
                 <tr>
                   <td colSpan="6" className="text-center p-4">
@@ -342,7 +338,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
 
                   return (
                     <tr key={period.id}>
-                      <td className="border p-2">
+                      <td className="tbody-td">
                         {isNewRow ? (
                           <input
                             type="text"
@@ -362,7 +358,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                           </span>
                         )}
                       </td>
-                      <td className="border p-2 min-w-[60px]">
+                      <td className="tbody-td min-w-[60px]">
                         <input
                           type="text"
                           className="w-full p-1 text-sm font-normal"
@@ -373,7 +369,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                           disabled={!isNewRow}
                         />
                       </td>
-                      <td className="border p-2 min-w-[150px]">
+                      <td className="tbody-td min-w-[150px]">
                         {isNewRow ? (
                           <input
                             type="date"
@@ -395,7 +391,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                           </span>
                         )}
                       </td>
-                      <td className="border p-2 min-w-[100px]">
+                      <td className="tbody-td min-w-[100px]">
                         <input
                           type="number"
                           className="w-full p-1 border rounded text-sm font-normal bg-gray-200"
@@ -403,7 +399,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                           disabled={true}
                         />
                       </td>
-                      {/* <td className="border p-2">
+                      {/* <td className="tbody-td">
                         <input
                           type="text"
                           className={`w-full p-1 border rounded text-sm font-normal ${
@@ -417,7 +413,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                           disabled={isRevAdjDisabled}
                         />
                       </td> */}
-                      {/* <td className="border p-2">
+                      {/* <td className="tbody-td">
                         <input
                           type="text"
                           className={`w-full p-1 border rounded text-sm font-normal ${
@@ -440,7 +436,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                         />
                       </td> */}
 
-                      <td className="border p-2">
+                      <td className="tbody-td">
                         <input
                           type="text"
                           className={`w-full p-1 border rounded text-sm font-normal ${
@@ -478,7 +474,7 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
                         />
                       </td>
 
-                      <td className="border p-2">
+                      <td className="tbody-td">
                         <input
                           type="text"
                           className="w-full p-1 text-sm font-normal"
@@ -503,8 +499,8 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
           </table>
         </div>
 
-        <div className="flex justify-end space-x-2 mt-4">
-          {/* 
+        {/* <div className="flex justify-end space-x-2 mt-4"> */}
+        {/* 
           {!isEditMode ? (
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 text-sm font-normal"
@@ -529,15 +525,15 @@ const RevenueCeilingComponent = ({ selectedPlan, revenueAccount }) => {
             </>
           )}
           */}
-          {isEditMode && (
+        {/* {isEditMode && (
             <button
               className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 text-sm font-normal"
               onClick={handleCancel}
             >
               Cancel
             </button>
-          )}
-        </div>
+          )} */}
+        {/* </div> */}
       </div>
     </div>
   );

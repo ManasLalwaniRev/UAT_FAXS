@@ -157,6 +157,13 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
   }, [selectedPlan, revenueAccount]);
 
   const handleSave = () => {
+    if (!revenueFormula || revenueFormula === "") {
+      toast.error("Please select revenue formula", {
+        toastId: "revenue-setup-save-select",
+        autoClose: 3000,
+      });
+      return;
+    }
     const payload = {
       id: setupId,
       projId: selectedPlan?.projId || "",
@@ -213,9 +220,9 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
   };
 
   return (
-    <div className=" p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16">
+    <div className=" p-2 sm:p-4 bg-gray rounded shadow min-h-[150px] scroll-mt-16">
       <div className="flex flex-col space-y-4">
-        <div>
+        {/* <div>
           <label className="text-sm font-normal">Revenue Formula</label>
           <select
             className="border border-gray-300 rounded px-2 py-1 w-full text-sm font-normal mt-1"
@@ -231,7 +238,26 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
               </option>
             ))}
           </select>
+        </div> */}
+        <div>
+          <label className="text-sm font-normal">Revenue Formula</label>
+          <select
+            className="border border-gray-300 rounded px-2 py-1 w-full text-sm font-normal mt-1"
+            value={revenueFormula}
+            onChange={(e) => {
+              setRevenueFormula(e.target.value);
+              setRevenueType(e.target.value); // Modified: Update revenueType to keep in sync
+            }}
+          >
+            <option value="">---------Select----------</option>
+            {formulaOptions.map((option) => (
+              <option key={option.formulaCd} value={option.formulaCd}>
+                {option.formulaDesc}
+              </option>
+            ))}
+          </select>
         </div>
+
         <div>
           <label className="text-sm font-normal mr-2">
             Override Funding Ceiling
@@ -332,139 +358,143 @@ const RevenueSetupComponent = ({ selectedPlan, revenueAccount }) => {
             <span className="text-sm font-normal">{revenueAccountState}</span>
           </div>
         </div>
-        <table className="w-full text-sm border-collapse sm:w-auto">
-          <tbody>
-            <tr className="bg-gray-100">
-              <td className="border p-2 font-normal"></td>
-              <td className="border p-2 font-normal">Rev on Cost</td>
-              <td className="border p-2 font-normal">Rev on Burden</td>
-              <td className="border p-2 font-normal">Fee on Cost/Burden</td>
-              <td className="border p-2 font-normal">Fee on Hours</td>
-              <td className="border p-2 font-normal">Fee Rate %</td>
-              <td className="border p-2 font-normal">Use T&M Rates</td>
-            </tr>
-            <tr>
-              <td className="border p-2 text-sm font-normal">Labor</td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={labCostFl}
-                  onChange={(e) => setLabCostFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={labBurdFl}
-                  onChange={(e) => setLabBurdFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={labFeeCostFl}
-                  onChange={(e) => setLabFeeCostFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={labFeeHrsFl}
-                  onChange={(e) => setLabFeeHrsFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="string"
-                  step="any"
-                  min="0"
-                  max="100"
-                  className="w-full p-1 border rounded text-sm font-normal"
-                  style={{ appearance: "none" }}
-                  value={labFeeRt}
-                  onChange={(e) =>
-                    handleFeeRateChange(e.target.value, setLabFeeRt)
-                  }
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={labTmFl}
-                  onChange={(e) => setLabTmFl(e.target.checked)}
-                />
-              </td>
-            </tr>
-            <tr>
-              <td className="border p-2 text-sm font-normal">Non-Labor</td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={nonLabCostFl}
-                  onChange={(e) => setNonLabCostFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={nonLabBurdFl}
-                  onChange={(e) => setNonLabBurdFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={nonLabFeeCostFl}
-                  onChange={(e) => setNonLabFeeCostFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={nonLabFeeHrsFl}
-                  onChange={(e) => setNonLabFeeHrsFl(e.target.checked)}
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="string"
-                  step="any"
-                  min="0"
-                  max="100"
-                  className="w-full p-1 border rounded text-sm font-normal"
-                  style={{ appearance: "none" }}
-                  value={nonLabFeeRt}
-                  onChange={(e) =>
-                    handleFeeRateChange(e.target.value, setNonLabFeeRt)
-                  }
-                />
-              </td>
-              <td className="border p-2">
-                <input
-                  type="checkbox"
-                  className="text-sm font-normal"
-                  checked={nonLabTmFl}
-                  onChange={(e) => setNonLabTmFl(e.target.checked)}
-                />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded text-sm font-normal mt-4 cursor-pointer"
-          onClick={handleSave}
-        >
-          Save
-        </button>
+        <div className="rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
+          <table className="w-full table sm:w-auto">
+            <tbody className="tbody">
+              <tr>
+                <td className="thead text-center"></td>
+                <td className="thead text-center">Rev on Cost</td>
+                <td className="thead text-center">Rev on Burden</td>
+                <td className="thead text-center">Fee on Cost/Burden</td>
+                <td className="thead text-center">Fee on Hours</td>
+                <td className="thead text-center">Fee Rate %</td>
+                <td className="thead text-center">Use T&M Rates</td>
+              </tr>
+              <tr>
+                <td className="thead text-center">Labor</td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={labCostFl}
+                    onChange={(e) => setLabCostFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={labBurdFl}
+                    onChange={(e) => setLabBurdFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={labFeeCostFl}
+                    onChange={(e) => setLabFeeCostFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={labFeeHrsFl}
+                    onChange={(e) => setLabFeeHrsFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="string"
+                    step="any"
+                    min="0"
+                    max="100"
+                    className="w-full p-1 border rounded text-sm font-normal"
+                    style={{ appearance: "none" }}
+                    value={labFeeRt}
+                    onChange={(e) =>
+                      handleFeeRateChange(e.target.value, setLabFeeRt)
+                    }
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={labTmFl}
+                    onChange={(e) => setLabTmFl(e.target.checked)}
+                  />
+                </td>
+              </tr>
+              <tr>
+                <td className="thead text-center">Non-Labor</td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={nonLabCostFl}
+                    onChange={(e) => setNonLabCostFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={nonLabBurdFl}
+                    onChange={(e) => setNonLabBurdFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={nonLabFeeCostFl}
+                    onChange={(e) => setNonLabFeeCostFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={nonLabFeeHrsFl}
+                    onChange={(e) => setNonLabFeeHrsFl(e.target.checked)}
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="string"
+                    step="any"
+                    min="0"
+                    max="100"
+                    className="w-full p-1 border rounded text-sm font-normal"
+                    style={{ appearance: "none" }}
+                    value={nonLabFeeRt}
+                    onChange={(e) =>
+                      handleFeeRateChange(e.target.value, setNonLabFeeRt)
+                    }
+                  />
+                </td>
+                <td className="tbody-td">
+                  <input
+                    type="checkbox"
+                    className="text-sm font-normal"
+                    checked={nonLabTmFl}
+                    onChange={(e) => setNonLabTmFl(e.target.checked)}
+                  />
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="flex justify-end w-full">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded text-sm font-normal mt-4 cursor-pointer w-25"
+            onClick={handleSave}
+          >
+            Save
+          </button>
+        </div>
       </div>
     </div>
   );

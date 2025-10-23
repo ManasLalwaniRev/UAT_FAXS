@@ -904,33 +904,26 @@ const PoolRate = ({ userName = "User" }) => {
                   Target Rates
                 </h2>
                 <div className="border border-gray-300 rounded-lg shadow-md overflow-x-auto w-fit">
-                  <table className="w-fit rounded-lg overflow-hidden">
-                    <thead className="bg-blue-50">
+                  <table className="table">
+                    <thead className="thead">
                       <tr>
-                        <th className="px-2 py-1 text-left text-xs font-semibold text-gray-800 border-b border-gray-300 w-[80px]">
-                          Month
-                        </th>
+                        <th className="th-thead w-[80px]">Month</th>
                         {pools.map((pool) => (
-                          <th
-                            key={pool.poolId}
-                            className="px-2 py-1 text-left text-xs font-semibold text-gray-800 border-b border-gray-300 w-[60px]"
-                          >
+                          <th key={pool.poolId} className="th-thead  w-[60px]">
                             {pool.groupName}
                           </th>
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody className="tbody">
                       {monthlyData.length > 0 && !loading && !error ? (
                         monthlyData.map((data) => (
                           <tr key={data.month} className="bg-white">
-                            <td className="px-2 py-1 text-xs text-gray-700 border-b border-gray-200 w-[80px]">
-                              {data.month}
-                            </td>
+                            <td className="tbody-td w-[80px]">{data.month}</td>
                             {pools.map((pool) => (
                               <td
                                 key={pool.poolId}
-                                className="px-2 py-1 text-xs border-b border-gray-200 w-[60px]"
+                                className="tbody-td w-[60px]"
                               >
                                 {/* <input
                                   type="text"
@@ -1228,10 +1221,7 @@ const PoolRate = ({ userName = "User" }) => {
                         ))
                       ) : (
                         <tr>
-                          <td
-                            colSpan={pools.length + 1}
-                            className="px-2 py-4 text-xs text-gray-700 text-center"
-                          >
+                          <td colSpan={pools.length + 1} className="tbody-td">
                             {loading ? (
                               <div className="flex justify-center items-center">
                                 <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-blue-500"></div>

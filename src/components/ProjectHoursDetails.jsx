@@ -1538,572 +1538,255 @@ const ProjectHoursDetails = ({
     }
   };
 
-  // const handleCopySelectedRows = () => {
-  //   if (selectedRows.size === 0) {
-  //     toast.info("No rows selected to copy.", { autoClose: 2000 });
-  //     return;
-  //   }
-
-  //   const sortedDurations = durations.sort((a, b) => {
-  //     if (a.year !== b.year) return a.year - b.year;
-  //     return a.monthNo - b.monthNo;
-  //   });
-
-  //   const headers = [
-  //     "ID Type",
-  //     "ID",
-  //     "Name",
-  //     "Account",
-  //     "Account Name",
-  //     "Organization",
-  //     "PLC",
-  //     "Rev",
-  //     "Brd",
-  //     "Status",
-  //     "Hour Rate",
-  //   ];
-
-  //   // Store month metadata for matching during paste
-  //   const monthMetadata = [];
-
-  //   sortedDurations.forEach((duration) => {
-  //     const monthName = new Date(
-  //       duration.year,
-  //       duration.monthNo - 1
-  //     ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-  //     headers.push(monthName);
-  //     monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
-  //   });
-
-  //   const copyData = [headers];
-  //   const structuredData = [];
-
-  //   selectedRows.forEach((rowIndex) => {
-  //     const emp = localEmployees[rowIndex];
-  //     if (emp && emp.emple && !hiddenRows[rowIndex]) {
-  //       const employeeRow = getEmployeeRow(emp, rowIndex);
-  //       const rowData = [
-  //         employeeRow.idType,
-  //         employeeRow.emplId,
-  //         employeeRow.name,
-  //         employeeRow.acctId,
-  //         employeeRow.acctName,
-  //         employeeRow.orgId,
-  //         employeeRow.glcPlc,
-  //         typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
-  //         typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
-  //         employeeRow.status,
-  //         employeeRow.perHourRate,
-  //       ];
-
-  //       sortedDurations.forEach((duration) => {
-  //         const uniqueKey = `${duration.monthNo}_${duration.year}`;
-  //         const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
-  //         const monthHours = getMonthHours(emp);
-  //         const forecastValue = monthHours[uniqueKey]?.value;
-  //         const value =
-  //           inputValue !== undefined && inputValue !== ""
-  //             ? inputValue
-  //             : forecastValue || "0.00";
-  //         rowData.push(value);
-  //       });
-
-  //       copyData.push(rowData);
-  //       structuredData.push(rowData);
-  //     }
-  //   });
-
-  //   const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
-
-  //   navigator.clipboard
-  //     .writeText(tsvContent)
-  //     .then(() => {
-  //       // CRITICAL: Store month metadata with copied data
-  //       setCopiedRowsData(() => structuredData);
-  //       setCopiedMonthMetadata(() => monthMetadata); // ← Add this state
-  //       setHasClipboardData(() => true);
-
-  //       toast.success(`Copied ${structuredData.length} rows!`, {
-  //         autoClose: 3000,
-  //       });
-
-  //       Promise.resolve().then(() => {
-  //         setSelectedRows(new Set());
-  //         setShowCopyButton(false);
-  //       });
-  //     })
-  //     .catch((err) => {
-  //       console.error("Copy failed:", err);
-  //       toast.error("Failed to copy data.", { autoClose: 3000 });
-  //     });
-  // };
-  
   const handleCopySelectedRows = () => {
-  if (selectedRows.size === 0) {
-    toast.info("No rows selected to copy.", { autoClose: 2000 });
-    return;
-  }
-
-  const sortedDurations = durations.sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year;
-    return a.monthNo - b.monthNo;
-  });
-
-  const headers = [
-    "ID Type",
-    "ID",
-    "Name",
-    "Account",
-    "Account Name",
-    "Organization",
-    "PLC",
-    "Rev",
-    "Brd",
-    "Status",
-    "Hour Rate",
-    "Total", // ADD Total header
-  ];
-
-  // Store month metadata for matching during paste
-  const monthMetadata = [];
-
-  sortedDurations.forEach((duration) => {
-    const monthName = new Date(
-      duration.year,
-      duration.monthNo - 1
-    ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
-    headers.push(monthName);
-    monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
-  });
-
-  const copyData = [headers];
-  const structuredData = [];
-
-  selectedRows.forEach((rowIndex) => {
-    const emp = localEmployees[rowIndex];
-    if (emp && emp.emple && !hiddenRows[rowIndex]) {
-      const employeeRow = getEmployeeRow(emp, rowIndex);
-      const rowData = [
-        employeeRow.idType,
-        employeeRow.emplId,
-        employeeRow.name,
-        employeeRow.acctId,
-        employeeRow.acctName,
-        employeeRow.orgId,
-        employeeRow.glcPlc,
-        typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
-        typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
-        employeeRow.status,
-        employeeRow.perHourRate,
-      ];
-
-      // Calculate total hours
-      let totalHours = 0;
-
-      sortedDurations.forEach((duration) => {
-        const uniqueKey = `${duration.monthNo}_${duration.year}`;
-        const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
-        const monthHours = getMonthHours(emp);
-        const forecastValue = monthHours[uniqueKey]?.value;
-        const value =
-          inputValue !== undefined && inputValue !== ""
-            ? inputValue
-            : forecastValue || "0.00";
-        
-        totalHours += value && !isNaN(value) ? Number(value) : 0;
-      });
-
-      // ADD Total to rowData - CRITICAL for both Excel and structuredData
-      rowData.push(totalHours.toFixed(2));
-
-      // Now add month values
-      sortedDurations.forEach((duration) => {
-        const uniqueKey = `${duration.monthNo}_${duration.year}`;
-        const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
-        const monthHours = getMonthHours(emp);
-        const forecastValue = monthHours[uniqueKey]?.value;
-        const value =
-          inputValue !== undefined && inputValue !== ""
-            ? inputValue
-            : forecastValue || "0.00";
-        rowData.push(value);
-      });
-
-      copyData.push(rowData);
-      structuredData.push(rowData); // Now includes Total at position 11
+    if (selectedRows.size === 0) {
+      toast.info("No rows selected to copy.", { autoClose: 2000 });
+      return;
     }
-  });
 
-  const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
-
-  navigator.clipboard
-    .writeText(tsvContent)
-    .then(() => {
-      // CRITICAL: Store month metadata with copied data
-      setCopiedRowsData(() => structuredData);
-      setCopiedMonthMetadata(() => monthMetadata);
-      setHasClipboardData(() => true);
-
-      toast.success(`Copied ${structuredData.length} rows!`, {
-        autoClose: 3000,
-      });
-
-      Promise.resolve().then(() => {
-        setSelectedRows(new Set());
-        setShowCopyButton(false);
-      });
-    })
-    .catch((err) => {
-      console.error("Copy failed:", err);
-      toast.error("Failed to copy data.", { autoClose: 3000 });
-    });
-};
-
-  
-//   const handlePasteMultipleRows = () => {
-//     if (copiedRowsData.length === 0) {
-//       toast.error("No copied data available to paste", { autoClose: 2000 });
-//       return;
-//     }
-
-//     // Close single new form if open
-//     if (showNewForm) {
-//       setShowNewForm(false);
-//     }
-
-//     // Filter durations by selected fiscal year
-//     const sortedDurations = [...durations]
-//       .filter((d) => {
-//         if (fiscalYear === "All") return true;
-//         return d.year === parseInt(fiscalYear);
-//       })
-//       .sort((a, b) => {
-//         if (a.year !== b.year) return a.year - b.year;
-//         return a.monthNo - b.monthNo;
-//       });
-
-//     const processedEntries = [];
-//     const processedHoursArray = [];
-
-//     // copiedRowsData.forEach((rowData, rowIndex) => {
-//     //   // Extract employee data (first 11 columns)
-//     //   const [
-//     //     idTypeLabel,
-//     //     id,
-//     //     name,
-//     //     acctId,
-//     //     acctName,
-//     //     orgId,
-//     //     plcGlcCode,
-//     //     isRev,
-//     //     isBrd,
-//     //     status,
-//     //     perHourRate,
-//     //     ...monthValues
-//     //   ] = rowData;
-
-//     //   // Map ID Type
-//     //   const idType =
-//     //     ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-//     //     idTypeLabel;
-
-//     //   // Parse name based on ID type
-//     //   let firstName = "";
-//     //   let lastName = "";
-
-//     //   if (idType === "PLC") {
-//     //     firstName = name;
-//     //   } else if (idType === "Vendor") {
-//     //     if (name.includes(", ")) {
-//     //       const nameParts = name.split(", ");
-//     //       lastName = nameParts[0];
-//     //       firstName = nameParts[1];
-//     //     } else {
-//     //       lastName = name;
-//     //     }
-//     //   } else if (idType === "Employee") {
-//     //     const nameParts = name.split(" ");
-//     //     firstName = nameParts[0];
-//     //     lastName = nameParts.slice(1).join(" ");
-//     //   } else {
-//     //     firstName = name;
-//     //   }
-
-//     //   const entry = {
-//     //     id: id,
-//     //     firstName: firstName,
-//     //     lastName: lastName,
-//     //     idType: idType,
-//     //     acctId: acctId,
-//     //     orgId: orgId,
-//     //     plcGlcCode: plcGlcCode,
-//     //     perHourRate: perHourRate,
-//     //     status: status || "ACT",
-//     //     isRev: isRev === "✓",
-//     //     isBrd: isBrd === "✓",
-//     //   };
-
-//     //   // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
-//     //   const periodHours = {};
-
-//     //   // Build a lookup map from copiedMonthMetadata to monthValues
-//     //   const copiedHoursMap = {};
-//     //   copiedMonthMetadata.forEach((meta, index) => {
-//     //     const key = `${meta.monthNo}_${meta.year}`;
-//     //     copiedHoursMap[key] = monthValues[index];
-//     //   });
-
-//     //   // Now map to current fiscal year durations
-//     //   sortedDurations.forEach((duration) => {
-//     //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-//     //     const value = copiedHoursMap[uniqueKey]; // ← Match by month/year
-
-//     //     // Only add non-zero values that exist in copied data
-//     //     if (value && value !== "0.00" && value !== "0" && value !== "") {
-//     //       periodHours[uniqueKey] = value;
-//     //     }
-//     //   });
-
-//     //   processedEntries.push(entry);
-//     //   processedHoursArray.push(periodHours);
-//     // });
-
-//     // Set state with all processed data
-   
-//     copiedRowsData.forEach((rowData, rowIndex) => {
-//   // Extract employee data (first 11 columns + skip Total column)
-//   const [
-//     idTypeLabel,
-//     id,
-//     name,
-//     acctId,
-//     acctName,
-//     orgId,
-//     plcGlcCode,
-//     isRev,
-//     isBrd,
-//     status,
-//     perHourRate,
-//     total,  // ADD THIS - capture Total column
-//     ...monthValues  // Now monthValues will be correct
-//   ] = rowData;
-
-//   // Rest of your existing code remains the same...
-//   const idType =
-//     ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-//     idTypeLabel;
-
-//   // Parse name based on ID type
-//   let firstName = "";
-//   let lastName = "";
-
-//   if (idType === "PLC") {
-//     firstName = name;
-//   } else if (idType === "Vendor") {
-//     if (name.includes(", ")) {
-//       const nameParts = name.split(", ");
-//       lastName = nameParts[0];
-//       firstName = nameParts[1];
-//     } else {
-//       lastName = name;
-//     }
-//   } else if (idType === "Employee") {
-//     const nameParts = name.split(" ");
-//     firstName = nameParts[0];
-//     lastName = nameParts.slice(1).join(" ");
-//   } else {
-//     firstName = name;
-//   }
-
-//   const entry = {
-//     id: id,
-//     firstName: firstName,
-//     lastName: lastName,
-//     idType: idType,
-//     acctId: acctId,
-//     orgId: orgId,
-//     plcGlcCode: plcGlcCode,
-//     perHourRate: perHourRate,
-//     status: status || "ACT",
-//     isRev: isRev === "✓",
-//     isBrd: isBrd === "✓",
-//   };
-
-//   // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
-//   const periodHours = {};
-
-//   // Build a lookup map from copiedMonthMetadata to monthValues
-//   const copiedHoursMap = {};
-//   copiedMonthMetadata.forEach((meta, index) => {
-//     const key = `${meta.monthNo}_${meta.year}`;
-//     copiedHoursMap[key] = monthValues[index];
-//   });
-
-//   // Now map to current fiscal year durations
-//   sortedDurations.forEach((duration) => {
-//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-//     const value = copiedHoursMap[uniqueKey];
-
-//     // Only add non-zero values that exist in copied data
-//     if (value && value !== "0.00" && value !== "0" && value !== "") {
-//       periodHours[uniqueKey] = value;
-//     }
-//   });
-
-//   processedEntries.push(entry);
-//   processedHoursArray.push(periodHours);
-// });
-
-   
-   
-   
-//     setNewEntries(processedEntries);
-//     setNewEntryPeriodHoursArray(processedHoursArray);
-
-//     // **ADD THIS** - Fetch suggestions for each pasted entry
-//     processedEntries.forEach((entry, index) => {
-//       fetchSuggestionsForPastedEntry(index, entry);
-//     });
-
-//     // Disable paste button
-//     setHasClipboardData(false);
-//     setCopiedRowsData([]);
-//     setCopiedMonthMetadata([]);
-
-//     toast.success(
-//       `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
-//       { autoClose: 3000 }
-//     );
-//   };
-  
-  const handlePasteMultipleRows = () => {
-  if (copiedRowsData.length === 0) {
-    toast.error("No copied data available to paste", { autoClose: 2000 });
-    return;
-  }
-
-  // Close single new form if open
-  if (showNewForm) {
-    setShowNewForm(false);
-  }
-
-  // Filter durations by selected fiscal year
-  const sortedDurations = [...durations]
-    .filter((d) => {
-      if (fiscalYear === "All") return true;
-      return d.year === parseInt(fiscalYear);
-    })
-    .sort((a, b) => {
+    const sortedDurations = durations.sort((a, b) => {
       if (a.year !== b.year) return a.year - b.year;
       return a.monthNo - b.monthNo;
     });
 
-  const processedEntries = [];
-  const processedHoursArray = [];
+    const headers = [
+      "ID Type",
+      "ID",
+      "Name",
+      "Account",
+      "Account Name",
+      "Organization",
+      "PLC",
+      "Rev",
+      "Brd",
+      "Status",
+      "Hour Rate",
+      "Total", // ADD Total header
+    ];
 
-  copiedRowsData.forEach((rowData, rowIndex) => {
-    // Extract employee data (first 11 columns + skip Total column at position 11)
-    const [
-      idTypeLabel,
-      id,
-      name,
-      acctId,
-      acctName,
-      orgId,
-      plcGlcCode,
-      isRev,
-      isBrd,
-      status,
-      perHourRate,
-      total, // Position 11 - capture but don't use
-      ...monthValues // Position 12+ - actual month values
-    ] = rowData;
+    // Store month metadata for matching during paste
+    const monthMetadata = [];
 
-    // Map ID Type
-    const idType =
-      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-      idTypeLabel;
+    sortedDurations.forEach((duration) => {
+      const monthName = new Date(
+        duration.year,
+        duration.monthNo - 1
+      ).toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+      headers.push(monthName);
+      monthMetadata.push({ monthNo: duration.monthNo, year: duration.year });
+    });
 
-    // Parse name based on ID type
-    let firstName = "";
-    let lastName = "";
+    const copyData = [headers];
+    const structuredData = [];
 
-    if (idType === "PLC") {
-      firstName = name;
-    } else if (idType === "Vendor") {
-      if (name.includes(", ")) {
-        const nameParts = name.split(", ");
-        lastName = nameParts[0];
-        firstName = nameParts[1];
-      } else {
-        lastName = name;
+    selectedRows.forEach((rowIndex) => {
+      const emp = localEmployees[rowIndex];
+      if (emp && emp.emple && !hiddenRows[rowIndex]) {
+        const employeeRow = getEmployeeRow(emp, rowIndex);
+        const rowData = [
+          employeeRow.idType,
+          employeeRow.emplId,
+          employeeRow.name,
+          employeeRow.acctId,
+          employeeRow.acctName,
+          employeeRow.orgId,
+          employeeRow.glcPlc,
+          typeof employeeRow.isRev === "object" ? "✓" : employeeRow.isRev,
+          typeof employeeRow.isBrd === "object" ? "✓" : employeeRow.isBrd,
+          employeeRow.status,
+          employeeRow.perHourRate,
+        ];
+
+        // Calculate total hours
+        let totalHours = 0;
+
+        sortedDurations.forEach((duration) => {
+          const uniqueKey = `${duration.monthNo}_${duration.year}`;
+          const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+          const monthHours = getMonthHours(emp);
+          const forecastValue = monthHours[uniqueKey]?.value;
+          const value =
+            inputValue !== undefined && inputValue !== ""
+              ? inputValue
+              : forecastValue || "0.00";
+
+          totalHours += value && !isNaN(value) ? Number(value) : 0;
+        });
+
+        // ADD Total to rowData - CRITICAL for both Excel and structuredData
+        rowData.push(totalHours.toFixed(2));
+
+        // Now add month values
+        sortedDurations.forEach((duration) => {
+          const uniqueKey = `${duration.monthNo}_${duration.year}`;
+          const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+          const monthHours = getMonthHours(emp);
+          const forecastValue = monthHours[uniqueKey]?.value;
+          const value =
+            inputValue !== undefined && inputValue !== ""
+              ? inputValue
+              : forecastValue || "0.00";
+          rowData.push(value);
+        });
+
+        copyData.push(rowData);
+        structuredData.push(rowData); // Now includes Total at position 11
       }
-    } else if (idType === "Employee") {
-      const nameParts = name.split(" ");
-      firstName = nameParts[0];
-      lastName = nameParts.slice(1).join(" ");
-    } else {
-      firstName = name;
+    });
+
+    const tsvContent = copyData.map((row) => row.join("\t")).join("\n");
+
+    navigator.clipboard
+      .writeText(tsvContent)
+      .then(() => {
+        // CRITICAL: Store month metadata with copied data
+        setCopiedRowsData(() => structuredData);
+        setCopiedMonthMetadata(() => monthMetadata);
+        setHasClipboardData(() => true);
+
+        toast.success(`Copied ${structuredData.length} rows!`, {
+          autoClose: 3000,
+        });
+
+        Promise.resolve().then(() => {
+          setSelectedRows(new Set());
+          setShowCopyButton(false);
+        });
+      })
+      .catch((err) => {
+        console.error("Copy failed:", err);
+        toast.error("Failed to copy data.", { autoClose: 3000 });
+      });
+  };
+
+  const handlePasteMultipleRows = () => {
+    if (copiedRowsData.length === 0) {
+      toast.error("No copied data available to paste", { autoClose: 2000 });
+      return;
     }
 
-    const entry = {
-      id: id,
-      firstName: firstName,
-      lastName: lastName,
-      idType: idType,
-      acctId: acctId,
-      orgId: orgId,
-      plcGlcCode: plcGlcCode,
-      perHourRate: perHourRate,
-      status: status || "ACT",
-      isRev: isRev === "✓",
-      isBrd: isBrd === "✓",
-    };
+    // Close single new form if open
+    if (showNewForm) {
+      setShowNewForm(false);
+    }
 
-    // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
-    const periodHours = {};
+    // Filter durations by selected fiscal year
+    const sortedDurations = [...durations]
+      .filter((d) => {
+        if (fiscalYear === "All") return true;
+        return d.year === parseInt(fiscalYear);
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.monthNo - b.monthNo;
+      });
 
-    // Build a lookup map from copiedMonthMetadata to monthValues
-    const copiedHoursMap = {};
-    copiedMonthMetadata.forEach((meta, index) => {
-      const key = `${meta.monthNo}_${meta.year}`;
-      copiedHoursMap[key] = monthValues[index];
-    });
+    const processedEntries = [];
+    const processedHoursArray = [];
 
-    // Now map to current fiscal year durations
-    sortedDurations.forEach((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      const value = copiedHoursMap[uniqueKey];
+    copiedRowsData.forEach((rowData, rowIndex) => {
+      // Extract employee data (first 11 columns + skip Total column at position 11)
+      const [
+        idTypeLabel,
+        id,
+        name,
+        acctId,
+        acctName,
+        orgId,
+        plcGlcCode,
+        isRev,
+        isBrd,
+        status,
+        perHourRate,
+        total, // Position 11 - capture but don't use
+        ...monthValues // Position 12+ - actual month values
+      ] = rowData;
 
-      // Only add non-zero values that exist in copied data
-      if (value && value !== "0.00" && value !== "0" && value !== "") {
-        periodHours[uniqueKey] = value;
+      // Map ID Type
+      const idType =
+        ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+        idTypeLabel;
+
+      // Parse name based on ID type
+      let firstName = "";
+      let lastName = "";
+
+      if (idType === "PLC") {
+        firstName = name;
+      } else if (idType === "Vendor") {
+        if (name.includes(", ")) {
+          const nameParts = name.split(", ");
+          lastName = nameParts[0];
+          firstName = nameParts[1];
+        } else {
+          lastName = name;
+        }
+      } else if (idType === "Employee") {
+        const nameParts = name.split(" ");
+        firstName = nameParts[0];
+        lastName = nameParts.slice(1).join(" ");
+      } else {
+        firstName = name;
       }
+
+      const entry = {
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        idType: idType,
+        acctId: acctId,
+        orgId: orgId,
+        plcGlcCode: plcGlcCode,
+        perHourRate: perHourRate,
+        status: status || "ACT",
+        isRev: isRev === "✓",
+        isBrd: isBrd === "✓",
+      };
+
+      // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+      const periodHours = {};
+
+      // Build a lookup map from copiedMonthMetadata to monthValues
+      const copiedHoursMap = {};
+      copiedMonthMetadata.forEach((meta, index) => {
+        const key = `${meta.monthNo}_${meta.year}`;
+        copiedHoursMap[key] = monthValues[index];
+      });
+
+      // Now map to current fiscal year durations
+      sortedDurations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const value = copiedHoursMap[uniqueKey];
+
+        // Only add non-zero values that exist in copied data
+        if (value && value !== "0.00" && value !== "0" && value !== "") {
+          periodHours[uniqueKey] = value;
+        }
+      });
+
+      processedEntries.push(entry);
+      processedHoursArray.push(periodHours);
     });
 
-    processedEntries.push(entry);
-    processedHoursArray.push(periodHours);
-  });
+    // Set state with all processed data
+    setNewEntries(processedEntries);
+    setNewEntryPeriodHoursArray(processedHoursArray);
 
-  // Set state with all processed data
-  setNewEntries(processedEntries);
-  setNewEntryPeriodHoursArray(processedHoursArray);
+    // **ADD THIS** - Fetch suggestions for each pasted entry
+    processedEntries.forEach((entry, index) => {
+      fetchSuggestionsForPastedEntry(index, entry);
+    });
 
-  // **ADD THIS** - Fetch suggestions for each pasted entry
-  processedEntries.forEach((entry, index) => {
-    fetchSuggestionsForPastedEntry(index, entry);
-  });
+    // Disable paste button
+    setHasClipboardData(false);
+    setCopiedRowsData([]);
+    setCopiedMonthMetadata([]);
 
-  // Disable paste button
-  setHasClipboardData(false);
-  setCopiedRowsData([]);
-  setCopiedMonthMetadata([]);
-
-  toast.success(
-    `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
-    { autoClose: 3000 }
-  );
-};
+    toast.success(
+      `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
+      { autoClose: 3000 }
+    );
+  };
 
   const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
     if (planType === "NBBUD") return;
@@ -4516,34 +4199,18 @@ const ProjectHoursDetails = ({
                 New
               </button>
 
-              {/* {hasClipboardData && (
+              {hasClipboardData && status === "In Progress" && (
                 <button
                   onClick={() => {
                     handlePasteMultipleRows();
-
-                    // Disable paste button after pasting
                     setHasClipboardData(false);
                     setCopiedRowsData([]);
                   }}
                   className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium"
                 >
-                  Paste ({copiedRowsData.length})
+                  Paste ({copiedRowsData.length} data)
                 </button>
-              )} */}
-
-              {hasClipboardData && status === "In Progress" && (
-  <button
-    onClick={() => {
-      handlePasteMultipleRows();
-      setHasClipboardData(false);
-      setCopiedRowsData([]);
-    }}
-    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium"
-  >
-    Paste ({copiedRowsData.length} data)
-  </button>
-)}
-
+              )}
 
               {/* Save Entry - Show for BOTH showNewForm AND newEntries */}
               {(showNewForm || newEntries.length > 0) && (
@@ -5444,7 +5111,6 @@ const ProjectHoursDetails = ({
                               placeholder="Account Name auto-filled"
                             />
                           </td>
-                          
                           {/* Organization */}
                           <td className="tbody-td">
                             <input
@@ -5642,7 +5308,7 @@ const ProjectHoursDetails = ({
                           </td>
 
                           {/* UPDATE THIS WARNING CELL */}
-                          <td className="p-1.5 border-r border-gray-200 text-xs text-center min-w-[70px]">
+                          <td className="tbody-td min-w-[70px]">
                             {row.warning ? (
                               <span
                                 className="text-yellow-500 text-lg cursor-pointer hover:text-yellow-600"
@@ -6104,12 +5770,14 @@ const ProjectHoursDetails = ({
                     </tr>
                   )}
 
+                
+
                   {/* PASTED ENTRIES - ADD THIS SECTION */}
                   {newEntries.length > 0 &&
                     newEntries.map((entry, entryIndex) => (
                       <tr
                         key={`new-entry-duration-${entryIndex}`}
-                        className="bg-gray-50"
+                        // className="bg-gray-50"
                         style={{
                           height: `${ROW_HEIGHT_DEFAULT}px`,
                           lineHeight: "normal",
@@ -6234,17 +5902,11 @@ const ProjectHoursDetails = ({
                       return (
                         <tr
                           key={`hours-${actualEmpIdx}`}
-                          className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
-          selectedRows.has(actualEmpIdx)
-            ? "bg-blue-100"
-            : selectedRowIndex === actualEmpIdx
-            ? "bg-yellow-100"
-            : "even:bg-gray-50"
-        }`}
-        style={{
-          height: `${ROW_HEIGHT_DEFAULT}px`,
-          lineHeight: "normal",
-        }}
+                          // className="whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200"
+                          style={{
+                            height: `${ROW_HEIGHT_DEFAULT}px`,
+                            lineHeight: "normal",
+                          }}
                         >
                           {sortedDurations.map((duration) => {
                             // const actualEmpIdx = 0;
@@ -6259,7 +5921,10 @@ const ProjectHoursDetails = ({
                               isMonthEditable(duration, closedPeriod, planType);
 
                             return (
-                              <td key={`hours-${actualEmpIdx}-${uniqueKey}`}>
+                              <td
+                                key={`hours-${actualEmpIdx}-${uniqueKey}`}
+                                className="tbody-td"
+                              >
                                 {/* <input
   type="text"
   inputMode="numeric"

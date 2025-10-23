@@ -3169,16 +3169,17 @@ const ProjectAmountsTable = ({
   </button>
 )} */}
 
-{hasClipboardData && !showNewForm && newEntries.length === 0 && initialData.status === "In Progress" && (
-  <button
-    onClick={handlePasteMultipleRows}
-    className="px-4 py-2 bg-purple-600 text-white text-xs font-semibold rounded-md hover:bg-purple-700"
-  >
-    Paste ({copiedRowsData.length} rows)
-  </button>
-)}
-
-
+          {hasClipboardData &&
+            !showNewForm &&
+            newEntries.length === 0 &&
+            initialData.status === "In Progress" && (
+              <button
+                onClick={handlePasteMultipleRows}
+                className="px-4 py-2 bg-purple-600 text-white text-xs font-semibold rounded-md hover:bg-purple-700"
+              >
+                Paste ({copiedRowsData.length} rows)
+              </button>
+            )}
 
           {/* Save Entry Button - Shows for BOTH single new form AND pasted entries */}
           {/* {(showNewForm || newEntries.length > 0) && (

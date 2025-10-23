@@ -426,10 +426,10 @@ const ProjectBudgetStatus = () => {
             className="space-y-4 sm:p-4 border-overall  p-2  bg-white mb-8"
           >
             {selectedPlan && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-1">
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-1">
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                   <div>
-                    <span className="font-semibold text-green-800">
+                    <span className="font-semibold text-blue-800">
                       Project:
                     </span>{" "}
                     <span className="text-gray-700">{selectedPlan.projId}</span>
@@ -443,21 +443,22 @@ const ProjectBudgetStatus = () => {
                     </span>
                   </div> */}
                   <div>
-                    <span className="font-semibold text-green-800">
-                      Start Date:
-                    </span>{" "}
+                    <span className="font-semibold text-blue-800">
+                      Period of Performance :
+                    </span>
+                    Start Date:{" "}
                     <span className="text-gray-700">
                       {formatDate(selectedPlan.projStartDt)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      End Date:
                     </span>{" "}
+                    |{/* <div> */}
+                    {/* <span className="font-semibold text-green-800"> */}
+                    End Date:
+                    {/* </span>{" "} */}
                     <span className="text-gray-700">
                       {formatDate(selectedPlan.projEndDt)}
                     </span>
                   </div>
+                  {/* </div> */}
                   {/* <div>
                     <span className="font-semibold text-green-800">
                       Organization:
@@ -465,7 +466,7 @@ const ProjectBudgetStatus = () => {
                     <span className="text-gray-700">{selectedPlan.orgId}</span>
                   </div> */}
                   <div>
-                    <span className="font-semibold text-green-800">
+                    <span className="font-semibold text-blue-800">
                       Funded Fee:
                     </span>{" "}
                     <span className="text-gray-700">
@@ -476,7 +477,7 @@ const ProjectBudgetStatus = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="font-semibold text-green-800">
+                    <span className="font-semibold text-blue-800">
                       Funded Cost:
                     </span>{" "}
                     <span className="text-gray-700">
@@ -487,7 +488,7 @@ const ProjectBudgetStatus = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="font-semibold text-green-800">
+                    <span className="font-semibold text-blue-800">
                       Funded Rev:
                     </span>{" "}
                     <span className="text-gray-700">
@@ -755,43 +756,21 @@ const ProjectBudgetStatus = () => {
                           background: "#fff",
                         }}
                       >
-                        <table className="w-full table-auto text-xs text-left border-collapse">
-                          <thead className="bg-gray-100 text-gray-800 sticky top-0 z-10">
+                        <table className="table">
+                          <thead className="thead">
                             <tr>
-                              <th className="p-2 border font-normal">Export</th>
-                              <th className="p-1 border font-normal text-center">
-                                Project ID
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Project Name
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                BUD/EAC
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Revision
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Version Type
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Origin
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Submitted
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Approved
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Conclude
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Status
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Closed Period
-                              </th>
+                              <th className="th-thead">Export</th>
+                              <th className="th-thead">Project ID</th>
+                              <th className="th-thead">Project Name</th>
+                              <th className="th-thead">BUD/EAC</th>
+                              <th className="th-thead">Revision</th>
+                              <th className="th-thead">Version Type</th>
+                              <th className="th-thead">Origin</th>
+                              <th className="th-thead">Submitted</th>
+                              <th className="th-thead">Approved</th>
+                              <th className="th-thead">Conclude</th>
+                              <th className="th-thead">Status</th>
+                              <th className="th-thead">Closed Period</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -833,7 +812,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (dashboardRefs.current[searchTerm] = el)}
                 >
                   <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -887,7 +866,7 @@ const ProjectBudgetStatus = () => {
             {/* Hours Tab */}
             {activeTab === "hours" && selectedPlan && (
               <div
-                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16 overflow-x-auto"
+                className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16 overflow-x-auto"
                 ref={(el) => (hoursRefs.current[searchTerm] = el)}
               >
                 <div className="w-full bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -955,7 +934,7 @@ const ProjectBudgetStatus = () => {
             {/* Amounts Tab */}
             {activeTab === "amounts" && selectedPlan && (
               <div
-                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                 ref={(el) => (amountsRefs.current[searchTerm] = el)}
               >
                 <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -1023,7 +1002,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (revenueRefs.current[searchTerm] = el)}
                 >
                   <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -1087,7 +1066,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative   p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (analysisRefs.current[searchTerm] = el)}
                 >
                   <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -1188,7 +1167,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (hoursRefs.current[searchTerm] = el)}
                 >
                   {/* <button
@@ -1271,7 +1250,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative  p-2 sm:p-4 border-line  min-h-[150px] scroll-mt-16"
                   ref={(el) => (revenueSetupRefs.current[searchTerm] = el)}
                 >
                   <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -1339,7 +1318,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (revenueCeilingRefs.current[searchTerm] = el)}
                 >
                   <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -1407,7 +1386,7 @@ const ProjectBudgetStatus = () => {
               selectedPlan &&
               currentUserRole === "admin" && (
                 <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                  className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (fundingRefs.current[searchTerm] = el)}
                 >
                   <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
@@ -1468,7 +1447,7 @@ const ProjectBudgetStatus = () => {
             {/* Warning Tab */}
             {activeTab === "warning" && selectedPlan && (
               <div
-                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
+                className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                 ref={(el) => (warningRefs.current[searchTerm] = el)}
               >
                 <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">

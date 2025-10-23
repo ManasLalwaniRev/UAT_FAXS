@@ -540,7 +540,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main content: minimal padding and no white bg */}
-      <div className="main-content bg-gray-100 p-2">
+      <div className="main-content bg-gradient-to-b from-blue-100 to-white p-2">
         <Routes>
           <Route
             path="/"
