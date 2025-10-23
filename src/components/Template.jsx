@@ -138,17 +138,9 @@ const Template = ({ updatedBy = "User" }) => {
   return (
     <div className="bg-white p-6 rounded-lg shadow-lg">
       <div className="flex justify-between items-center gap-2 mb-4">
-        <h2 className="w-full  bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+        <h2 className="w-full  bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
           Burden Setup
         </h2>
-        <button
-          onClick={() => setIsFormOpen(!isFormOpen)}
-          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 -mt-3 rounded-md hover:bg-blue-700 transition ease-in-out duration-200"
-          disabled={isSubmitting}
-        >
-          <Plus className="w-5 h-5" />
-          <span>Burden</span>
-        </button>
       </div>
 
       {/* Form to Add New Template */}
@@ -237,31 +229,31 @@ const Template = ({ updatedBy = "User" }) => {
       )}
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border-collapse border border-gray-300">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Burden_Code
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Description
-              </th>
-              <th className="border border-gray-300 px-4 py-2 text-left text-sm font-semibold text-gray-700">
-                Actions
-              </th>
+      <div className="flex justify-end">
+        <button
+          onClick={() => setIsFormOpen(!isFormOpen)}
+          className="flex items-center space-x-2 bg-blue-600 text-white px-3 py-1 -mt-3 mb-3 rounded-md hover:bg-blue-700 transition ease-in-out duration-200 "
+          disabled={isSubmitting}
+        >
+          <Plus className="w-5 h-5" />
+          <span>Burden</span>
+        </button>
+      </div>
+      <div className="overflow-x-auto border-line">
+        <table className="min-w-full table">
+          <thead className="thead">
+            <tr>
+              <th className="th-thead">Burden_Code</th>
+              <th className="th-thead">Description</th>
+              <th className="th-thead">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="tbody">
             {templates.map((template) => (
               <tr key={template.id} className="hover:bg-gray-50">
-                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-600">
-                  {template.templateCode}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-600">
-                  {template.description}
-                </td>
-                <td className="border border-gray-300 px-4 py-2 text-sm text-gray-600">
+                <td className="tbody-td">{template.templateCode}</td>
+                <td className="tbody-td">{template.description}</td>
+                <td className="tbody-td">
                   <button
                     onClick={() => handleDeleteTemplate(template)}
                     className="text-red-600 hover:text-red-800 transition ease-in-out duration-200"

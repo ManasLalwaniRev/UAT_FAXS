@@ -1,11 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaEdit, FaTrash, FaSave, FaPlus, FaTimes } from "react-icons/fa";
 import { backendUrl } from "./config";
-
 
 const EmployeeHoursCeilings = ({
   projectId,
@@ -330,34 +328,22 @@ const EmployeeHoursCeilings = ({
             No data available for this project ID.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-100 border-b border-gray-200">
+          <div className="overflow-x-auto border-line">
+            <table className="w-full table">
+              <thead className="thead">
                 <tr>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Empl ID
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Employee Name
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Labor Category
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Labor Desc
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Hours Ceiling
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Action
-                  </th>
+                  <th className="th-thead">Empl ID</th>
+                  <th className="th-thead">Employee Name</th>
+                  <th className="th-thead">Labor Category</th>
+                  <th className="th-thead">Labor Desc</th>
+                  <th className="th-thead">Hours Ceiling</th>
+                  <th className="th-thead">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="tbody">
                 {showNewRow && (
-                  <tr className="bg-white border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-2 py-1">
+                  <tr>
+                    <td className="tbody-td">
                       <input
                         list="emp-suggestions"
                         value={newRow.empId}
@@ -375,10 +361,8 @@ const EmployeeHoursCeilings = ({
                         ))}
                       </datalist>
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
-                      {newRow.employeeName}
-                    </td>
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">{newRow.employeeName}</td>
+                    <td className="tbody-td">
                       <input
                         list="labor-suggestions"
                         value={newRow.laborCategoryId}
@@ -399,10 +383,8 @@ const EmployeeHoursCeilings = ({
                         ))}
                       </datalist>
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
-                      {newRow.laborCategoryDesc}
-                    </td>
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">{newRow.laborCategoryDesc}</td>
+                    <td className="tbody-td">
                       <input
                         type="number"
                         value={newRow.hoursCeiling}
@@ -416,7 +398,7 @@ const EmployeeHoursCeilings = ({
                         placeholder="0"
                       />
                     </td>
-                    <td className="px-2 py-1 flex gap-1">
+                    <td className="tbody-td">
                       <button
                         onClick={handleSave}
                         className="text-green-700 hover:text-green-800"
@@ -439,7 +421,7 @@ const EmployeeHoursCeilings = ({
                     key={`${emp.projectId}-${emp.empId}-${index}`}
                     className="bg-white border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <>
                           <input
@@ -463,7 +445,7 @@ const EmployeeHoursCeilings = ({
                         emp.empId
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="text"
@@ -475,7 +457,7 @@ const EmployeeHoursCeilings = ({
                         emp.employeeName
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <>
                           <input
@@ -502,7 +484,7 @@ const EmployeeHoursCeilings = ({
                         emp.laborCategoryId
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="text"
@@ -514,7 +496,7 @@ const EmployeeHoursCeilings = ({
                         emp.laborCategoryDesc
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="number"
@@ -529,7 +511,7 @@ const EmployeeHoursCeilings = ({
                         emp.hoursCeiling
                       )}
                     </td>
-                    <td className="px-2 py-1 flex gap-1">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <>
                           <button

@@ -337,28 +337,20 @@ const HoursCeilings = ({ projectId, isSearched, updatedBy = "Kartikay" }) => {
             No data available for this project ID.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-100 border-b border-gray-200">
+          <div className="overflow-x-auto border-line">
+            <table className="w-full table">
+              <thead className="thead">
                 <tr>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Labor Category
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Labor Category Description
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Hours Ceiling
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Action
-                  </th>
+                  <th className="th-thead">Labor Category</th>
+                  <th className="th-thead">Labor Category Description</th>
+                  <th className="th-thead">Hours Ceiling</th>
+                  <th className="th-thead">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="tbody-td">
                 {showNewRow && (
                   <tr className="bg-white border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       <input
                         list="labor-suggestions"
                         value={newRow.laborCategory}
@@ -380,10 +372,10 @@ const HoursCeilings = ({ projectId, isSearched, updatedBy = "Kartikay" }) => {
                         ))}
                       </datalist>
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {newRow.laborCategoryDescription}
                     </td>
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       <input
                         type="text"
                         value={newRow.hoursCeiling}
@@ -397,7 +389,7 @@ const HoursCeilings = ({ projectId, isSearched, updatedBy = "Kartikay" }) => {
                         placeholder="0"
                       />
                     </td>
-                    <td className="px-2 py-1 flex gap-1">
+                    <td className="tbody-td">
                       <button
                         onClick={handleSave}
                         className="text-green-700 hover:text-green-800"
@@ -420,14 +412,12 @@ const HoursCeilings = ({ projectId, isSearched, updatedBy = "Kartikay" }) => {
                     key={index}
                     className="bg-white border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
-                      {ceiling.laborCategoryId}
-                    </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">{ceiling.laborCategoryId}</td>
+                    <td className="tbody-td">
                       {/* {getDescription(ceiling.laborCategory)} */}
                       {ceiling.laborCategoryDesc}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="text"
@@ -442,7 +432,7 @@ const HoursCeilings = ({ projectId, isSearched, updatedBy = "Kartikay" }) => {
                         </span>
                       )}
                     </td>
-                    <td className="px-2 py-1 flex gap-1">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <>
                           <button

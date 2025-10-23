@@ -382,31 +382,23 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
         ) : directCostCeilings.length === 0 && !showNewRow ? (
           <p className="text-gray-600">No data available.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-100 border-b border-gray-200">
+          <div className="overflow-x-auto border-line">
+            <table className="w-full table">
+              <thead className="thead">
                 <tr>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Account
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Account Name
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
+                  <th className="th-thead">Account</th>
+                  <th className="th-thead">Account Name</th>
+                  <th className="th-thead ">
                     Functional Currency Ceiling Amount
                   </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
-                    Apply to R/B/A
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
-                    Action
-                  </th>
+                  <th className="th-thead  ">Apply to R/B/A</th>
+                  <th className="th-thead  ">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="tbody">
                 {showNewRow && (
                   <tr className="bg-white border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       {/* <input
                         list="dc-account-suggestions"
                         value={newRow.accountId}
@@ -437,10 +429,8 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
                         ))}
                       </datalist>
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900">
-                      {newRow.accountName}
-                    </td>
-                    <td className="px-2 py-1 text-center">
+                    <td className="tbody-td">{newRow.accountName}</td>
+                    <td className="tbody-td">
                       <input
                         type="number"
                         step="0.01"
@@ -455,7 +445,7 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
                         placeholder="0"
                       />
                     </td>
-                    <td className="px-2 py-1 text-center">
+                    <td className="tbody-td">
                       <select
                         value={newRow.applyToRbaCode}
                         onChange={(e) =>
@@ -473,7 +463,7 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
                         ))}
                       </select>
                     </td>
-                    <td className="px-2 py-1 flex gap-2 justify-center">
+                    <td className="tbody-td">
                       <button
                         onClick={handleSave}
                         className="text-green-700 hover:text-green-800"
@@ -501,14 +491,12 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
                     }-${index}`}
                     className="bg-white border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="px-2 py-1 text-xs text-gray-900">
-                      {ceiling.accountId}
-                    </td>
-                    <td className="px-2 py-1 text-xs text-gray-900">
+                    <td className="tbody-td">{ceiling.accountId}</td>
+                    <td className="tbody-td">
                       {accounts.find((a) => a.acctId === ceiling.accountId)
                         ?.acctName || "N/A"}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 text-center">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="number"
@@ -522,7 +510,7 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
                         ceiling.ceilingAmountFunc
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 text-center">
+                    <td className="tbody-td  ">
                       {editIndex === index ? (
                         <select
                           name="applyToRbaCode"
@@ -540,7 +528,7 @@ const DirectCostCeilings = ({ projectId, isSearched, updatedBy = "TEST" }) => {
                         ceiling.applyToRbaCode || ""
                       )}
                     </td>
-                    <td className="px-2 py-1 flex gap-2 justify-center">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <>
                           <button

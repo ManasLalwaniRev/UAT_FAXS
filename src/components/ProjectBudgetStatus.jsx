@@ -429,9 +429,7 @@ const ProjectBudgetStatus = () => {
               <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-1">
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
                   <div>
-                    <span className="font-semibold text-blue-800">
-                      Project:
-                    </span>{" "}
+                    <span className="font-semibold blue-text">Project ID:</span>{" "}
                     <span className="text-gray-700">{selectedPlan.projId}</span>
                   </div>
                   {/* <div>
@@ -443,7 +441,7 @@ const ProjectBudgetStatus = () => {
                     </span>
                   </div> */}
                   <div>
-                    <span className="font-semibold text-blue-800">
+                    <span className="font-semibold blue-text">
                       Period of Performance :
                     </span>
                     Start Date:{" "}
@@ -466,9 +464,7 @@ const ProjectBudgetStatus = () => {
                     <span className="text-gray-700">{selectedPlan.orgId}</span>
                   </div> */}
                   <div>
-                    <span className="font-semibold text-blue-800">
-                      Funded Fee:
-                    </span>{" "}
+                    <span className="font-semibold blue-text">Funded Fee:</span>{" "}
                     <span className="text-gray-700">
                       {Number(selectedPlan.fundedFee).toLocaleString("en-US", {
                         minimumFractionDigits: 0,
@@ -477,7 +473,7 @@ const ProjectBudgetStatus = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="font-semibold text-blue-800">
+                    <span className="font-semibold blue-text">
                       Funded Cost:
                     </span>{" "}
                     <span className="text-gray-700">
@@ -488,9 +484,7 @@ const ProjectBudgetStatus = () => {
                     </span>
                   </div>
                   <div>
-                    <span className="font-semibold text-blue-800">
-                      Funded Rev:
-                    </span>{" "}
+                    <span className="font-semibold blue-text">Funded Rev:</span>{" "}
                     <span className="text-gray-700">
                       {Number(selectedPlan.fundedRev).toLocaleString("en-US", {
                         minimumFractionDigits: 0,
@@ -815,9 +809,9 @@ const ProjectBudgetStatus = () => {
                   className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (dashboardRefs.current[searchTerm] = el)}
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -838,19 +832,25 @@ const ProjectBudgetStatus = () => {
                     </button>
                     <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
                       <span>
-                        <span className="font-semibold">Project ID: </span>
+                        <span className="font-semibold blue-text">
+                          Project ID:{" "}
+                        </span>
                         {selectedPlan.projId}
                       </span>
                       <span>
-                        <span className="font-semibold">Type: </span>
+                        <span className="font-semibold blue-text">Type: </span>
                         {selectedPlan.plType || "N/A"}
                       </span>
                       <span>
-                        <span className="font-semibold">Version: </span>
+                        <span className="font-semibold blue-text">
+                          Version:{" "}
+                        </span>
                         {selectedPlan.version || "N/A"}
                       </span>
                       <span>
-                        <span className="font-semibold">Status: </span>
+                        <span className="font-semibold blue-text">
+                          Status:{" "}
+                        </span>
                         {selectedPlan.status || "N/A"}
                       </span>
                     </div>
@@ -869,9 +869,9 @@ const ProjectBudgetStatus = () => {
                 className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16 overflow-x-auto"
                 ref={(el) => (hoursRefs.current[searchTerm] = el)}
               >
-                <div className="w-full bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <div className="w-full bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                   <button
-                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                    className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                     onClick={handleCloseTab}
                     title="Close project details"
                   >
@@ -892,23 +892,25 @@ const ProjectBudgetStatus = () => {
                   </button>
                   <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
                     <span>
-                      <span className="font-semibold">Project ID: </span>
+                      <span className="font-semibold blue-text">
+                        Project ID:{" "}
+                      </span>
                       {selectedPlan.projId}
                     </span>
                     <span>
-                      <span className="font-semibold">Type: </span>
+                      <span className="font-semibold blue-text">Type: </span>
                       {selectedPlan.plType || "N/A"}
                     </span>
                     <span>
-                      <span className="font-semibold">Version: </span>
+                      <span className="font-semibold blue-text">Version: </span>
                       {selectedPlan.version || "N/A"}
                     </span>
                     <span>
-                      <span className="font-semibold">Status: </span>
+                      <span className="font-semibold blue-text">Status: </span>
                       {selectedPlan.status || "N/A"}
                     </span>
                     <span>
-                      <span className="font-semibold">
+                      <span className="font-semibold blue-text">
                         Period of Performance:{" "}
                       </span>
                       Start Date:{" "}
@@ -937,9 +939,9 @@ const ProjectBudgetStatus = () => {
                 className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                 ref={(el) => (amountsRefs.current[searchTerm] = el)}
               >
-                <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                   <button
-                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                    className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                     onClick={handleCloseTab}
                     title="Close project details"
                   >
@@ -960,23 +962,25 @@ const ProjectBudgetStatus = () => {
                   </button>
                   <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
                     <span>
-                      <span className="font-semibold">Project ID: </span>
+                      <span className="font-semibold blue-text">
+                        Project ID:{" "}
+                      </span>
                       {selectedPlan.projId}
                     </span>
                     <span>
-                      <span className="font-semibold">Type: </span>
+                      <span className="font-semibold blue-text">Type: </span>
                       {selectedPlan.plType || "N/A"}
                     </span>
                     <span>
-                      <span className="font-semibold">Version: </span>
+                      <span className="font-semibold blue-text">Version: </span>
                       {selectedPlan.version || "N/A"}
                     </span>
                     <span>
-                      <span className="font-semibold">Status: </span>
+                      <span className="font-semibold blue-text">Status: </span>
                       {selectedPlan.status || "N/A"}
                     </span>
                     <span>
-                      <span className="font-semibold">
+                      <span className="font-semibold blue-text">
                         Period of Performance:{" "}
                       </span>
                       Start Date:{" "}
@@ -1005,9 +1009,9 @@ const ProjectBudgetStatus = () => {
                   className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (revenueRefs.current[searchTerm] = el)}
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -1028,23 +1032,29 @@ const ProjectBudgetStatus = () => {
                     </button>
                     <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
                       <span>
-                        <span className="font-semibold">Project ID: </span>
+                        <span className="font-semibold blue-text">
+                          Project ID:{" "}
+                        </span>
                         {selectedPlan.projId}
                       </span>
                       <span>
-                        <span className="font-semibold">Type: </span>
+                        <span className="font-semibold blue-text">Type: </span>
                         {selectedPlan.plType || "N/A"}
                       </span>
                       <span>
-                        <span className="font-semibold">Version: </span>
+                        <span className="font-semibold blue-text">
+                          Version:{" "}
+                        </span>
                         {selectedPlan.version || "N/A"}
                       </span>
                       <span>
-                        <span className="font-semibold">Status: </span>
+                        <span className="font-semibold blue-text">
+                          Status:{" "}
+                        </span>
                         {selectedPlan.status || "N/A"}
                       </span>
                       <span>
-                        <span className="font-semibold">
+                        <span className="font-semibold blue-text">
                           Period of Performance:{" "}
                         </span>
                         Start Date:{" "}
@@ -1069,9 +1079,9 @@ const ProjectBudgetStatus = () => {
                   className="relative   p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (analysisRefs.current[searchTerm] = el)}
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -1090,13 +1100,15 @@ const ProjectBudgetStatus = () => {
                         />
                       </svg>
                     </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
                       <span>
-                        <span className="font-semibold">Project ID: </span>
+                        <span className="font-semibold blue-text">
+                          Project ID:{" "}
+                        </span>
                         {selectedPlan.projId}
                       </span>
                       <span>
-                        <span className="font-semibold">Type: </span>
+                        <span className="font-semibold ">Type: </span>
                         {selectedPlan.plType || "N/A"}
                       </span>
                       <span>
@@ -1189,9 +1201,9 @@ const ProjectBudgetStatus = () => {
                     />
                   </svg>
                 </button> */}
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -1210,7 +1222,7 @@ const ProjectBudgetStatus = () => {
                         />
                       </svg>
                     </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
                       <span>
                         <span className="font-semibold">Project ID: </span>
                         {selectedPlan.projId}
@@ -1253,9 +1265,9 @@ const ProjectBudgetStatus = () => {
                   className="relative  p-2 sm:p-4 border-line  min-h-[150px] scroll-mt-16"
                   ref={(el) => (revenueSetupRefs.current[searchTerm] = el)}
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -1274,7 +1286,7 @@ const ProjectBudgetStatus = () => {
                         />
                       </svg>
                     </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
                       <span>
                         <span className="font-semibold">Project ID: </span>
                         {selectedPlan.projId}
@@ -1321,9 +1333,9 @@ const ProjectBudgetStatus = () => {
                   className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (revenueCeilingRefs.current[searchTerm] = el)}
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -1342,7 +1354,7 @@ const ProjectBudgetStatus = () => {
                         />
                       </svg>
                     </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
                       <span>
                         <span className="font-semibold">Project ID: </span>
                         {selectedPlan.projId}
@@ -1389,9 +1401,9 @@ const ProjectBudgetStatus = () => {
                   className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                   ref={(el) => (fundingRefs.current[searchTerm] = el)}
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                     <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                      className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                       onClick={handleCloseTab}
                       title="Close project details"
                     >
@@ -1410,7 +1422,7 @@ const ProjectBudgetStatus = () => {
                         />
                       </svg>
                     </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
                       <span>
                         <span className="font-semibold">Project ID: </span>
                         {selectedPlan.projId}
@@ -1450,9 +1462,9 @@ const ProjectBudgetStatus = () => {
                 className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
                 ref={(el) => (warningRefs.current[searchTerm] = el)}
               >
-                <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
                   <button
-                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                    className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
                     onClick={handleCloseTab}
                     title="Close project details"
                   >
@@ -1471,7 +1483,7 @@ const ProjectBudgetStatus = () => {
                       />
                     </svg>
                   </button>
-                  <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                  <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
                     <span>
                       <span className="font-semibold">Project ID: </span>
                       {selectedPlan.projId}

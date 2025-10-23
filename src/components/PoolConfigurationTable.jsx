@@ -193,7 +193,7 @@ const PoolConfigurationTable = () => {
         hideProgressBar={false}
         closeOnClick
       />
-      <h2 className="w-full bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+      <h2 className="w-full bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
         Pool Configuration
       </h2>
       <div className="flex items-center gap-4 mb-3">
@@ -243,61 +243,48 @@ const PoolConfigurationTable = () => {
           maxHeight: "500px",
           overflowY: "auto",
           position: "relative",
-          border: "1px solid #e5e7eb",
-          borderRadius: "0.5rem",
+          // border: "1px solid #e5e7eb",
+          // borderRadius: "0.5rem",
         }}
+        className="border-line"
       >
-        <table className="min-w-full bg-white">
+        <table className="min-w-full table">
           <thead
-            className="bg-blue-50"
-            style={{
-              position: "sticky",
-              top: 0,
-              zIndex: 10,
-              boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-            }}
+            className="thead"
+            // style={{
+            //   position: "sticky",
+            //   top: 0,
+            //   zIndex: 10,
+            //   boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+            // }}
           >
-            <tr className="border-b border-gray-200">
-              <th className="py-2 px-3 text-left text-gray-800 font-normal text-xs whitespace-nowrap border-r border-gray-200">
-                Org ID
-              </th>
-              <th className="py-2 px-3 text-left text-gray-800 font-normal text-xs whitespace-nowrap border-r border-gray-200">
-                Account ID
-              </th>
+            <tr>
+              <th className="th-thead">Org ID</th>
+              <th className="th-thead">Account ID</th>
               {groupCodes.map((code, index) => (
-                <th
-                  key={index}
-                  className="py-2 px-3 text-left text-gray-800 font-normal text-xs whitespace-nowrap border-r border-gray-200"
-                >
+                <th key={index} className="th-thead">
                   {groupNames[code] || code}
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody>
+          <tbody className="tbody">
             {filteredData.map((row) => (
               <tr
                 key={`${row.orgId}-${row.acctId}`}
-                className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                // className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
               >
-                <td className="py-2 px-3 text-gray-600 text-xs font-xs whitespace-nowrap border-r border-gray-200">
-                  {row.orgId}
-                </td>
-                <td className="py-2 px-3 text-gray-600 text-xs font-xs whitespace-nowrap border-r border-gray-200">
-                  {row.acctId}
-                </td>
+                <td className="tbody-td">{row.orgId}</td>
+                <td className="tbody-td  whitespace-nowrap">{row.acctId}</td>
                 {groupCodes.map((code, idx) => (
-                  <td
-                    key={idx}
-                    className="py-2 px-3 border-r border-gray-200 text-center align-middle"
-                  >
+                  <td key={idx} className="tbody-td">
                     <input
                       type="checkbox"
                       checked={row[code] === true}
                       onChange={() =>
                         handleCheckboxChange(row.orgId, row.acctId, code)
                       }
-                      className="h-3 w-3 text-blue-600 border-gray-300 rounded bg-gray-50 focus:ring-blue-500 focus:ring-opacity-50 shadow-sm"
+                      className="h-3 w-3 text-blue-600  focus:ring-blue-500 focus:ring-opacity-50 tbody-td"
                     />
                   </td>
                 ))}

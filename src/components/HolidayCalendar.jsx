@@ -225,11 +225,11 @@ const AnnualHolidaysPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl px-8 bg-white rounded-xl shadow-lg p-8 space-y-6 border border-gray-300">
-        <h2 className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+      <div className="w-full max-w-5xl px-8 bg-white p-8 space-y-6 border-line">
+        <h2 className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
           Setup Annual Holidays
         </h2>
-        <div className="bg-gray-50 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4 items-center border border-gray-300">
+        <div className="bg-gray-50 p-4  grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-line">
           <div className="flex items-center space-x-2">
             <label
               htmlFor="year"
@@ -268,39 +268,31 @@ const AnnualHolidaysPage = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-300">
+        <div className="bg-gray-50 p-4 border-line">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">
             Target Year Holidays
           </h3>
           {isLoading && <p className="text-center text-gray-500">Loading...</p>}
-          <div className="overflow-x-auto max-h-180 overflow-y-auto rounded-lg border border-gray-300">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-200 sticky top-0">
+
+          <div className="overflow-x-auto max-h-180 overflow-y-auto border-line">
+            <table className=" table">
+              <thead className="thead">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="th-thead uppercase tracking-wider">Date</th>
+                  <th className="th-thead uppercase tracking-wider">
                     Description
                   </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
+                  <th className="th-thead uppercase tracking-wider">
                     Holiday Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    State
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Actions
-                  </th>
+                  <th className="th-thead uppercase tracking-wider">State</th>
+                  <th className="th-thead uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="  divide-y divide-gray-200 tbody">
                 {filteredHolidays.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="px-6 py-4 text-sm text-gray-500 text-center"
-                    >
+                    <td colSpan="5" className="tbody-td">
                       No holidays available or matching your search.
                     </td>
                   </tr>
@@ -308,7 +300,7 @@ const AnnualHolidaysPage = () => {
                   filteredHolidays.map((holiday, idx) => (
                     <tr key={holiday.id || `new-${idx}`}>
                       {/* Date */}
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                      <td className="tbody-td">
                         {holiday.isEditing ? (
                           <DatePicker
                             selected={parseDate(holiday.date)}
@@ -328,7 +320,7 @@ const AnnualHolidaysPage = () => {
                         )}
                       </td>
                       {/* Description */}
-                      <td className="px-6 py-4 text-sm text-gray-800">
+                      <td className="tbody-td">
                         {holiday.isEditing ? (
                           <input
                             type="text"
@@ -348,7 +340,7 @@ const AnnualHolidaysPage = () => {
                         )}
                       </td>
                       {/* Holiday Status */}
-                      <td className="px-6 py-4 text-center text-sm">
+                      <td className="tbody-td">
                         {holiday.isEditing ? (
                           <select
                             value={holiday.holidayType}
@@ -371,7 +363,7 @@ const AnnualHolidaysPage = () => {
                         )}
                       </td>
                       {/* State */}
-                      <td className="px-6 py-4 text-sm text-gray-800">
+                      <td className="tbody-td">
                         <input
                           type="text"
                           value={holiday.state}
@@ -390,7 +382,7 @@ const AnnualHolidaysPage = () => {
                         />
                       </td>
                       {/* Actions */}
-                      <td className="px-6 py-4 text-right text-sm font-medium flex flex-row justify-end items-center space-x-2">
+                      <td className="tbody-td flex flex-row justify-end items-center space-x-2">
                         {holiday.isEditing ? (
                           <>
                             <button

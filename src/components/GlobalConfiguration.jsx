@@ -536,13 +536,13 @@ const LaborForm = () => {
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex items-center justify-center p-4">
       {/* Retained w-full px-8 for wider display within its parent */}
-      <div className="w-full px-8 bg-white rounded-xl shadow-lg p-8 space-y-6 border border-gray-300">
-        <h2 className="w-full  bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
-          Global Configuration
+      <div className="w-full px-8 bg-white border-line p-6 space-y-6">
+        <h2 className="w-full  bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
+          Settings
         </h2>
 
         {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 mb-6">
+        <div className="flex border-line mb-6">
           <button
             className={cn(
               "py-2 px-4 text-lg font-medium focus:outline-none",
@@ -570,7 +570,7 @@ const LaborForm = () => {
         {/* Tab Content */}
         <div>
           {activeTab === "projectSettings" && (
-            <div className="p-4 bg-white rounded-xl shadow-lg border border-gray-300">
+            <div className="p-4 bg-white border-line">
               <h3 className="text-xl mb-4">Project Settings</h3>
               {/* Changed gap-y-8 back to gap-y-5 for more compact layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">
@@ -1161,7 +1161,7 @@ const LaborForm = () => {
             </div>
           )}
           {activeTab === "OrganizationSettings" && (
-            <div className="p-4 bg-white rounded-xl shadow-lg border border-gray-300">
+            <div className="p-4 bg-white border-line">
               <h3 className="text-xl mb-4">Organization Settings</h3>
               {/* Changed gap-y-8 back to gap-y-5 for more compact layout */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-5">

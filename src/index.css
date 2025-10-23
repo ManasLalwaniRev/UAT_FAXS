@@ -111,6 +111,9 @@
   .border-line {
     @apply rounded-xl shadow-lg border border-gray-200;
   }
+  .blue-text {
+    @apply text-black;
+  }
 }
 
 .synchronized-tables-outer {
