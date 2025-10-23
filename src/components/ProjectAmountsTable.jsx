@@ -2943,7 +2943,7 @@ const ProjectAmountsTable = ({
   };
 
   const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-    if (planType === "NBBUD") return;
+    // if (planType === "NBBUD") return;
 
     const encodedProjectId = encodeURIComponent(projectId);
     const apiPlanType = planType === "NBBUD" ? "BUD" : planType;

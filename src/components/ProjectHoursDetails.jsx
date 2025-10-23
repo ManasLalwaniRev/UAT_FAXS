@@ -1788,12 +1788,155 @@ const ProjectHoursDetails = ({
     );
   };
 
-  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-    if (planType === "NBBUD") return;
+  // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  //   // if (planType === "NBBUD") return;
 
+  //   // CRITICAL FIX: URL encode project ID
+  //   const encodedProjectId = encodeURIComponent(projectId);
+  //   const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //   // Fetch employee suggestions based on ID type
+  //   if (entry.idType && entry.idType !== "") {
+  //     try {
+  //       const endpoint =
+  //         entry.idType === "Vendor"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+  //       const response = await axios.get(endpoint);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (entry.idType === "Vendor") {
+  //               return {
+  //                 emplId: emp.vendId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName,
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             }
+  //           })
+  //         : [];
+
+  //       setPastedEntrySuggestions((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: suggestions,
+  //       }));
+  //     } catch (err) {
+  //       console.error(
+  //         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+  //         err
+  //       );
+  //     }
+  //   }
+
+  //   // Fetch account, org, and PLC options
+  //   try {
+  //     const response = await axios.get(
+  //       `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+  //     );
+  //     const data = Array.isArray(response.data)
+  //       ? response.data[0]
+  //       : response.data;
+
+  //     // Fetch accounts
+  //     let accountsWithNames = [];
+
+  //     if (entry.idType === "PLC") {
+  //       const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+  //     } else if (entry.idType === "Employee") {
+  //       accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Vendor") {
+  //       accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Other") {
+  //       accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+  //         ? data.otherDirectCostLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     }
+
+  //     setPastedEntryAccounts((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: accountsWithNames,
+  //     }));
+
+  //     // Fetch organizations
+  //     const orgResponse = await axios.get(
+  //       `${backendUrl}/Orgnization/GetAllOrgs`
+  //     );
+  //     const orgOptions = Array.isArray(orgResponse.data)
+  //       ? orgResponse.data.map((org) => ({
+  //           value: org.orgId,
+  //           label: org.orgId,
+  //         }))
+  //       : [];
+
+  //     setPastedEntryOrgs((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: orgOptions,
+  //     }));
+
+  //     // Fetch PLC options
+  //     if (data.plc && Array.isArray(data.plc)) {
+  //       const plcOptions = data.plc.map((plc) => ({
+  //         value: plc.laborCategoryCode,
+  //         label: `${plc.laborCategoryCode} - ${plc.description}`,
+  //       }));
+
+  //       setPastedEntryPlcs((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: plcOptions,
+  //       }));
+  //     }
+  //   } catch (err) {
+  //     console.error(
+  //       `Failed to fetch pasted entry options for index ${entryIndex}:`,
+  //       err
+  //     );
+  //   }
+  // };
+  
+  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
     // CRITICAL FIX: URL encode project ID
     const encodedProjectId = encodeURIComponent(projectId);
-    const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+    // REMOVE THIS LINE: const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
 
     // Fetch employee suggestions based on ID type
     if (entry.idType && entry.idType !== "") {
@@ -1845,8 +1988,9 @@ const ProjectHoursDetails = ({
 
     // Fetch account, org, and PLC options
     try {
+      // USE planType DIRECTLY instead of apiPlanType
       const response = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
       );
       const data = Array.isArray(response.data)
         ? response.data[0]
@@ -4935,7 +5079,7 @@ const ProjectHoursDetails = ({
                           </td>
                           {/* ID */}
                           <td className="tbody-td">
-                            <input
+                            {/* <input
                               type="text"
                               name="id"
                               value={entry.id}
@@ -4996,7 +5140,66 @@ const ProjectHoursDetails = ({
                                   ? "Not required for PLC"
                                   : "Enter ID"
                               }
-                            />
+                            /> */}
+                            <input
+  type="text"
+  name="id"
+  value={entry.id}
+  onChange={(e) => {
+    const trimmedValue = e.target.value.trim();
+    setNewEntries((prev) =>
+      prev.map((ent, idx) =>
+        idx === entryIndex
+          ? { ...ent, id: trimmedValue }
+          : ent
+      )
+    );
+
+    // Auto-populate fields if employee found
+    const suggestions =
+      pastedEntrySuggestions[entryIndex] || [];
+    const selectedEmployee = suggestions.find(
+      (emp) => emp.emplId === trimmedValue
+    );
+    if (selectedEmployee) {
+      setNewEntries((prev) =>
+        prev.map((ent, idx) =>
+          idx === entryIndex
+            ? {
+                ...ent,
+                id: trimmedValue,
+                firstName:
+                  selectedEmployee.firstName || "",
+                lastName:
+                  selectedEmployee.lastName || "",
+                perHourRate:
+                  selectedEmployee.perHourRate ||
+                  "",
+                orgId:
+                  selectedEmployee.orgId ||
+                  ent.orgId,
+                plcGlcCode:
+                  selectedEmployee.plc || "",
+              }
+            : ent
+        )
+      );
+    }
+  }}
+  disabled={entry.idType === "PLC"}
+  className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+    entry.idType === "PLC"
+      ? "bg-gray-100 cursor-not-allowed"
+      : ""
+  }`}
+  list={`employee-id-list-${entryIndex}`}
+  placeholder={
+    entry.idType === "PLC"
+      ? "Not required for PLC"
+      : "Enter ID"
+  }
+/>
+
                             <datalist id={`employee-id-list-${entryIndex}`}>
                               {(pastedEntrySuggestions[entryIndex] || [])
                                 .filter(
