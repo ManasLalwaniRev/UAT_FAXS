@@ -2942,12 +2942,119 @@ const ProjectAmountsTable = ({
     );
   };
 
-  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-    // if (planType === "NBBUD") return;
+  // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  //   // if (planType === "NBBUD") return;
 
+  //   const encodedProjectId = encodeURIComponent(projectId);
+  //   const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //   if (entry.idType && entry.idType !== "") {
+  //     try {
+  //       const endpoint =
+  //         entry.idType === "Vendor" || entry.idType === "Vendor Employee"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+  //       const response = await axios.get(endpoint);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (
+  //               entry.idType === "Vendor" ||
+  //               entry.idType === "Vendor Employee"
+  //             ) {
+  //               return {
+  //                 emplId: emp.vendId || emp.empId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName,
+  //                 orgId: emp.orgId || "",
+  //                 acctId: emp.acctId || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 orgId: emp.orgId || "",
+  //                 acctId: emp.acctId || "",
+  //               };
+  //             }
+  //           })
+  //         : [];
+
+  //       setPastedEntrySuggestions((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: suggestions,
+  //       }));
+  //     } catch (err) {
+  //       console.error(
+  //         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+  //         err
+  //       );
+  //     }
+  //   }
+
+  //   try {
+  //     const response = await axios.get(
+  //       `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+  //     );
+  //     const data = Array.isArray(response.data)
+  //       ? response.data[0]
+  //       : response.data;
+
+  //     let accountsWithNames = [];
+  //     if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
+  //       accountsWithNames = Array.isArray(data.subContractorNonLaborAccounts)
+  //         ? data.subContractorNonLaborAccounts.map((account) => ({
+  //             id: account.accountId || account,
+  //             name: account.acctName || account.accountId || String(account),
+  //           }))
+  //         : [];
+  //     } else {
+  //       accountsWithNames = Array.isArray(data.employeeNonLaborAccounts)
+  //         ? data.employeeNonLaborAccounts.map((account) => ({
+  //             id: account.accountId || account,
+  //             name: account.acctName || account.accountId || String(account),
+  //           }))
+  //         : [];
+  //     }
+
+  //     setPastedEntryAccounts((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: accountsWithNames,
+  //     }));
+
+  //     const orgResponse = await axios.get(
+  //       `${backendUrl}/Orgnization/GetAllOrgs`
+  //     );
+  //     const orgOptions = Array.isArray(orgResponse.data)
+  //       ? orgResponse.data.map((org) => ({
+  //           value: org.orgId,
+  //           label: org.orgId,
+  //         }))
+  //       : [];
+
+  //     setPastedEntryOrgs((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: orgOptions,
+  //     }));
+  //   } catch (err) {
+  //     console.error(
+  //       `Failed to fetch pasted entry options for index ${entryIndex}:`,
+  //       err
+  //     );
+  //   }
+  // };
+
+  // Add keyboard listener for paste
+  
+  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
     const encodedProjectId = encodeURIComponent(projectId);
     const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
 
+    // Fetch employee suggestions based on ID type
     if (entry.idType && entry.idType !== "") {
       try {
         const endpoint =
@@ -2996,14 +3103,16 @@ const ProjectAmountsTable = ({
       }
     }
 
+    // **ADD THIS SECTION** - Fetch accounts and organizations
     try {
       const response = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
       );
       const data = Array.isArray(response.data)
         ? response.data[0]
         : response.data;
 
+      // Fetch accounts based on ID type
       let accountsWithNames = [];
       if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
         accountsWithNames = Array.isArray(data.subContractorNonLaborAccounts)
@@ -3012,9 +3121,16 @@ const ProjectAmountsTable = ({
               name: account.acctName || account.accountId || String(account),
             }))
           : [];
-      } else {
+      } else if (entry.idType === "Employee") {
         accountsWithNames = Array.isArray(data.employeeNonLaborAccounts)
           ? data.employeeNonLaborAccounts.map((account) => ({
+              id: account.accountId || account,
+              name: account.acctName || account.accountId || String(account),
+            }))
+          : [];
+      } else if (entry.idType === "Other") {
+        accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+          ? data.otherDirectCostLaborAccounts.map((account) => ({
               id: account.accountId || account,
               name: account.acctName || account.accountId || String(account),
             }))
@@ -3026,6 +3142,7 @@ const ProjectAmountsTable = ({
         [entryIndex]: accountsWithNames,
       }));
 
+      // Fetch organizations
       const orgResponse = await axios.get(
         `${backendUrl}/Orgnization/GetAllOrgs`
       );
@@ -3047,8 +3164,6 @@ const ProjectAmountsTable = ({
       );
     }
   };
-
-  // Add keyboard listener for paste
 
   const addNewEntryForm = () => {
     const newEntry = {
