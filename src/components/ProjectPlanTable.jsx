@@ -32,6 +32,8 @@ const ProjectPlanTable = ({
   fiscalYear,
   setFiscalYear,
   fiscalYearOptions,
+  searched,
+  filteredProjects,
 }) => {
   const [plans, setPlans] = useState([]);
   const [filteredPlans, setFilteredPlans] = useState([]);
@@ -102,15 +104,31 @@ const ProjectPlanTable = ({
     });
   };
 
+  useEffect(() => {
+    setColumns([
+      "projId",
+      "projName",
+      "plType",
+      "version",
+      "versionCode",
+      "source",
+      "isCompleted",
+      "isApproved",
+      "finalVersion",
+      "status",
+      "closedPeriod",
+    ]);
+  }, []);
+
   const fetchPlans = async () => {
-    // if (!projectId) {
-    //   setPlans([]);
-    //   setFilteredPlans([]);
-    //   setLoading(false);
-    //   lastFetchedProjectId.current = null;
-    //   fullProjectId.current = null;
-    //   return;
-    // }
+    if (!searched && projectId.trim() === "") {
+      setPlans([]);
+      setFilteredPlans([]);
+      setLoading(false);
+      lastFetchedProjectId.current = null;
+      fullProjectId.current = null;
+      return;
+    }
 
     // Prevent unnecessary API calls for the same project
     if (lastFetchedProjectId.current === projectId) {
@@ -725,6 +743,7 @@ const ProjectPlanTable = ({
           modifiedBy: plan.modifiedBy || "User",
           approvedBy: "",
           templateId: plan.templateId || 1,
+          fiscalYear: fiscalYear,
         };
 
         // console.log('Payload for action:', payloadTemplate);
@@ -998,16 +1017,16 @@ const ProjectPlanTable = ({
   // // Enable actions if plType and version are both empty
   //  const isPlanWithoutActions = plan => !plan.plType && !plan.version;
 
-  if (loading) {
-    return (
-      <div className="p-4">
-        <div className="flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <span className="ml-2">Loading project plans...</span>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="p-4">
+  //       <div className="flex items-center justify-center">
+  //         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+  //         <span className="ml-2">Loading project plans...</span>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   if (error) {
     return (
@@ -1061,7 +1080,7 @@ const ProjectPlanTable = ({
       >
         <div className="flex justify-between items-center mb-2 gap-1">
           <div className="flex gap-1 flex-wrap items-center ">
-            {plans.length > 0 && (
+            {plans.length >= 0 && (
               <>
                 {/* Create Budget */}
                 <button
@@ -1388,92 +1407,117 @@ const ProjectPlanTable = ({
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
-                {filteredPlans.map((plan, idx) => (
-                  <tr
-                    key={`plan-${plan.plId || idx}-${plan.projId || "unknown"}`}
-                    className={`transition-all duration-200 cursor-pointer ${
-                      selectedPlan &&
-                      selectedPlan.plId === plan.plId &&
-                      selectedPlan.projId === plan.projId
-                        ? "bg-blue-200 hover:bg-blue-300 "
-                        : "even:bg-gray-50 hover:bg-blue-50"
-                    }`}
-                    //border-l-4 border-l-blue-600
-                    onClick={() => {
-                      handleRowClick(plan);
-                      getMasterAndRelatedProjects(plans, plan.projId);
-                    }}
-                  >
-                    <td className="px-1 py-1 h-1 text-xs text-gray-700  text-center">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleExportPlan(plan);
-                        }}
-                        className="text-green-600 hover:text-green-800"
-                        title="Export to Excel"
-                        disabled={!plan.projId || !plan.version || !plan.plType}
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 cursor-pointer"
-                          viewBox="0 0 48 48"
-                        >
-                          <defs>
-                            <linearGradient
-                              id="grad1"
-                              x1="0%"
-                              y1="0%"
-                              x2="100%"
-                              y2="100%"
-                            >
-                              <stop
-                                offset="0%"
-                                style={{ stopColor: "#21A366" }}
-                              />
-                              <stop
-                                offset="100%"
-                                style={{ stopColor: "#185C37" }}
-                              />
-                            </linearGradient>
-                          </defs>
-
-                          <rect
-                            x="18"
-                            y="6"
-                            width="24"
-                            height="18"
-                            fill="url(#grad1)"
-                          />
-                          <rect
-                            x="18"
-                            y="24"
-                            width="24"
-                            height="18"
-                            fill="#107C41"
-                          />
-
-                          <rect
-                            x="6"
-                            y="10"
-                            width="16"
-                            height="28"
-                            rx="2"
-                            fill="#185C37"
-                          />
-
-                          <path
-                            fill="#fff"
-                            d="M11.5 29.5L14.2 24l-2.7-5.5h2.9l1.5 3.6 1.5-3.6h2.9L17.2 24l2.7 5.5h-2.9l-1.5-3.6-1.5 3.6z"
-                          />
-                        </svg>
-                      </button>
+                {loading ? (
+                  <tr>
+                    <td colSpan={columns.length}>
+                      <div className="flex items-center justify-center py-4">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span className="ml-2 mt-4">
+                          Loading project plans...
+                        </span>
+                      </div>
                     </td>
+                  </tr>
+                ) : filteredPlans.length === 0 ||
+                  (!searched && projectId.trim() === "") ? (
+                  <tr>
+                    <td colSpan={columns.length + 1}>
+                      <div className="p-8 text-center text-gray-500 text-lg">
+                        Search and select a valid Project to view details
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredPlans.map((plan, idx) => (
+                    <tr
+                      key={`plan-${plan.plId || idx}-${
+                        plan.projId || "unknown"
+                      }`}
+                      className={`transition-all duration-200 cursor-pointer ${
+                        selectedPlan &&
+                        selectedPlan.plId === plan.plId &&
+                        selectedPlan.projId === plan.projId
+                          ? "bg-blue-200 hover:bg-blue-300 "
+                          : "even:bg-gray-50 hover:bg-blue-50"
+                      }`}
+                      //border-l-4 border-l-blue-600
+                      onClick={() => {
+                        handleRowClick(plan);
+                        getMasterAndRelatedProjects(plans, plan.projId);
+                      }}
+                    >
+                      <td className="px-1 py-1 h-1 text-xs text-gray-700  text-center">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleExportPlan(plan);
+                          }}
+                          className="text-green-600 hover:text-green-800"
+                          title="Export to Excel"
+                          disabled={
+                            !plan.projId || !plan.version || !plan.plType
+                          }
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6 cursor-pointer"
+                            viewBox="0 0 48 48"
+                          >
+                            <defs>
+                              <linearGradient
+                                id="grad1"
+                                x1="0%"
+                                y1="0%"
+                                x2="100%"
+                                y2="100%"
+                              >
+                                <stop
+                                  offset="0%"
+                                  style={{ stopColor: "#21A366" }}
+                                />
+                                <stop
+                                  offset="100%"
+                                  style={{ stopColor: "#185C37" }}
+                                />
+                              </linearGradient>
+                            </defs>
 
-                    {columns.map((col) => (
-                      <td
-                        key={col}
-                        className={` text-xs h-1 px-1 py-1 text-center text-gray-700
+                            <rect
+                              x="18"
+                              y="6"
+                              width="24"
+                              height="18"
+                              fill="url(#grad1)"
+                            />
+                            <rect
+                              x="18"
+                              y="24"
+                              width="24"
+                              height="18"
+                              fill="#107C41"
+                            />
+
+                            <rect
+                              x="6"
+                              y="10"
+                              width="16"
+                              height="28"
+                              rx="2"
+                              fill="#185C37"
+                            />
+
+                            <path
+                              fill="#fff"
+                              d="M11.5 29.5L14.2 24l-2.7-5.5h2.9l1.5 3.6 1.5-3.6h2.9L17.2 24l2.7 5.5h-2.9l-1.5-3.6-1.5 3.6z"
+                            />
+                          </svg>
+                        </button>
+                      </td>
+
+                      {columns.map((col) => (
+                        <td
+                          key={col}
+                          className={` text-xs h-1 px-1 py-1 text-center text-gray-700
                             
     
                 ${col === "projId" || col === "projName" ? "break-words" : ""}
@@ -1485,86 +1529,88 @@ const ProjectPlanTable = ({
                     : ""
                 }
               `}
-                      >
-                        {col === "closedPeriod" ? (
-                          formatDateOnly(plan[col])
-                        ) : col === "createdAt" || col === "updatedAt" ? (
-                          formatDateWithTime(plan[col])
-                        ) : col === "versionCode" ? (
-                          <input
-                            type="text"
-                            value={
-                              editingVersionCodeIdx === idx
-                                ? editingVersionCodeValue
-                                : plan.versionCode || ""
-                            }
-                            autoFocus={editingVersionCodeIdx === idx}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingVersionCodeIdx(idx);
-                              setEditingVersionCodeValue(
-                                plan.versionCode || ""
-                              );
-                            }}
-                            onChange={(e) =>
-                              setEditingVersionCodeValue(e.target.value)
-                            }
-                            onBlur={() => {
-                              if (editingVersionCodeIdx === idx) {
-                                if (
-                                  editingVersionCodeValue !== plan.versionCode
-                                ) {
-                                  handleVersionCodeChange(
-                                    idx,
-                                    editingVersionCodeValue
-                                  );
-                                }
-                                setEditingVersionCodeIdx(null);
+                        >
+                          {col === "closedPeriod" ? (
+                            formatDateOnly(plan[col])
+                          ) : col === "createdAt" || col === "updatedAt" ? (
+                            formatDateWithTime(plan[col])
+                          ) : col === "versionCode" ? (
+                            <input
+                              type="text"
+                              value={
+                                editingVersionCodeIdx === idx
+                                  ? editingVersionCodeValue
+                                  : plan.versionCode || ""
                               }
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                if (
-                                  editingVersionCodeValue !== plan.versionCode
-                                ) {
-                                  handleVersionCodeChange(
-                                    idx,
-                                    editingVersionCodeValue
-                                  );
-                                }
-                                setEditingVersionCodeIdx(null);
-                              } else if (e.key === "Escape") {
-                                setEditingVersionCodeIdx(null);
+                              autoFocus={editingVersionCodeIdx === idx}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingVersionCodeIdx(idx);
                                 setEditingVersionCodeValue(
                                   plan.versionCode || ""
                                 );
+                              }}
+                              onChange={(e) =>
+                                setEditingVersionCodeValue(e.target.value)
                               }
-                            }}
-                            className={`border border-gray-300 rounded px-2 py-1 w-20 text-xs hover:border-blue-500 focus:border-blue-500 focus:outline-none ${
-                              !plan.plType || !plan.version
-                                ? "bg-gray-100 cursor-not-allowed"
-                                : "bg-white"
-                            }`}
-                            disabled={!plan.plType || !plan.version}
-                          />
-                        ) : typeof plan[col] === "boolean" ? (
-                          <input
-                            type="checkbox"
-                            checked={getCheckboxProps(plan, col, idx).checked}
-                            disabled={getCheckboxProps(plan, col, idx).disabled}
-                            onClick={(e) => e.stopPropagation()}
-                            onMouseDown={(e) => e.stopPropagation()}
-                            onDoubleClick={(e) => e.stopPropagation()}
-                            onKeyDown={(e) => e.stopPropagation()}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              handleCheckboxChange(idx, col);
-                            }}
-                            className="cursor-pointer"
-                          />
-                        ) : col === "status" ? (
-                          <span
-                            className={`
+                              onBlur={() => {
+                                if (editingVersionCodeIdx === idx) {
+                                  if (
+                                    editingVersionCodeValue !== plan.versionCode
+                                  ) {
+                                    handleVersionCodeChange(
+                                      idx,
+                                      editingVersionCodeValue
+                                    );
+                                  }
+                                  setEditingVersionCodeIdx(null);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  if (
+                                    editingVersionCodeValue !== plan.versionCode
+                                  ) {
+                                    handleVersionCodeChange(
+                                      idx,
+                                      editingVersionCodeValue
+                                    );
+                                  }
+                                  setEditingVersionCodeIdx(null);
+                                } else if (e.key === "Escape") {
+                                  setEditingVersionCodeIdx(null);
+                                  setEditingVersionCodeValue(
+                                    plan.versionCode || ""
+                                  );
+                                }
+                              }}
+                              className={`border border-gray-300 rounded px-2 py-1 w-20 text-xs hover:border-blue-500 focus:border-blue-500 focus:outline-none ${
+                                !plan.plType || !plan.version
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : "bg-white"
+                              }`}
+                              disabled={!plan.plType || !plan.version}
+                            />
+                          ) : typeof plan[col] === "boolean" ? (
+                            <input
+                              type="checkbox"
+                              checked={getCheckboxProps(plan, col, idx).checked}
+                              disabled={
+                                getCheckboxProps(plan, col, idx).disabled
+                              }
+                              onClick={(e) => e.stopPropagation()}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onDoubleClick={(e) => e.stopPropagation()}
+                              onKeyDown={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                handleCheckboxChange(idx, col);
+                              }}
+                              className="cursor-pointer"
+                            />
+                          ) : col === "status" ? (
+                            <span
+                              className={`
           inline-block rounded-2xl px-4 py-1 whitespace-nowrap
           ${
             plan.status === "Submitted"
@@ -1578,17 +1624,18 @@ const ProjectPlanTable = ({
               : ""
           }
         `}
-                            style={{ minWidth: 90, textAlign: "center" }}
-                          >
-                            {plan.status}
-                          </span>
-                        ) : (
-                          plan[col] || ""
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
+                              style={{ minWidth: 90, textAlign: "center" }}
+                            >
+                              {plan.status}
+                            </span>
+                          ) : (
+                            plan[col] || ""
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
