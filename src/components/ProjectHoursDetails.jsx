@@ -137,6 +137,10 @@ const ProjectHoursDetails = ({
   const [findMatches, setFindMatches] = useState([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
+  // ADD THIS NEW STATE at the top with other useState declarations
+ const [cachedProjectData, setCachedProjectData] = useState(null);
+ const [cachedOrgData, setCachedOrgData] = useState(null);
+
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
   const isPastingRef = useRef(false);
@@ -1659,134 +1663,456 @@ const ProjectHoursDetails = ({
       });
   };
 
-  const handlePasteMultipleRows = () => {
-    if (copiedRowsData.length === 0) {
-      toast.error("No copied data available to paste", { autoClose: 2000 });
-      return;
+  // const handlePasteMultipleRows = () => {
+  //   if (copiedRowsData.length === 0) {
+  //     toast.error("No copied data available to paste", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   // Close single new form if open
+  //   if (showNewForm) {
+  //     setShowNewForm(false);
+  //   }
+
+  //   // Filter durations by selected fiscal year
+  //   const sortedDurations = [...durations]
+  //     .filter((d) => {
+  //       if (fiscalYear === "All") return true;
+  //       return d.year === parseInt(fiscalYear);
+  //     })
+  //     .sort((a, b) => {
+  //       if (a.year !== b.year) return a.year - b.year;
+  //       return a.monthNo - b.monthNo;
+  //     });
+
+  //   const processedEntries = [];
+  //   const processedHoursArray = [];
+
+  //   copiedRowsData.forEach((rowData, rowIndex) => {
+  //     // Extract employee data (first 11 columns + skip Total column at position 11)
+  //     const [
+  //       idTypeLabel,
+  //       id,
+  //       name,
+  //       acctId,
+  //       acctName,
+  //       orgId,
+  //       plcGlcCode,
+  //       isRev,
+  //       isBrd,
+  //       status,
+  //       perHourRate,
+  //       total, // Position 11 - capture but don't use
+  //       ...monthValues // Position 12+ - actual month values
+  //     ] = rowData;
+
+  //     // Map ID Type
+  //     const idType =
+  //       ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+  //       idTypeLabel;
+
+  //     // Parse name based on ID type
+  //     let firstName = "";
+  //     let lastName = "";
+
+  //     if (idType === "PLC") {
+  //       firstName = name;
+  //     } else if (idType === "Vendor") {
+  //       if (name.includes(", ")) {
+  //         const nameParts = name.split(", ");
+  //         lastName = nameParts[0];
+  //         firstName = nameParts[1];
+  //       } else {
+  //         lastName = name;
+  //       }
+  //     } else if (idType === "Employee") {
+  //       const nameParts = name.split(" ");
+  //       firstName = nameParts[0];
+  //       lastName = nameParts.slice(1).join(" ");
+  //     } else {
+  //       firstName = name;
+  //     }
+
+  //     const entry = {
+  //       id: id,
+  //       firstName: firstName,
+  //       lastName: lastName,
+  //       idType: idType,
+  //       acctId: acctId,
+  //       orgId: orgId,
+  //       plcGlcCode: plcGlcCode,
+  //       perHourRate: perHourRate,
+  //       status: status || "ACT",
+  //       isRev: isRev === "✓",
+  //       isBrd: isBrd === "✓",
+  //     };
+
+  //     // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+  //     const periodHours = {};
+
+  //     // Build a lookup map from copiedMonthMetadata to monthValues
+  //     const copiedHoursMap = {};
+  //     copiedMonthMetadata.forEach((meta, index) => {
+  //       const key = `${meta.monthNo}_${meta.year}`;
+  //       copiedHoursMap[key] = monthValues[index];
+  //     });
+
+  //     // Now map to current fiscal year durations
+  //     sortedDurations.forEach((duration) => {
+  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //       const value = copiedHoursMap[uniqueKey];
+
+  //       // Only add non-zero values that exist in copied data
+  //       if (value && value !== "0.00" && value !== "0" && value !== "") {
+  //         periodHours[uniqueKey] = value;
+  //       }
+  //     });
+
+  //     processedEntries.push(entry);
+  //     processedHoursArray.push(periodHours);
+  //   });
+
+  //   // Set state with all processed data
+  //   setNewEntries(processedEntries);
+  //   setNewEntryPeriodHoursArray(processedHoursArray);
+
+  //   // **ADD THIS** - Fetch suggestions for each pasted entry
+  //   processedEntries.forEach((entry, index) => {
+  //     fetchSuggestionsForPastedEntry(index, entry);
+  //   });
+
+  //   // Disable paste button
+  //   setHasClipboardData(false);
+  //   setCopiedRowsData([]);
+  //   setCopiedMonthMetadata([]);
+
+  //   toast.success(
+  //     `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
+  //     { autoClose: 3000 }
+  //   );
+  // };
+
+  // ADD this useEffect to clear cache when projectId or planType changes
+  
+  // **NEW OPTIMIZED FUNCTION** - Fetches all data with minimal API calls
+const fetchAllSuggestionsOptimized = async (processedEntries) => {
+  
+  // if (planType === "NBBUD" || processedEntries.length === 0) return;
+
+  const encodedProjectId = encodeURIComponent(projectId);
+
+  try {
+    // **STEP 1: Fetch common project-level data ONCE**
+    let projectData = cachedProjectData;
+    let orgOptions = cachedOrgData;
+
+    // Fetch project data if not cached
+    if (!projectData) {
+      const projectResponse = await axios.get(
+        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+      );
+      projectData = Array.isArray(projectResponse.data)
+        ? projectResponse.data[0]
+        : projectResponse.data;
+      setCachedProjectData(projectData);
     }
 
-    // Close single new form if open
-    if (showNewForm) {
-      setShowNewForm(false);
+    // Fetch org data if not cached
+    if (!orgOptions) {
+      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+      orgOptions = Array.isArray(orgResponse.data)
+        ? orgResponse.data.map((org) => ({
+            value: org.orgId,
+            label: `${org.orgId}`,
+          }))
+        : [];
+      setCachedOrgData(orgOptions);
     }
 
-    // Filter durations by selected fiscal year
-    const sortedDurations = [...durations]
-      .filter((d) => {
-        if (fiscalYear === "All") return true;
-        return d.year === parseInt(fiscalYear);
-      })
-      .sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year;
-        return a.monthNo - b.monthNo;
-      });
+    // **STEP 2: Group entries by idType to minimize API calls**
+    const employeeEntries = [];
+    const vendorEntries = [];
+    const otherEntries = [];
 
-    const processedEntries = [];
-    const processedHoursArray = [];
+    processedEntries.forEach((entry, index) => {
+      if (entry.idType === "Employee") {
+        employeeEntries.push({ entry, index });
+      } else if (entry.idType === "Vendor") {
+        vendorEntries.push({ entry, index });
+      } else if (entry.idType !== "PLC") {
+        otherEntries.push({ entry, index });
+      }
+    });
 
-    copiedRowsData.forEach((rowData, rowIndex) => {
-      // Extract employee data (first 11 columns + skip Total column at position 11)
-      const [
-        idTypeLabel,
-        id,
-        name,
-        acctId,
-        acctName,
-        orgId,
-        plcGlcCode,
-        isRev,
-        isBrd,
-        status,
-        perHourRate,
-        total, // Position 11 - capture but don't use
-        ...monthValues // Position 12+ - actual month values
-      ] = rowData;
+    // **STEP 3: Fetch employee suggestions ONCE per type**
+    let employeeSuggestions = [];
+    let vendorSuggestions = [];
 
-      // Map ID Type
-      const idType =
-        ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-        idTypeLabel;
+    // Fetch Employee suggestions only if there are Employee entries
+    if (employeeEntries.length > 0) {
+      try {
+        const response = await axios.get(
+          `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+        );
+        employeeSuggestions = Array.isArray(response.data)
+          ? response.data.map((emp) => {
+              const [lastName, firstName] = emp.employeeName
+                .split(",")
+                .map((str) => str.trim());
+              return {
+                emplId: emp.empId,
+                firstName: firstName || "",
+                lastName: lastName || "",
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            })
+          : [];
+      } catch (err) {
+        console.error("Failed to fetch employee suggestions:", err);
+      }
+    }
 
-      // Parse name based on ID type
-      let firstName = "";
-      let lastName = "";
+    // Fetch Vendor suggestions only if there are Vendor entries
+    if (vendorEntries.length > 0) {
+      try {
+        const response = await axios.get(
+          `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+        );
+        vendorSuggestions = Array.isArray(response.data)
+          ? response.data.map((emp) => ({
+              emplId: emp.vendId,
+              firstName: "",
+              lastName: emp.employeeName,
+              perHourRate: emp.perHourRate || emp.hrRate || "",
+              plc: emp.plc || "",
+              orgId: emp.orgId || "",
+            }))
+          : [];
+      } catch (err) {
+        console.error("Failed to fetch vendor suggestions:", err);
+      }
+    }
 
-      if (idType === "PLC") {
-        firstName = name;
-      } else if (idType === "Vendor") {
-        if (name.includes(", ")) {
-          const nameParts = name.split(", ");
-          lastName = nameParts[0];
-          firstName = nameParts[1];
-        } else {
-          lastName = name;
-        }
-      } else if (idType === "Employee") {
-        const nameParts = name.split(" ");
-        firstName = nameParts[0];
-        lastName = nameParts.slice(1).join(" ");
-      } else {
-        firstName = name;
+    // **STEP 4: Apply cached data to all entries**
+    processedEntries.forEach((entry, entryIndex) => {
+      // Set employee/vendor suggestions based on type
+      if (entry.idType === "Employee") {
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: employeeSuggestions,
+        }));
+      } else if (entry.idType === "Vendor") {
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: vendorSuggestions,
+        }));
       }
 
-      const entry = {
-        id: id,
-        firstName: firstName,
-        lastName: lastName,
-        idType: idType,
-        acctId: acctId,
-        orgId: orgId,
-        plcGlcCode: plcGlcCode,
-        perHourRate: perHourRate,
-        status: status || "ACT",
-        isRev: isRev === "✓",
-        isBrd: isBrd === "✓",
-      };
+      // Set account options based on idType
+      let accountsWithNames = [];
+      if (entry.idType === "PLC") {
+        const employeeAccounts = Array.isArray(projectData.employeeLaborAccounts)
+          ? projectData.employeeLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+        const vendorAccounts = Array.isArray(projectData.sunContractorLaborAccounts)
+          ? projectData.sunContractorLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+        accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+      } else if (entry.idType === "Employee") {
+        accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
+          ? projectData.employeeLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+      } else if (entry.idType === "Vendor") {
+        accountsWithNames = Array.isArray(projectData.sunContractorLaborAccounts)
+          ? projectData.sunContractorLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+      } else if (entry.idType === "Other") {
+        accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
+          ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+      }
 
-      // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
-      const periodHours = {};
+      setPastedEntryAccounts((prev) => ({
+        ...prev,
+        [entryIndex]: accountsWithNames,
+      }));
 
-      // Build a lookup map from copiedMonthMetadata to monthValues
-      const copiedHoursMap = {};
-      copiedMonthMetadata.forEach((meta, index) => {
-        const key = `${meta.monthNo}_${meta.year}`;
-        copiedHoursMap[key] = monthValues[index];
-      });
+      // Set org options (same for all)
+      setPastedEntryOrgs((prev) => ({
+        ...prev,
+        [entryIndex]: orgOptions,
+      }));
 
-      // Now map to current fiscal year durations
-      sortedDurations.forEach((duration) => {
-        const uniqueKey = `${duration.monthNo}_${duration.year}`;
-        const value = copiedHoursMap[uniqueKey];
+      // Set PLC options (same for all)
+      if (projectData.plc && Array.isArray(projectData.plc)) {
+        const plcOptions = projectData.plc.map((plc) => ({
+          value: plc.laborCategoryCode,
+          label: `${plc.laborCategoryCode} - ${plc.description}`,
+        }));
 
-        // Only add non-zero values that exist in copied data
-        if (value && value !== "0.00" && value !== "0" && value !== "") {
-          periodHours[uniqueKey] = value;
-        }
-      });
+        setPastedEntryPlcs((prev) => ({
+          ...prev,
+          [entryIndex]: plcOptions,
+        }));
+      }
+    });
+  } catch (err) {
+    console.error("Failed to fetch suggestions for pasted entries:", err);
+  }
+};
 
-      processedEntries.push(entry);
-      processedHoursArray.push(periodHours);
+  const handlePasteMultipleRows = async () => {
+  if (copiedRowsData.length === 0) {
+    toast.error("No copied data available to paste", { autoClose: 2000 });
+    return;
+  }
+
+  // Close single new form if open
+  if (showNewForm) {
+    setShowNewForm(false);
+  }
+
+  // Filter durations by selected fiscal year
+  const sortedDurations = [...durations]
+    .filter((d) => {
+      if (fiscalYear === "All") return true;
+      return d.year === parseInt(fiscalYear);
+    })
+    .sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.monthNo - b.monthNo;
     });
 
-    // Set state with all processed data
-    setNewEntries(processedEntries);
-    setNewEntryPeriodHoursArray(processedHoursArray);
+  const processedEntries = [];
+  const processedHoursArray = [];
 
-    // **ADD THIS** - Fetch suggestions for each pasted entry
-    processedEntries.forEach((entry, index) => {
-      fetchSuggestionsForPastedEntry(index, entry);
+  copiedRowsData.forEach((rowData, rowIndex) => {
+    // Extract employee data (first 11 columns + skip Total column at position 11)
+    const [
+      idTypeLabel,
+      id,
+      name,
+      acctId,
+      acctName,
+      orgId,
+      plcGlcCode,
+      isRev,
+      isBrd,
+      status,
+      perHourRate,
+      total, // Position 11 - capture but don't use
+      ...monthValues // Position 12+ - actual month values
+    ] = rowData;
+
+    // Map ID Type
+    const idType =
+      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+      idTypeLabel;
+
+    // Parse name based on ID type
+    let firstName = "";
+    let lastName = "";
+
+    if (idType === "PLC") {
+      firstName = name;
+    } else if (idType === "Vendor") {
+      if (name.includes(", ")) {
+        const nameParts = name.split(", ");
+        lastName = nameParts[0];
+        firstName = nameParts[1];
+      } else {
+        lastName = name;
+      }
+    } else if (idType === "Employee") {
+      const nameParts = name.split(" ");
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(" ");
+    } else {
+      firstName = name;
+    }
+
+    const entry = {
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      idType: idType,
+      acctId: acctId,
+      orgId: orgId,
+      plcGlcCode: plcGlcCode,
+      perHourRate: perHourRate,
+      status: status || "ACT",
+      isRev: isRev === "✓",
+      isBrd: isBrd === "✓",
+    };
+
+    // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+    const periodHours = {};
+
+    // Build a lookup map from copiedMonthMetadata to monthValues
+    const copiedHoursMap = {};
+    copiedMonthMetadata.forEach((meta, index) => {
+      const key = `${meta.monthNo}_${meta.year}`;
+      copiedHoursMap[key] = monthValues[index];
     });
 
-    // Disable paste button
-    setHasClipboardData(false);
-    setCopiedRowsData([]);
-    setCopiedMonthMetadata([]);
+    // Now map to current fiscal year durations
+    sortedDurations.forEach((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      const value = copiedHoursMap[uniqueKey];
 
-    toast.success(
-      `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
-      { autoClose: 3000 }
-    );
-  };
+      // Only add non-zero values that exist in copied data
+      if (value && value !== "0.00" && value !== "0" && value !== "") {
+        periodHours[uniqueKey] = value;
+      }
+    });
+
+    processedEntries.push(entry);
+    processedHoursArray.push(periodHours);
+  });
+
+  // Set state with all processed data
+  setNewEntries(processedEntries);
+  setNewEntryPeriodHoursArray(processedHoursArray);
+
+  // **OPTIMIZED** - Fetch common data ONCE, then process all entries
+  await fetchAllSuggestionsOptimized(processedEntries);
+
+  // Disable paste button
+  setHasClipboardData(false);
+  setCopiedRowsData([]);
+  setCopiedMonthMetadata([]);
+
+  toast.success(
+    `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
+    { autoClose: 3000 }
+  );
+};
+
+
+
+  useEffect(() => {
+  // Clear cached data when project changes
+  setCachedProjectData(null);
+  setCachedOrgData(null);
+}, [projectId, planType]);
+
 
   // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
   //   // if (planType === "NBBUD") return;
@@ -1933,149 +2259,304 @@ const ProjectHoursDetails = ({
   //   }
   // };
   
-  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-    // CRITICAL FIX: URL encode project ID
-    const encodedProjectId = encodeURIComponent(projectId);
-    // REMOVE THIS LINE: const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+  // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  //   // CRITICAL FIX: URL encode project ID
+  //   const encodedProjectId = encodeURIComponent(projectId);
+  //   // REMOVE THIS LINE: const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
 
-    // Fetch employee suggestions based on ID type
-    if (entry.idType && entry.idType !== "") {
-      try {
-        const endpoint =
-          entry.idType === "Vendor"
-            ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
-            : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+  //   // Fetch employee suggestions based on ID type
+  //   if (entry.idType && entry.idType !== "") {
+  //     try {
+  //       const endpoint =
+  //         entry.idType === "Vendor"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
 
-        const response = await axios.get(endpoint);
-        const suggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => {
-              if (entry.idType === "Vendor") {
-                return {
-                  emplId: emp.vendId,
-                  firstName: "",
-                  lastName: emp.employeeName,
-                  perHourRate: emp.perHourRate || emp.hrRate || "",
-                  plc: emp.plc || "",
-                  orgId: emp.orgId || "",
-                };
-              } else {
-                const [lastName, firstName] = (emp.employeeName || "")
-                  .split(", ")
-                  .map((str) => str.trim());
-                return {
-                  emplId: emp.empId,
-                  firstName: firstName || "",
-                  lastName: lastName || "",
-                  perHourRate: emp.perHourRate || emp.hrRate || "",
-                  plc: emp.plc || "",
-                  orgId: emp.orgId || "",
-                };
-              }
-            })
-          : [];
+  //       const response = await axios.get(endpoint);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (entry.idType === "Vendor") {
+  //               return {
+  //                 emplId: emp.vendId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName,
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             }
+  //           })
+  //         : [];
 
-        setPastedEntrySuggestions((prev) => ({
-          ...prev,
-          [entryIndex]: suggestions,
-        }));
-      } catch (err) {
-        console.error(
-          `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
-          err
-        );
-      }
-    }
+  //       setPastedEntrySuggestions((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: suggestions,
+  //       }));
+  //     } catch (err) {
+  //       console.error(
+  //         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+  //         err
+  //       );
+  //     }
+  //   }
 
-    // Fetch account, org, and PLC options
+  //   // Fetch account, org, and PLC options
+  //   try {
+  //     // USE planType DIRECTLY instead of apiPlanType
+  //     const response = await axios.get(
+  //       `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+  //     );
+  //     const data = Array.isArray(response.data)
+  //       ? response.data[0]
+  //       : response.data;
+
+  //     // Fetch accounts
+  //     let accountsWithNames = [];
+
+  //     if (entry.idType === "PLC") {
+  //       const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+  //     } else if (entry.idType === "Employee") {
+  //       accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Vendor") {
+  //       accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Other") {
+  //       accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+  //         ? data.otherDirectCostLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     }
+
+  //     setPastedEntryAccounts((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: accountsWithNames,
+  //     }));
+
+  //     // Fetch organizations
+  //     const orgResponse = await axios.get(
+  //       `${backendUrl}/Orgnization/GetAllOrgs`
+  //     );
+  //     const orgOptions = Array.isArray(orgResponse.data)
+  //       ? orgResponse.data.map((org) => ({
+  //           value: org.orgId,
+  //           label: org.orgId,
+  //         }))
+  //       : [];
+
+  //     setPastedEntryOrgs((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: orgOptions,
+  //     }));
+
+  //     // Fetch PLC options
+  //     if (data.plc && Array.isArray(data.plc)) {
+  //       const plcOptions = data.plc.map((plc) => ({
+  //         value: plc.laborCategoryCode,
+  //         label: `${plc.laborCategoryCode} - ${plc.description}`,
+  //       }));
+
+  //       setPastedEntryPlcs((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: plcOptions,
+  //       }));
+  //     }
+  //   } catch (err) {
+  //     console.error(
+  //       `Failed to fetch pasted entry options for index ${entryIndex}:`,
+  //       err
+  //     );
+  //   }
+  // };
+  
+  // REPLACE the entire fetchSuggestionsForPastedEntry function with this optimized version
+const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  // if (planType === "NBBUD") return;
+
+  // CRITICAL FIX: URL encode project ID
+  const encodedProjectId = encodeURIComponent(projectId);
+
+  // Fetch employee suggestions based on ID type (this is entry-specific, must be called per entry)
+  if (entry.idType && entry.idType !== "") {
     try {
-      // USE planType DIRECTLY instead of apiPlanType
-      const response = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
-      );
-      const data = Array.isArray(response.data)
-        ? response.data[0]
-        : response.data;
+      const endpoint =
+        entry.idType === "Vendor"
+          ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+          : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
 
-      // Fetch accounts
-      let accountsWithNames = [];
-
-      if (entry.idType === "PLC") {
-        const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
-          ? data.employeeLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-        const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
-          ? data.sunContractorLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-        accountsWithNames = [...employeeAccounts, ...vendorAccounts];
-      } else if (entry.idType === "Employee") {
-        accountsWithNames = Array.isArray(data.employeeLaborAccounts)
-          ? data.employeeLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-      } else if (entry.idType === "Vendor") {
-        accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
-          ? data.sunContractorLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-      } else if (entry.idType === "Other") {
-        accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
-          ? data.otherDirectCostLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-      }
-
-      setPastedEntryAccounts((prev) => ({
-        ...prev,
-        [entryIndex]: accountsWithNames,
-      }));
-
-      // Fetch organizations
-      const orgResponse = await axios.get(
-        `${backendUrl}/Orgnization/GetAllOrgs`
-      );
-      const orgOptions = Array.isArray(orgResponse.data)
-        ? orgResponse.data.map((org) => ({
-            value: org.orgId,
-            label: org.orgId,
-          }))
+      const response = await axios.get(endpoint);
+      const suggestions = Array.isArray(response.data)
+        ? response.data.map((emp) => {
+            if (entry.idType === "Vendor") {
+              return {
+                emplId: emp.vendId,
+                firstName: "",
+                lastName: emp.employeeName,
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            } else {
+              const [lastName, firstName] = emp.employeeName
+                .split(",")
+                .map((str) => str.trim());
+              return {
+                emplId: emp.empId,
+                firstName: firstName || "",
+                lastName: lastName || "",
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            }
+          })
         : [];
 
-      setPastedEntryOrgs((prev) => ({
+      setPastedEntrySuggestions((prev) => ({
         ...prev,
-        [entryIndex]: orgOptions,
+        [entryIndex]: suggestions,
       }));
-
-      // Fetch PLC options
-      if (data.plc && Array.isArray(data.plc)) {
-        const plcOptions = data.plc.map((plc) => ({
-          value: plc.laborCategoryCode,
-          label: `${plc.laborCategoryCode} - ${plc.description}`,
-        }));
-
-        setPastedEntryPlcs((prev) => ({
-          ...prev,
-          [entryIndex]: plcOptions,
-        }));
-      }
     } catch (err) {
       console.error(
-        `Failed to fetch pasted entry options for index ${entryIndex}:`,
+        `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
         err
       );
     }
-  };
+  }
+
+  // OPTIMIZATION: Fetch project and org data only once, then cache it
+  try {
+    let projectData = cachedProjectData;
+    let orgOptions = cachedOrgData;
+
+    // Only fetch project data if not already cached
+    if (!projectData) {
+      const response = await axios.get(
+        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+      );
+      projectData = Array.isArray(response.data)
+        ? response.data[0]
+        : response.data;
+      setCachedProjectData(projectData);
+    }
+
+    // Only fetch org data if not already cached
+    if (!orgOptions) {
+      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+      orgOptions = Array.isArray(orgResponse.data)
+        ? orgResponse.data.map((org) => ({
+            value: org.orgId,
+            label: `${org.orgId}`,
+          }))
+        : [];
+      setCachedOrgData(orgOptions);
+    }
+
+    // Now use the cached data to populate entry-specific options
+    // Fetch accounts
+    let accountsWithNames = [];
+    if (entry.idType === "PLC") {
+      const employeeAccounts = Array.isArray(projectData.employeeLaborAccounts)
+        ? projectData.employeeLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+      const vendorAccounts = Array.isArray(projectData.sunContractorLaborAccounts)
+        ? projectData.sunContractorLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+      accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+    } else if (entry.idType === "Employee") {
+      accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
+        ? projectData.employeeLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+    } else if (entry.idType === "Vendor") {
+      accountsWithNames = Array.isArray(projectData.sunContractorLaborAccounts)
+        ? projectData.sunContractorLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+    } else if (entry.idType === "Other") {
+      accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
+        ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+    }
+
+    setPastedEntryAccounts((prev) => ({
+      ...prev,
+      [entryIndex]: accountsWithNames,
+    }));
+
+    // Use cached organizations
+    setPastedEntryOrgs((prev) => ({
+      ...prev,
+      [entryIndex]: orgOptions,
+    }));
+
+    // Fetch PLC options
+    if (projectData.plc && Array.isArray(projectData.plc)) {
+      const plcOptions = projectData.plc.map((plc) => ({
+        value: plc.laborCategoryCode,
+        label: `${plc.laborCategoryCode} - ${plc.description}`,
+      }));
+
+      setPastedEntryPlcs((prev) => ({
+        ...prev,
+        [entryIndex]: plcOptions,
+      }));
+    }
+  } catch (err) {
+    console.error(
+      `Failed to fetch pasted entry options for index ${entryIndex}:`,
+      err
+    );
+  }
+};
+
 
   const handlePasteToNewEntry = async () => {
     try {
@@ -2470,6 +2951,8 @@ const ProjectHoursDetails = ({
 
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
     if (!isEditable) return;
+
+    
 
     // Allow only numbers and dots
     if (!/^[0-9.]*$/.test(newValue)) return;
