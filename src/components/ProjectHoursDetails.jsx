@@ -58,6 +58,9 @@ const ProjectHoursDetails = ({
   fiscalYear,
   onSaveSuccess,
 }) => {
+   // ADD THIS RIGHT HERE - Normalize fiscal year
+  const normalizedFiscalYear = fiscalYear === "All" || !fiscalYear ? "All" : String(fiscalYear).trim();
+  console.log("FISCAL YEAR DEBUG:", fiscalYear, "Normalized:", normalizedFiscalYear);
   const [durations, setDurations] = useState([]);
   const [isDurationLoading, setIsDurationLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -2914,40 +2917,253 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
   };
 
   // Calculate column totals for each month
-  const calculateColumnTotals = () => {
-    const columnTotals = {};
+  // const calculateColumnTotals = () => {
+  //   const columnTotals = {};
 
-    sortedDurations.forEach((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
+
+  //     // Sum hours from existing employees
+  //     localEmployees.forEach((emp, idx) => {
+  //       if (hiddenRows[idx]) return; // Skip hidden rows
+
+  //       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //       const monthHours = getMonthHours(emp);
+  //       const forecastValue = monthHours[uniqueKey]?.value;
+  //       const value =
+  //         inputValue !== undefined && inputValue !== ""
+  //           ? inputValue
+  //           : forecastValue;
+
+  //       total += value && !isNaN(value) ? Number(value) : 0;
+  //     });
+
+  //     // Add hours from new entry form if visible
+  //     if (showNewForm) {
+  //       const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //       total +=
+  //         newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     }
+
+  //     columnTotals[uniqueKey] = total;
+  //   });
+
+  //   return columnTotals;
+  // };
+
+  // Calculate column totals for each month
+// const calculateColumnTotals = () => {
+//   const columnTotals = {};
+  
+//   // Initialize CTD and Prior Year totals
+//   let ctdTotal = 0;
+//   let priorYearTotal = 0;
+  
+//   const currentFiscalYear = fiscalYear !== "All" ? parseInt(fiscalYear) : null;
+  
+//   sortedDurations.forEach((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     let total = 0;
+
+//     // Sum hours from existing employees
+//     localEmployees.forEach((emp, idx) => {
+//       if (hiddenRows[idx]) return; // Skip hidden rows
+//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//       const monthHours = getMonthHours(emp);
+//       const forecastValue = monthHours[uniqueKey]?.value;
+//       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//       total += value && !isNaN(value) ? Number(value) : 0;
+//     });
+
+//     // Add hours from new entry form if visible
+//     if (showNewForm) {
+//       const newEntryValue = newEntryPeriodHours[uniqueKey];
+//       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+//     }
+
+//     columnTotals[uniqueKey] = total;
+    
+//     // Calculate CTD and Prior Year based on fiscal year selection
+//     if (currentFiscalYear) {
+//       const startYear = parseInt(startDate.split('-')[0]); // Extract start year from startDate
+      
+//       // Prior Year: sum of (selected fiscal year - 1)
+//       if (duration.year === currentFiscalYear - 1) {
+//         priorYearTotal += total;
+//       }
+      
+//       // CTD: sum from start year to (selected fiscal year - 2)
+//       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+//         ctdTotal += total;
+//       }
+//     }
+//   });
+  
+//   // Add CTD and Prior Year to columnTotals
+//   columnTotals['ctd'] = ctdTotal;
+//   columnTotals['priorYear'] = priorYearTotal;
+  
+//   return columnTotals;
+// };
+
+// const calculateColumnTotals = () => {
+//   const columnTotals = {};
+  
+//   let ctdTotal = 0;
+//   let priorYearTotal = 0;
+  
+//   // const currentFiscalYear = normalizedFiscalYear !== "All"  ? parseInt(fiscalYear) : null;
+//    const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+//   const startYear = parseInt(startDate.split('-')[0]);
+  
+//   // ✅ First, calculate CTD and Prior Year from ALL durations
+//   if (currentFiscalYear) {
+//     durations.forEach((duration) => {
+//       let total = 0;
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+//       // Sum hours from existing employees
+//       localEmployees.forEach((emp, idx) => {
+//         if (hiddenRows[idx]) return;
+//         const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//         total += value && !isNaN(value) ? Number(value) : 0;
+//       });
+
+//       // Add hours from new entry form if visible
+//       if (showNewForm) {
+//         const newEntryValue = newEntryPeriodHours[uniqueKey];
+//         total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+//       }
+
+//       // Prior Year: sum of (selected fiscal year - 1)
+//       if (duration.year === currentFiscalYear - 1) {
+//         priorYearTotal += total;
+//       }
+      
+//       // CTD: sum from start year to (selected fiscal year - 2)
+//       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+//         ctdTotal += total;
+//       }
+//     });
+//   }
+  
+//   // Now calculate monthly totals for visible columns (filtered by fiscal year)
+//   sortedDurations.forEach((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     let total = 0;
+
+//     // Sum hours from existing employees
+//     localEmployees.forEach((emp, idx) => {
+//       if (hiddenRows[idx]) return;
+//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//       const monthHours = getMonthHours(emp);
+//       const forecastValue = monthHours[uniqueKey]?.value;
+//       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//       total += value && !isNaN(value) ? Number(value) : 0;
+//     });
+
+//     // Add hours from new entry form if visible
+//     if (showNewForm) {
+//       const newEntryValue = newEntryPeriodHours[uniqueKey];
+//       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+//     }
+
+//     columnTotals[uniqueKey] = total;
+//   });
+  
+//   // Add CTD and Prior Year to columnTotals
+//   // columnTotals['ctd'] = ctdTotal;
+//   // columnTotals['priorYear'] = priorYearTotal;
+//   if (currentFiscalYear) {
+//   columnTotals['ctd'] = ctdTotal;
+//   columnTotals['priorYear'] = priorYearTotal;
+// }
+  
+//   return columnTotals;
+// };
+
+const calculateColumnTotals = () => {
+  const columnTotals = {};
+  
+  let ctdTotal = 0;
+  let priorYearTotal = 0;
+  
+  const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+  
+  // ✅ Only calculate CTD and Prior Year when a specific fiscal year is selected
+  if (currentFiscalYear !== null) {
+    const startYear = parseInt(startDate.split('-')[0]);
+    
+    // Calculate CTD and Prior Year from ALL durations
+    durations.forEach((duration) => {
       let total = 0;
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
 
       // Sum hours from existing employees
       localEmployees.forEach((emp, idx) => {
-        if (hiddenRows[idx]) return; // Skip hidden rows
-
+        if (hiddenRows[idx]) return;
         const inputValue = inputValues[`${idx}_${uniqueKey}`];
         const monthHours = getMonthHours(emp);
         const forecastValue = monthHours[uniqueKey]?.value;
-        const value =
-          inputValue !== undefined && inputValue !== ""
-            ? inputValue
-            : forecastValue;
-
+        const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
         total += value && !isNaN(value) ? Number(value) : 0;
       });
 
       // Add hours from new entry form if visible
       if (showNewForm) {
         const newEntryValue = newEntryPeriodHours[uniqueKey];
-        total +=
-          newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+        total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
       }
 
-      columnTotals[uniqueKey] = total;
+      // Prior Year: sum of (selected fiscal year - 1)
+      if (duration.year === currentFiscalYear - 1) {
+        priorYearTotal += total;
+      }
+      
+      // CTD: sum from start year to (selected fiscal year - 2)
+      if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+        ctdTotal += total;
+      }
+    });
+    
+    // Add CTD and Prior Year to columnTotals only when fiscal year is selected
+    columnTotals['ctd'] = ctdTotal;
+    columnTotals['priorYear'] = priorYearTotal;
+  }
+  
+  // Now calculate monthly totals for visible columns (filtered by fiscal year)
+  sortedDurations.forEach((duration) => {
+    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+    let total = 0;
+
+    // Sum hours from existing employees
+    localEmployees.forEach((emp, idx) => {
+      if (hiddenRows[idx]) return;
+      const inputValue = inputValues[`${idx}_${uniqueKey}`];
+      const monthHours = getMonthHours(emp);
+      const forecastValue = monthHours[uniqueKey]?.value;
+      const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+      total += value && !isNaN(value) ? Number(value) : 0;
     });
 
-    return columnTotals;
-  };
+    // Add hours from new entry form if visible
+    if (showNewForm) {
+      const newEntryValue = newEntryPeriodHours[uniqueKey];
+      total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+    }
+
+    columnTotals[uniqueKey] = total;
+  });
+  
+  return columnTotals;
+};
+
+
+
 
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
     if (!isEditable) return;
@@ -6332,6 +6548,72 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                       lineHeight: "normal",
                     }}
                   >
+
+                     {/* CTD Header */}
+    {/* <th
+      key="ctd-header"
+      className="th-thead min-w-[80px]"
+      style={{ cursor: "default" }}
+    >
+      <div className="flex flex-col items-center justify-center h-full">
+        <span className="whitespace-nowrap th-thead">CTD</span>
+        <span className="text-xs text-gray-600 font-normal normal-case">
+          {(() => {
+            if (fiscalYear === "All") return "N/A";
+            const startYear = parseInt(startDate.split('-')[0]);
+            const selectedYear = parseInt(fiscalYear);
+            return `${startYear}-${selectedYear - 2}`;
+          })()}
+        </span>
+      </div>
+    </th> */}
+
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <th
+    key="ctd-header"
+    className="th-thead min-w-[80px]"
+    style={{ cursor: "default" }}
+  >
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="whitespace-nowrap th-thead">CTD</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {(() => {
+          const startYear = parseInt(startDate.split('-')[0]);
+          const selectedYear = parseInt(normalizedFiscalYear);
+          return `${startYear}-${selectedYear - 2}`;
+        })()}
+      </span>
+    </div>
+  </th>
+)}
+    
+    {/* Prior Year Header */}
+    {/* <th
+      key="prior-year-header"
+      className="th-thead min-w-[80px]"
+      style={{ cursor: "default" }}
+    >
+      <div className="flex flex-col items-center justify-center h-full">
+        <span className="whitespace-nowrap th-thead">Prior Year</span>
+        <span className="text-xs text-gray-600 font-normal normal-case">
+          {fiscalYear !== "All" ? parseInt(fiscalYear) - 1 : "N/A"}
+        </span>
+      </div>
+    </th> */}
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <th
+    key="prior-year-header"
+    className="th-thead min-w-[80px]"
+    style={{ cursor: "default" }}
+  >
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="whitespace-nowrap th-thead">Prior Year</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {parseInt(normalizedFiscalYear) - 1}
+      </span>
+    </div>
+  </th>
+)}
                     {sortedDurations.map((duration) => {
                       const uniqueKey = `${duration.monthNo}_${duration.year}`;
                       return (
@@ -6369,6 +6651,26 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                         lineHeight: "normal",
                       }}
                     >
+
+                        {/* CTD Cell - read-only for new entry */}
+    {/* <td className="tbody-td text-center text-xs bg-gray-100">
+      0.00
+    </td> */}
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <td className="tbody-td text-center text-xs bg-gray-100">
+    0.00
+  </td>
+)}
+    
+    {/* Prior Year Cell - read-only for new entry */}
+    {/* <td className="tbody-td text-center text-xs bg-gray-100">
+      0.00
+    </td> */}
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <td className="tbody-td text-center text-xs bg-gray-100">
+    0.00
+  </td>
+)}
                       {sortedDurations.map((duration) => {
                         const uniqueKey = `${duration.monthNo}_${duration.year}`;
                         const value = newEntryPeriodHours[uniqueKey] || 0; // ← Use newEntryPeriodHours for new form
@@ -6585,6 +6887,69 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                       );
                       const monthHours = getMonthHours(emp);
 
+
+                      // Calculate CTD and Prior Year for this employee
+    // Calculate CTD and Prior Year for this employee
+// let empCtd = 0;
+// let empPriorYear = 0;
+
+// if (fiscalYear !== "All") {
+//   const currentFiscalYear = parseInt(fiscalYear);
+//   const startYear = parseInt(startDate.split('-')[0]);
+  
+//   // ✅ CORRECT - Use ALL durations, not filtered sortedDurations
+//   durations.forEach((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
+//     const forecastValue = monthHours[uniqueKey]?.value;
+//     const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//     const hours = value && !isNaN(value) ? Number(value) : 0;
+    
+//     // Prior Year: sum of (selected fiscal year - 1)
+//     if (duration.year === currentFiscalYear - 1) {
+//       empPriorYear += hours;
+//     }
+    
+//     // CTD: sum from start year to (selected fiscal year - 2)
+//     if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+//       empCtd += hours;
+//     }
+//   });
+// }
+
+// Calculate CTD and Prior Year for this employee
+    let empCtd = 0;
+    let empPriorYear = 0;
+
+    if (normalizedFiscalYear !== "All" ) {
+      // const currentFiscalYear = parseInt(fiscalYear);
+       const currentFiscalYear = parseInt(normalizedFiscalYear);
+      const startYear = parseInt(startDate.split('-')[0]);
+      
+      // ✅ CRITICAL: Use ALL durations, not sortedDurations
+      durations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        
+        // ✅ CRITICAL FIX: Use actualEmpIdx (not idx) consistently
+        const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
+        const forecastValue = monthHours[uniqueKey]?.value;
+        const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+        const hours = value && !isNaN(value) ? Number(value) : 0;
+        
+        // Prior Year: sum of (selected fiscal year - 1)
+        if (duration.year === currentFiscalYear - 1) {
+          empPriorYear += hours;
+        }
+        
+        // CTD: sum from start year to (selected fiscal year - 2)
+        if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+          empCtd += hours;
+        }
+      });
+    }
+
+
+
                       return (
                         <tr
                           key={`hours-${actualEmpIdx}`}
@@ -6594,6 +6959,27 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                             lineHeight: "normal",
                           }}
                         >
+
+                           {/* CTD Cell */}
+        {/* <td className="tbody-td text-center text-xs">
+          {empCtd.toFixed(2)}
+        </td> */}
+        {normalizedFiscalYear !== "All"  && (
+  <td className="tbody-td text-center text-xs">
+    {empCtd.toFixed(2)}
+  </td>
+)}
+        
+        {/* Prior Year Cell */}
+        {/* <td className="tbody-td text-center text-xs">
+          {empPriorYear.toFixed(2)}
+        </td>
+         */}
+        {normalizedFiscalYear !== "All"  && (
+  <td className="tbody-td text-center text-xs">
+    {empPriorYear.toFixed(2)}
+  </td>
+)}
                           {sortedDurations.map((duration) => {
                             // const actualEmpIdx = 0;
                             const uniqueKey = `${duration.monthNo}_${duration.year}`;
@@ -6661,7 +7047,7 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                       );
                     })}
                 </tbody>
-                <tfoot>
+                {/* <tfoot>
                   <tr
                     className="bg-gray-200 font-bold text-center"
                     style={{
@@ -6691,7 +7077,71 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                       });
                     })()}
                   </tr>
-                </tfoot>
+                </tfoot> */}
+                <tfoot>
+  <tr
+    className="bg-gray-200 font-bold text-center"
+    style={{
+      position: "sticky",
+      bottom: 0,
+      zIndex: 20,
+      height: `${ROW_HEIGHT_DEFAULT}px`,
+      lineHeight: "normal",
+      borderTop: "2px solid #d1d5db",
+    }}
+  >
+    {/* CTD Column */}
+  {normalizedFiscalYear !== "All"  && (
+  <td
+    key="total-ctd"
+    className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+  >
+    {(() => {
+      const columnTotals = calculateColumnTotals();
+      return columnTotals['ctd']?.toFixed(2) || '0.00';
+    })()}
+  </td>
+)}
+    
+    {/* Prior Year Column */}
+    {/* <td
+      key="total-prior-year"
+      className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+    >
+      {(() => {
+        const columnTotals = calculateColumnTotals();
+        return columnTotals['priorYear']?.toFixed(2) || '0.00';
+      })()}
+    </td> */}
+    {normalizedFiscalYear !== "All"  && (
+  <td
+    key="total-prior-year"
+    className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+  >
+    {(() => {
+      const columnTotals = calculateColumnTotals();
+      return columnTotals['priorYear']?.toFixed(2) || '0.00';
+    })()}
+  </td>
+)}
+    
+    {/* Existing month columns */}
+    {sortedDurations.map((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      const columnTotals = calculateColumnTotals();
+      const total = columnTotals[uniqueKey] || 0;
+      return (
+        <td
+          key={`total-${uniqueKey}`}
+          className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+        >
+          {total.toFixed(2)}
+        </td>
+      );
+    })}
+  </tr>
+</tfoot>
+
               </table>
             </div>
           </div>
