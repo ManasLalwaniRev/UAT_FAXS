@@ -40,6 +40,13 @@ import Login from "./components/Login";
 import Dashboard from "./pages/Dashboard";
 
 function App() {
+  if (import.meta.env.VITE_CHECK === "production") {
+    console.log = () => {};
+    console.info = () => {};
+    console.warn = () => {};
+    console.error = () => {};
+  }
+
   return (
     <>
       <Router>

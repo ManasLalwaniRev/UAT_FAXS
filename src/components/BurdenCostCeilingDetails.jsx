@@ -630,37 +630,23 @@ const BurdenCostCeilingDetails = ({
         ) : filteredCeilings.length === 0 && !showNewRow ? (
           <p className="text-gray-600">No data available.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-100 border-b border-gray-200">
+          <div className="overflow-x-auto border-line">
+            <table className="w-full table">
+              <thead className="thead">
                 <tr>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Account
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Account Name
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs">
-                    Pool
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
-                    Rate Ceiling
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
-                    Ceiling Method
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
-                    Apply to R/B/A
-                  </th>
-                  <th className="px-2 py-1 text-gray-700 font-semibold text-xs text-center">
-                    Action
-                  </th>
+                  <th className="th-thead">Account</th>
+                  <th className="th-thead">Account Name</th>
+                  <th className="th-thead">Pool</th>
+                  <th className="th-thead  ">Rate Ceiling</th>
+                  <th className="th-thead  ">Ceiling Method</th>
+                  <th className="th-thead  ">Apply to R/B/A</th>
+                  <th className="th-thead  ">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="tbody">
                 {showNewRow && (
                   <tr className="bg-white border-b border-gray-200 hover:bg-gray-50">
-                    <td className="px-2 py-1 max-h-32 overflow-y-auto">
+                    <td className="tbody-td max-h-32 overflow-y-auto">
                       <input
                         list="accountSuggestions"
                         value={newRow.accountId}
@@ -683,9 +669,7 @@ const BurdenCostCeilingDetails = ({
                         ))}
                       </datalist>
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
-                      {newRow.accountName}
-                    </td>
+                    <td className="tbody-td">{newRow.accountName}</td>
                     {/* <td className="px-2 py-1">
                       <select
                         value={newRow.poolCode}
@@ -709,7 +693,7 @@ const BurdenCostCeilingDetails = ({
                         ))}
                       </select>
                     </td> */}
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       <select
                         value={newRow.poolCode}
                         onChange={(e) =>
@@ -739,7 +723,7 @@ const BurdenCostCeilingDetails = ({
                       </select>
                     </td>
 
-                    <td className="px-2 py-1 text-center">
+                    <td className="tbody-td">
                       <input
                         type="text"
                         value={newRow.rateCeiling}
@@ -753,7 +737,7 @@ const BurdenCostCeilingDetails = ({
                         placeholder="0"
                       />
                     </td>
-                    <td className="px-2 py-1 text-center">
+                    <td className="tbody-td">
                       <select
                         value={newRow.ceilingMethodCode}
                         onChange={(e) =>
@@ -772,7 +756,7 @@ const BurdenCostCeilingDetails = ({
                         ))}
                       </select>
                     </td>
-                    <td className="px-2 py-1 text-center">
+                    <td className="tbody-td">
                       <select
                         value={newRow.applyToRbaCode}
                         onChange={(e) =>
@@ -791,7 +775,7 @@ const BurdenCostCeilingDetails = ({
                         ))}
                       </select>
                     </td>
-                    <td className="px-2 py-1 flex gap-1 justify-center items-center text-center">
+                    <td className="tbody-td">
                       <button
                         onClick={handleSave}
                         className="text-green-700 hover:text-green-800"
@@ -816,17 +800,15 @@ const BurdenCostCeilingDetails = ({
                     key={`${ceiling.accountId}-${ceiling.fiscalYear}-${ceiling.poolCode}-${index}`}
                     className="bg-white border-b border-gray-200 hover:bg-gray-50"
                   >
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
-                      {ceiling.accountId}
-                    </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">{ceiling.accountId}</td>
+                    <td className="tbody-td">
                       {accounts.find((a) => a.acctId === ceiling.accountId)
                         ?.acctName || "N/A"}
                     </td>
-                    {/* <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    {/* <td className="tbody-td">
                       {ceiling.poolCode}
                     </td> */}
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal">
+                    <td className="tbody-td">
                       {
                         pools.find(
                           (pool) =>
@@ -841,7 +823,7 @@ const BurdenCostCeilingDetails = ({
                       }
                     </td>
 
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal text-center">
+                    <td className="tbody-td  ">
                       {editIndex === index ? (
                         <input
                           type="text"
@@ -856,10 +838,8 @@ const BurdenCostCeilingDetails = ({
                         </span>
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal text-center">
-                      {ceiling.ceilingMethodCode}
-                    </td>
-                    <td className="px-2 py-1 text-xs text-gray-900 font-normal text-center">
+                    <td className="tbody-td  ">{ceiling.ceilingMethodCode}</td>
+                    <td className="tbody-td  ">
                       {editIndex === index ? (
                         <select
                           name="applyToRbaCode"
@@ -879,7 +859,7 @@ const BurdenCostCeilingDetails = ({
                         </span>
                       )}
                     </td>
-                    <td className="px-2 py-1 flex gap-1 justify-center items-center text-center">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <>
                           <button

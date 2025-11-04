@@ -206,37 +206,27 @@ const CostFeeOverrideDetails = ({
             No data available for this project ID.
           </p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-100 border-b border-gray-200">
+          <div className="overflow-x-auto border-line">
+            <table className="w-full table">
+              <thead className="thead">
                 <tr>
-                  {/* <th className="px-2 py-1 text-xs font-semibold text-gray-700">
+                  {/* <th className="th-thead">
                     Project ID
                   </th> */}
-                  <th className="px-2 py-1 text-xs font-semibold text-gray-700">
-                    Cost Ceiling
-                  </th>
-                  <th className="px-2 py-1 text-xs font-semibold text-gray-700">
-                    Fee Ceiling
-                  </th>
-                  <th className="px-2 py-1 text-xs font-semibold text-gray-700">
-                    Total Value Ceiling
-                  </th>
-                  <th className="px-2 py-1 text-xs font-semibold text-gray-700">
-                    Ceiling Code
-                  </th>
-                  <th className="px-2 py-1 text-xs font-semibold text-gray-700">
-                    Action
-                  </th>
+                  <th className="th-thead">Cost Ceiling</th>
+                  <th className="th-thead">Fee Ceiling</th>
+                  <th className="th-thead">Total Value Ceiling</th>
+                  <th className="th-thead">Ceiling Code</th>
+                  <th className="th-thead">Action</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="tbody">
                 {showNewRow && (
                   <tr className="bg-white border-b border-gray-200 hover:bg-gray-50">
                     {/* <td className="px-2 py-1 text-xs">
                       {lastSearchedProjectId}
                     </td> */}
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       <input
                         type="number"
                         value={newRow.costCeiling}
@@ -249,7 +239,7 @@ const CostFeeOverrideDetails = ({
                         className="w-full px-2 py-1 border border-gray-300 rounded-md text-xs"
                       />
                     </td>
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       <input
                         type="number"
                         value={newRow.feeCeiling}
@@ -262,7 +252,7 @@ const CostFeeOverrideDetails = ({
                         className="w-full px-2 py-1 border border-gray-300 rounded-md text-xs"
                       />
                     </td>
-                    <td className="px-2 py-1">
+                    <td className="tbody-td">
                       <input
                         type="number"
                         value={newRow.totalValueCeiling}
@@ -275,7 +265,7 @@ const CostFeeOverrideDetails = ({
                         className="w-full px-2 py-1 border border-gray-300 rounded-md text-xs"
                       />
                     </td>
-                    <td className="px-2 py-1 text-center">
+                    <td className="tbody-td ">
                       <select
                         name="ceilingCode"
                         value={newRow.ceilingCode}
@@ -294,7 +284,7 @@ const CostFeeOverrideDetails = ({
                         ))}
                       </select>
                     </td>
-                    <td className="px-2 py-1 flex gap-1">
+                    <td className="tbody-td">
                       <button
                         onClick={handleSave}
                         className="text-green-700 hover:text-green-800"
@@ -319,7 +309,7 @@ const CostFeeOverrideDetails = ({
                     className="bg-white border-b border-gray-200 hover:bg-gray-50"
                   >
                     {/* <td className="px-2 py-1 text-xs">{row.projectId}</td> */}
-                    <td className="px-2 py-1 text-xs">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="number"
@@ -332,7 +322,7 @@ const CostFeeOverrideDetails = ({
                         row.costCeiling
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs">
+                    <td className="tbody-td ">
                       {editIndex === index ? (
                         <input
                           type="number"
@@ -345,7 +335,7 @@ const CostFeeOverrideDetails = ({
                         row.feeCeiling
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <input
                           type="number"
@@ -358,7 +348,7 @@ const CostFeeOverrideDetails = ({
                         row.totalValueCeiling
                       )}
                     </td>
-                    <td className="px-2 py-1 text-xs text-center">
+                    <td className="tbody-td">
                       {editIndex === index ? (
                         <select
                           name="ceilingCode"
@@ -376,7 +366,7 @@ const CostFeeOverrideDetails = ({
                         row.ceilingCode
                       )}
                     </td>
-                    <td className="px-2 py-1 flex gap-1">
+                    <td className="tbody-td ">
                       {editIndex === index ? (
                         <>
                           <button

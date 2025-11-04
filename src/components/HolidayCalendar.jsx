@@ -225,11 +225,11 @@ const AnnualHolidaysPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl px-8 bg-white rounded-xl shadow-lg p-8 space-y-6 border border-gray-300">
-        <h2 className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+      <div className="w-full max-w-5xl px-8 bg-white p-8 space-y-6 border-line">
+        <h2 className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
           Setup Annual Holidays
         </h2>
-        <div className="bg-gray-50 p-4 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4 items-center border border-gray-300">
+        <div className="bg-gray-50 p-4  grid grid-cols-1 md:grid-cols-4 gap-4 items-center border-line">
           <div className="flex items-center space-x-2">
             <label
               htmlFor="year"
@@ -268,187 +268,183 @@ const AnnualHolidaysPage = () => {
           </div>
         </div>
 
-        <div className="bg-gray-50 p-4 rounded-lg border border-gray-300">
+        <div className="bg-gray-50 p-4 border-line">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">
             Target Year Holidays
           </h3>
           {isLoading && <p className="text-center text-gray-500">Loading...</p>}
-          <div className="overflow-x-auto max-h-180 overflow-y-auto rounded-lg border border-gray-300">
-            <table className="min-w-full divide-y divide-gray-300">
-              <thead className="bg-gray-200 sticky top-0">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Holiday Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    State
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredHolidays.length === 0 ? (
+
+          <div className="border-line overflow-hidden">
+            <div className="overflow-x-auto max-h-180 overflow-y-auto ">
+              <table className=" table">
+                <thead className="thead">
                   <tr>
-                    <td
-                      colSpan="5"
-                      className="px-6 py-4 text-sm text-gray-500 text-center"
-                    >
-                      No holidays available or matching your search.
-                    </td>
+                    <th className="th-thead uppercase tracking-wider">Date</th>
+                    <th className="th-thead uppercase tracking-wider">
+                      Description
+                    </th>
+                    <th className="th-thead uppercase tracking-wider">
+                      Holiday Status
+                    </th>
+                    <th className="th-thead uppercase tracking-wider">State</th>
+                    <th className="th-thead uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ) : (
-                  filteredHolidays.map((holiday, idx) => (
-                    <tr key={holiday.id || `new-${idx}`}>
-                      {/* Date */}
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        {holiday.isEditing ? (
-                          <DatePicker
-                            selected={parseDate(holiday.date)}
-                            onChange={(date) =>
-                              handleHolidayChange(
-                                holiday,
-                                "date",
-                                formatDate(date)
-                              )
-                            }
-                            dateFormat="MM/dd/yyyy"
-                            placeholderText="MM/DD/YYYY"
-                            className="w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                          />
-                        ) : (
-                          holiday.date
-                        )}
-                      </td>
-                      {/* Description */}
-                      <td className="px-6 py-4 text-sm text-gray-800">
-                        {holiday.isEditing ? (
-                          <input
-                            type="text"
-                            value={holiday.holiday}
-                            onChange={(e) =>
-                              handleHolidayChange(
-                                holiday,
-                                "holiday",
-                                e.target.value
-                              )
-                            }
-                            className="w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
-                            placeholder="Holiday Description"
-                          />
-                        ) : (
-                          holiday.holiday
-                        )}
-                      </td>
-                      {/* Holiday Status */}
-                      <td className="px-6 py-4 text-center text-sm">
-                        {holiday.isEditing ? (
-                          <select
-                            value={holiday.holidayType}
-                            onChange={(e) =>
-                              handleHolidayChange(
-                                holiday,
-                                "holidayType",
-                                e.target.value
-                              )
-                            }
-                            className="w-full border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none"
-                          >
-                            <option value="">-- Select --</option>
-                            <option value="Weekend">Weekend</option>
-                            <option value="Holiday">Holiday</option>
-                            <option value="Optional">Optional</option>
-                          </select>
-                        ) : (
-                          <span>{holiday.holidayType}</span>
-                        )}
-                      </td>
-                      {/* State */}
-                      <td className="px-6 py-4 text-sm text-gray-800">
-                        <input
-                          type="text"
-                          value={holiday.state}
-                          onChange={(e) =>
-                            handleHolidayChange(
-                              holiday,
-                              "state",
-                              e.target.value
-                            )
-                          }
-                          className={`w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 ${
-                            holiday.isEditing ? "focus:ring-blue-500" : ""
-                          }`}
-                          placeholder="State Name"
-                          disabled={!holiday.isEditing}
-                        />
-                      </td>
-                      {/* Actions */}
-                      <td className="px-6 py-4 text-right text-sm font-medium flex flex-row justify-end items-center space-x-2">
-                        {holiday.isEditing ? (
-                          <>
-                            <button
-                              onClick={() => handleSaveHoliday(holiday)}
-                              disabled={isLoading}
-                              className="text-green-700 hover:text-green-800"
-                              title="Save"
-                              style={{ background: "none", border: "none" }}
-                            >
-                              <FaSave size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleCancelEdit(holiday)}
-                              disabled={isLoading}
-                              className="text-gray-500 hover:text-gray-700"
-                              title="Cancel"
-                              style={{ background: "none", border: "none" }}
-                            >
-                              <FaTimes size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRow(holiday)}
-                              disabled={isLoading}
-                              className="text-gray-400 hover:text-gray-800"
-                              title="Delete"
-                              style={{ background: "none", border: "none" }}
-                            >
-                              <FaTrash size={18} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <button
-                              onClick={() => handleEditRow(holiday)}
-                              disabled={isLoading}
-                              className="text-blue-400 hover:text-blue-700"
-                              title="Edit"
-                              style={{ background: "none", border: "none" }}
-                            >
-                              <FaEdit size={18} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteRow(holiday)}
-                              disabled={isLoading}
-                              className="text-gray-400 hover:text-gray-800"
-                              title="Delete"
-                              style={{ background: "none", border: "none" }}
-                            >
-                              <FaTrash size={18} />
-                            </button>
-                          </>
-                        )}
+                </thead>
+                <tbody className="  divide-y divide-gray-200 tbody">
+                  {filteredHolidays.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="tbody-td">
+                        No holidays available or matching your search.
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    filteredHolidays.map((holiday, idx) => (
+                      <tr key={holiday.id || `new-${idx}`}>
+                        {/* Date */}
+                        <td className="tbody-td">
+                          {holiday.isEditing ? (
+                            <DatePicker
+                              selected={parseDate(holiday.date)}
+                              onChange={(date) =>
+                                handleHolidayChange(
+                                  holiday,
+                                  "date",
+                                  formatDate(date)
+                                )
+                              }
+                              dateFormat="MM/dd/yyyy"
+                              placeholderText="MM/DD/YYYY"
+                              className="w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            />
+                          ) : (
+                            holiday.date
+                          )}
+                        </td>
+                        {/* Description */}
+                        <td className="tbody-td">
+                          {holiday.isEditing ? (
+                            <input
+                              type="text"
+                              value={holiday.holiday}
+                              onChange={(e) =>
+                                handleHolidayChange(
+                                  holiday,
+                                  "holiday",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="Holiday Description"
+                            />
+                          ) : (
+                            holiday.holiday
+                          )}
+                        </td>
+                        {/* Holiday Status */}
+                        <td className="tbody-td">
+                          {holiday.isEditing ? (
+                            <select
+                              value={holiday.holidayType}
+                              onChange={(e) =>
+                                handleHolidayChange(
+                                  holiday,
+                                  "holidayType",
+                                  e.target.value
+                                )
+                              }
+                              className="w-full border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none"
+                            >
+                              <option value="">-- Select --</option>
+                              <option value="Weekend">Weekend</option>
+                              <option value="Holiday">Holiday</option>
+                              <option value="Optional">Optional</option>
+                            </select>
+                          ) : (
+                            <span>{holiday.holidayType}</span>
+                          )}
+                        </td>
+                        {/* State */}
+                        <td className="tbody-td">
+                          <input
+                            type="text"
+                            value={holiday.state}
+                            onChange={(e) =>
+                              handleHolidayChange(
+                                holiday,
+                                "state",
+                                e.target.value
+                              )
+                            }
+                            className={`w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 ${
+                              holiday.isEditing ? "focus:ring-blue-500" : ""
+                            }`}
+                            placeholder="State Name"
+                            disabled={!holiday.isEditing}
+                          />
+                        </td>
+                        {/* Actions */}
+                        <td className="tbody-td flex flex-row justify-end items-center space-x-2">
+                          {holiday.isEditing ? (
+                            <>
+                              <button
+                                onClick={() => handleSaveHoliday(holiday)}
+                                disabled={isLoading}
+                                className="text-green-700 hover:text-green-800"
+                                title="Save"
+                                style={{ background: "none", border: "none" }}
+                              >
+                                <FaSave size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleCancelEdit(holiday)}
+                                disabled={isLoading}
+                                className="text-gray-500 hover:text-gray-700"
+                                title="Cancel"
+                                style={{ background: "none", border: "none" }}
+                              >
+                                <FaTimes size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRow(holiday)}
+                                disabled={isLoading}
+                                className="text-gray-400 hover:text-gray-800"
+                                title="Delete"
+                                style={{ background: "none", border: "none" }}
+                              >
+                                <FaTrash size={18} />
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleEditRow(holiday)}
+                                disabled={isLoading}
+                                className="text-blue-400 hover:text-blue-700"
+                                title="Edit"
+                                style={{ background: "none", border: "none" }}
+                              >
+                                <FaEdit size={18} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteRow(holiday)}
+                                disabled={isLoading}
+                                className="text-gray-400 hover:text-gray-800"
+                                title="Delete"
+                                style={{ background: "none", border: "none" }}
+                              >
+                                <FaTrash size={18} />
+                              </button>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>

@@ -214,8 +214,15 @@ const ProjectBudgetStatus = () => {
     }
   }, [filteredProjects]);
 
+  useEffect(() => {
+    if (searchTerm.trim() === "") {
+      setSearched(false);
+    }
+  }, [searchTerm]);
+
   const handleSearch = async () => {
     const term = searchTerm.trim();
+
     setSearched(true);
     setErrorMessage("");
 
@@ -309,6 +316,7 @@ const ProjectBudgetStatus = () => {
 
   const handleInputChange = (e) => {
     setSearchTerm(e.target.value);
+    // handleSearch(e.target.value);
     setErrorMessage("");
     setSearched(false);
     setFilteredProjects([]);
@@ -410,8 +418,7 @@ const ProjectBudgetStatus = () => {
           </button>
         </div>
       </div>
-
-      {searched && errorMessage ? (
+      {/* {searched && errorMessage ? (
         <div className="text-red-500 italic text-xs sm:text-sm">
           {errorMessage}
         </div>
@@ -419,22 +426,22 @@ const ProjectBudgetStatus = () => {
         <div className="text-gray-500 italic text-xs sm:text-sm">
           No project found with that ID.
         </div>
-      ) : (
-        filteredProjects.length >= 0 && (
-          <div
-            key={searchTerm}
-            className="space-y-4 sm:p-4 border-overall  p-2  bg-white mb-8"
-          >
-            {selectedPlan && (
-              <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-1">
-                <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      Project:
-                    </span>{" "}
-                    <span className="text-gray-700">{selectedPlan.projId}</span>
-                  </div>
-                  {/* <div>
+      ) : ( */}
+      {/* { filteredProjects.length >= 0 &&  */}
+      {/* ( */}
+
+      <div
+        key={searchTerm}
+        className="space-y-4 sm:p-4 border-overall  p-2  bg-white mb-8"
+      >
+        {selectedPlan && (
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-1">
+            <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              <div>
+                <span className="font-semibold blue-text">Project ID:</span>{" "}
+                <span className="text-gray-700">{selectedPlan.projId}</span>
+              </div>
+              {/* <div>
                     <span className="font-semibold text-green-800">
                       Project Name:
                     </span>{" "}
@@ -442,166 +449,169 @@ const ProjectBudgetStatus = () => {
                       {selectedPlan.projName}
                     </span>
                   </div> */}
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      Start Date:
-                    </span>{" "}
-                    <span className="text-gray-700">
-                      {formatDate(selectedPlan.projStartDt)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      End Date:
-                    </span>{" "}
-                    <span className="text-gray-700">
-                      {formatDate(selectedPlan.projEndDt)}
-                    </span>
-                  </div>
-                  {/* <div>
+              <div>
+                <span className="font-semibold blue-text">
+                  Period of Performance :
+                </span>
+                Start Date:{" "}
+                <span className="text-gray-700">
+                  {formatDate(selectedPlan.projStartDt)}
+                </span>{" "}
+                |{/* <div> */}
+                {/* <span className="font-semibold text-green-800"> */}
+                End Date:
+                {/* </span>{" "} */}
+                <span className="text-gray-700">
+                  {formatDate(selectedPlan.projEndDt)}
+                </span>
+              </div>
+              {/* </div> */}
+              {/* <div>
                     <span className="font-semibold text-green-800">
                       Organization:
                     </span>{" "}
                     <span className="text-gray-700">{selectedPlan.orgId}</span>
                   </div> */}
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      Funded Fee:
-                    </span>{" "}
-                    <span className="text-gray-700">
-                      {Number(selectedPlan.fundedFee).toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      Funded Cost:
-                    </span>{" "}
-                    <span className="text-gray-700">
-                      {Number(selectedPlan.fundedCost).toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="font-semibold text-green-800">
-                      Funded Rev:
-                    </span>{" "}
-                    <span className="text-gray-700">
-                      {Number(selectedPlan.fundedRev).toLocaleString("en-US", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  </div>
-                </div>
+              <div>
+                <span className="font-semibold blue-text">Funded Fee:</span>{" "}
+                <span className="text-gray-700">
+                  {Number(selectedPlan.fundedFee).toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
               </div>
+              <div>
+                <span className="font-semibold blue-text">Funded Cost:</span>{" "}
+                <span className="text-gray-700">
+                  {Number(selectedPlan.fundedCost).toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
+              </div>
+              <div>
+                <span className="font-semibold blue-text">Funded Rev:</span>{" "}
+                <span className="text-gray-700">
+                  {Number(selectedPlan.fundedRev).toLocaleString("en-US", {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 0,
+                  })}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Flex container to keep buttons on the left of ProjectPlanTable */}
+        <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex flex-row lg:flex-col gap-2 text-blue-600 text-xs sm:text-sm w-full lg:w-fit lg:min-w-[150px] flex-wrap mt-4">
+            {currentUserRole === "admin" && (
+              <span
+                className={`btn ${
+                  activeTab === "dashboard" ? "btn-active" : "btn-inactive"
+                }`}
+                onClick={() => handleTabClick("dashboard")}
+              >
+                Dashboard
+              </span>
+            )}
+            <span
+              className={`btn ${
+                activeTab === "hours" ? "btn-active" : "btn-inactive"
+              }`}
+              onClick={() => handleTabClick("hours")}
+            >
+              Hours
+            </span>
+            <span
+              className={`btn ${
+                activeTab === "amounts" ? "btn-active" : "btn-inactive"
+              }`}
+              onClick={() => handleTabClick("amounts")}
+            >
+              Other Cost
+            </span>
+            {currentUserRole === "admin" && (
+              <>
+                <span
+                  className={`btn ${
+                    activeTab === "revenueAnalysis"
+                      ? "btn-active"
+                      : "btn-inactive"
+                  }`}
+                  onClick={() => handleTabClick("revenueAnalysis")}
+                >
+                  Revenue Details
+                </span>
+                <span
+                  className={`btn ${
+                    activeTab === "analysisByPeriod"
+                      ? "btn-active"
+                      : "btn-inactive"
+                  }`}
+                  onClick={() => handleTabClick("analysisByPeriod")}
+                >
+                  Monthly Forecast
+                </span>
+                <span
+                  className={`btn ${
+                    activeTab === "plc" ? "btn-active" : "btn-inactive"
+                  }`}
+                  onClick={() => handleTabClick("plc")}
+                >
+                  Labor Categories
+                </span>
+                <span
+                  className={`btn ${
+                    activeTab === "revenueSetup" ? "btn-active" : "btn-inactive"
+                  }`}
+                  onClick={() => handleTabClick("revenueSetup")}
+                >
+                  Revenue Definition
+                </span>
+                <span
+                  className={`btn ${
+                    activeTab === "revenueCeiling"
+                      ? "btn-active"
+                      : "btn-inactive"
+                  }`}
+                  onClick={() => handleTabClick("revenueCeiling")}
+                >
+                  Adjustment
+                </span>
+                <span
+                  className={`btn ${
+                    activeTab === "funding" ? "btn-active" : "btn-inactive"
+                  }`}
+                  onClick={() => handleTabClick("funding")}
+                >
+                  Funding
+                </span>
+              </>
             )}
 
-            {/* Flex container to keep buttons on the left of ProjectPlanTable */}
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex flex-row lg:flex-col gap-2 text-blue-600 text-xs sm:text-sm w-full lg:w-fit lg:min-w-[150px] flex-wrap mt-4">
-                {currentUserRole === "admin" && (
-                  <span
-                    className={`btn ${
-                      activeTab === "dashboard" ? "btn-active" : "btn-inactive"
-                    }`}
-                    onClick={() => handleTabClick("dashboard")}
-                  >
-                    Dashboard
-                  </span>
-                )}
-                <span
-                  className={`btn ${
-                    activeTab === "hours" ? "btn-active" : "btn-inactive"
-                  }`}
-                  onClick={() => handleTabClick("hours")}
-                >
-                  Hours
-                </span>
-                <span
-                  className={`btn ${
-                    activeTab === "amounts" ? "btn-active" : "btn-inactive"
-                  }`}
-                  onClick={() => handleTabClick("amounts")}
-                >
-                  Other Cost
-                </span>
-                {currentUserRole === "admin" && (
-                  <>
-                    <span
-                      className={`btn ${
-                        activeTab === "revenueAnalysis"
-                          ? "btn-active"
-                          : "btn-inactive"
-                      }`}
-                      onClick={() => handleTabClick("revenueAnalysis")}
-                    >
-                      Revenue Details
-                    </span>
-                    <span
-                      className={`btn ${
-                        activeTab === "analysisByPeriod"
-                          ? "btn-active"
-                          : "btn-inactive"
-                      }`}
-                      onClick={() => handleTabClick("analysisByPeriod")}
-                    >
-                      Monthly Forecast
-                    </span>
-                    <span
-                      className={`btn ${
-                        activeTab === "plc" ? "btn-active" : "btn-inactive"
-                      }`}
-                      onClick={() => handleTabClick("plc")}
-                    >
-                      Labor Categories
-                    </span>
-                    <span
-                      className={`btn ${
-                        activeTab === "revenueSetup"
-                          ? "btn-active"
-                          : "btn-inactive"
-                      }`}
-                      onClick={() => handleTabClick("revenueSetup")}
-                    >
-                      Revenue Definition
-                    </span>
-                    <span
-                      className={`btn ${
-                        activeTab === "revenueCeiling"
-                          ? "btn-active"
-                          : "btn-inactive"
-                      }`}
-                      onClick={() => handleTabClick("revenueCeiling")}
-                    >
-                      Adjustment
-                    </span>
-                    <span
-                      className={`btn ${
-                        activeTab === "funding" ? "btn-active" : "btn-inactive"
-                      }`}
-                      onClick={() => handleTabClick("funding")}
-                    >
-                      Funding
-                    </span>
-                  </>
-                )}
+            <span
+              className={`btn ${
+                activeTab === "warning" ? "btn-active" : "btn-inactive"
+              }`}
+              onClick={() => handleTabClick("warning")}
+            >
+              Warning
+            </span>
+          </div>
+          <div className="flex-1 min-w-0 overflow-hidden">
+            <ProjectPlanTable
+              projectId={searchTerm.trim()}
+              searched={searched}
+              onPlanSelect={handlePlanSelect}
+              selectedPlan={selectedPlan}
+              fiscalYear={fiscalYear}
+              setFiscalYear={setFiscalYear}
+              fiscalYearOptions={fiscalYearOptions}
+              filteredProjects={filteredProjects}
+            />
 
-                <span
-                  className={`btn ${
-                    activeTab === "warning" ? "btn-active" : "btn-inactive"
-                  }`}
-                  onClick={() => handleTabClick("warning")}
-                >
-                  Warning
-                </span>
-              </div>
-              <div className="flex-1 min-w-0 overflow-hidden">
-                {/* <div className="w-full overflow-hidden">
+            {/* <div className="w-full overflow-hidden">
                   <ProjectPlanTable
                     projectId={searchTerm}
                     onPlanSelect={handlePlanSelect}
@@ -611,7 +621,7 @@ const ProjectBudgetStatus = () => {
                     fiscalYearOptions={fiscalYearOptions}
                   />
                 </div> */}
-                {/* <div className="w-full overflow-hidden">
+            {/* <div className="w-full overflow-hidden">
   {!searched ? (
     <div className="flex flex-col items-center justify-center p-8 text-gray-500">
       <div className="text-center">
@@ -630,528 +640,335 @@ const ProjectBudgetStatus = () => {
     />
   )}
 </div> */}
+          </div>
+        </div>
 
-                <div className="w-full overflow-hidden">
-                  {!searched && searchTerm.trim() === "" ? (
-                    <div className="w-full border border-black rounded-lg bg-white overflow-hidden">
-                      {/* Top buttons section - same as ProjectPlanTable */}
-                      <div className="flex justify-between items-center gap-1 mt-6 p-2">
-                        <div className="flex gap-0.5 flex-wrap items-center">
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="New Budget"
-                          >
-                            New Budget
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="New Blank Budget"
-                          >
-                            New Blank Budget
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="New EAC"
-                          >
-                            New EAC
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="Delete Selected Plan"
-                          >
-                            Delete
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="Submit"
-                          >
-                            Submit
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="Approve"
-                          >
-                            Approve
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="Conclude"
-                          >
-                            Conclude
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="Calculate"
-                          >
-                            Calc
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="Filter BUD/EAC Plans"
-                          >
-                            BUD/EAC
-                          </button>
-                          <button
-                            disabled
-                            className="btn1 btn-disabled"
-                            title="New Business"
-                          >
-                            New Business
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1 flex-shrink-0">
-                          <button
-                            disabled
-                            className="bg-gray-400 text-white px-1 py-1 rounded flex items-center text-xs cursor-not-allowed whitespace-nowrap"
-                            title="Import Plan"
-                          >
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-3 w-3 mr-0.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-                              />
-                            </svg>
-                            Import
-                          </button>
-                          <div className="flex items-center gap-1">
-                            <label className="font-semibold text-xs whitespace-nowrap">
-                              Fiscal Year:
-                            </label>
-                            <select
-                              disabled
-                              className="border border-gray-300 rounded px-1 py-1 text-xs focus:outline-none bg-gray-100 cursor-not-allowed"
-                            >
-                              <option>All</option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Table with headers only */}
-                      <div
-                        className="w-full overflow-auto"
-                        style={{
-                          maxHeight: "320px",
-                          minHeight: "300px",
-                          border: "1px solid #e5e7eb",
-                          borderRadius: "0.5rem",
-                          background: "#fff",
-                        }}
-                      >
-                        <table className="w-full table-auto text-xs text-left border-collapse">
-                          <thead className="bg-gray-100 text-gray-800 sticky top-0 z-10">
-                            <tr>
-                              <th className="p-2 border font-normal">Export</th>
-                              <th className="p-1 border font-normal text-center">
-                                Project ID
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Project Name
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                BUD/EAC
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Revision
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Version Type
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Origin
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Submitted
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Approved
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Conclude
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Status
-                              </th>
-                              <th className="p-1 border font-normal text-center">
-                                Closed Period
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <tr>
-                              <td
-                                colSpan="12"
-                                className="p-8 text-center text-gray-500"
-                              >
-                                <div className="flex flex-col items-center justify-center">
-                                  <p className="text-lg font-medium mb-2">
-                                    Enter a Project ID to view project details
-                                  </p>
-                                  {/* <p className="text-sm">
-                                    Empty search to get all project details
-                                  </p> */}
-                                </div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  ) : (
-                    <ProjectPlanTable
-                      projectId={searchTerm}
-                      onPlanSelect={handlePlanSelect}
-                      selectedPlan={selectedPlan}
-                      fiscalYear={fiscalYear}
-                      setFiscalYear={setFiscalYear}
-                      fiscalYearOptions={fiscalYearOptions}
+        {/* Dashboard Tab */}
+        {activeTab === "dashboard" &&
+          selectedPlan &&
+          currentUserRole === "admin" && (
+            <div
+              className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+              ref={(el) => (dashboardRefs.current[searchTerm] = el)}
+            >
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <button
+                  className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                  onClick={handleCloseTab}
+                  title="Close project details"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
                     />
-                  )}
+                  </svg>
+                </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                  <span>
+                    <span className="font-semibold blue-text">
+                      Project ID:{" "}
+                    </span>
+                    {selectedPlan.projId}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">Type: </span>
+                    {selectedPlan.plType || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">Version: </span>
+                    {selectedPlan.version || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">Status: </span>
+                    {selectedPlan.status || "N/A"}
+                  </span>
                 </div>
+              </div>
+              <FinancialDashboard
+                planId={selectedPlan.plId}
+                templateId={selectedPlan.templateId}
+                type={selectedPlan.plType}
+              />
+            </div>
+          )}
+
+        {/* Hours Tab */}
+        {activeTab === "hours" && selectedPlan && (
+          <div
+            className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16 overflow-x-auto"
+            ref={(el) => (hoursRefs.current[searchTerm] = el)}
+          >
+            <div className="w-full bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+              <button
+                className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                onClick={handleCloseTab}
+                title="Close project details"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                <span>
+                  <span className="font-semibold blue-text">Project ID: </span>
+                  {selectedPlan.projId}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">Type: </span>
+                  {selectedPlan.plType || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">Version: </span>
+                  {selectedPlan.version || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">Status: </span>
+                  {selectedPlan.status || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">
+                    Period of Performance:{" "}
+                  </span>
+                  Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"} |
+                  End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                </span>
               </div>
             </div>
+            <ProjectHoursDetails
+              planId={selectedPlan.plId}
+              projectId={selectedPlan.projId}
+              status={selectedPlan.status}
+              planType={selectedPlan.plType}
+              closedPeriod={selectedPlan.closedPeriod}
+              startDate={selectedPlan.projStartDt}
+              endDate={selectedPlan.projEndDt}
+              fiscalYear={fiscalYear}
+              onSaveSuccess={() => {}}
+            />
+          </div>
+        )}
 
-            {/* Dashboard Tab */}
-            {activeTab === "dashboard" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (dashboardRefs.current[searchTerm] = el)}
-                >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <FinancialDashboard
-                    planId={selectedPlan.plId}
-                    templateId={selectedPlan.templateId}
-                    type={selectedPlan.plType}
-                  />
-                </div>
-              )}
-
-            {/* Hours Tab */}
-            {activeTab === "hours" && selectedPlan && (
-              <div
-                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16 overflow-x-auto"
-                ref={(el) => (hoursRefs.current[searchTerm] = el)}
+        {/* Amounts Tab */}
+        {activeTab === "amounts" && selectedPlan && (
+          <div
+            className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+            ref={(el) => (amountsRefs.current[searchTerm] = el)}
+          >
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+              <button
+                className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                onClick={handleCloseTab}
+                title="Close project details"
               >
-                <div className="w-full bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                  <button
-                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                    onClick={handleCloseTab}
-                    title="Close project details"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                  <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                    <span>
-                      <span className="font-semibold">Project ID: </span>
-                      {selectedPlan.projId}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Type: </span>
-                      {selectedPlan.plType || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Version: </span>
-                      {selectedPlan.version || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Status: </span>
-                      {selectedPlan.status || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">
-                        Period of Performance:{" "}
-                      </span>
-                      Start Date:{" "}
-                      {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                      Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                    </span>
-                  </div>
-                </div>
-                <ProjectHoursDetails
-                  planId={selectedPlan.plId}
-                  projectId={selectedPlan.projId}
-                  status={selectedPlan.status}
-                  planType={selectedPlan.plType}
-                  closedPeriod={selectedPlan.closedPeriod}
-                  startDate={selectedPlan.projStartDt}
-                  endDate={selectedPlan.projEndDt}
-                  fiscalYear={fiscalYear}
-                  onSaveSuccess={() => {}}
-                />
-              </div>
-            )}
-
-            {/* Amounts Tab */}
-            {activeTab === "amounts" && selectedPlan && (
-              <div
-                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                ref={(el) => (amountsRefs.current[searchTerm] = el)}
-              >
-                <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                  <button
-                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                    onClick={handleCloseTab}
-                    title="Close project details"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                  <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                    <span>
-                      <span className="font-semibold">Project ID: </span>
-                      {selectedPlan.projId}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Type: </span>
-                      {selectedPlan.plType || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Version: </span>
-                      {selectedPlan.version || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Status: </span>
-                      {selectedPlan.status || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">
-                        Period of Performance:{" "}
-                      </span>
-                      Start Date:{" "}
-                      {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                      Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                    </span>
-                  </div>
-                </div>
-                <ProjectAmountsTable
-                  initialData={selectedPlan}
-                  startDate={selectedPlan.projStartDt}
-                  endDate={selectedPlan.projEndDt}
-                  planType={selectedPlan.plType}
-                  fiscalYear={fiscalYear}
-                  refreshKey={refreshKey}
-                  onSaveSuccess={() => setRefreshKey((prev) => prev + 1)}
-                />
-              </div>
-            )}
-
-            {/* Revenue Analysis Tab */}
-            {activeTab === "revenueAnalysis" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (revenueRefs.current[searchTerm] = el)}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">
-                          Period of Performance:{" "}
-                        </span>
-                        Start Date:{" "}
-                        {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                        Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <RevenueAnalysisTable
-                    planId={selectedPlan.plId}
-                    status={selectedPlan.status}
-                    fiscalYear={fiscalYear}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
                   />
-                </div>
-              )}
+                </svg>
+              </button>
+              <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                <span>
+                  <span className="font-semibold blue-text">Project ID: </span>
+                  {selectedPlan.projId}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">Type: </span>
+                  {selectedPlan.plType || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">Version: </span>
+                  {selectedPlan.version || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">Status: </span>
+                  {selectedPlan.status || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold blue-text">
+                    Period of Performance:{" "}
+                  </span>
+                  Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"} |
+                  End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                </span>
+              </div>
+            </div>
+            <ProjectAmountsTable
+              initialData={selectedPlan}
+              startDate={selectedPlan.projStartDt}
+              endDate={selectedPlan.projEndDt}
+              planType={selectedPlan.plType}
+              fiscalYear={fiscalYear}
+              refreshKey={refreshKey}
+              onSaveSuccess={() => setRefreshKey((prev) => prev + 1)}
+            />
+          </div>
+        )}
 
-            {/* Analysis By Period Tab */}
-            {activeTab === "analysisByPeriod" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (analysisRefs.current[searchTerm] = el)}
+        {/* Revenue Analysis Tab */}
+        {activeTab === "revenueAnalysis" &&
+          selectedPlan &&
+          currentUserRole === "admin" && (
+            <div
+              className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+              ref={(el) => (revenueRefs.current[searchTerm] = el)}
+            >
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <button
+                  className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                  onClick={handleCloseTab}
+                  title="Close project details"
                 >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">
-                          Period of Performance:{" "}
-                        </span>
-                        Start Date:{" "}
-                        {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                        Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <AnalysisByPeriodContent
-                    onCancel={handleCloseTab}
-                    planID={selectedPlan.plId}
-                    templateId={selectedPlan.templateId || 1}
-                    type={selectedPlan.plType || "TARGET"}
-                    initialApiData={analysisApiData}
-                    isLoading={isAnalysisLoading}
-                    error={analysisError}
-                    fiscalYear={fiscalYear}
-                  />
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
+                  <span>
+                    <span className="font-semibold blue-text">
+                      Project ID:{" "}
+                    </span>
+                    {selectedPlan.projId}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">Type: </span>
+                    {selectedPlan.plType || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">Version: </span>
+                    {selectedPlan.version || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">Status: </span>
+                    {selectedPlan.status || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold blue-text">
+                      Period of Performance:{" "}
+                    </span>
+                    Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"}{" "}
+                    | End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                  </span>
                 </div>
-              )}
+              </div>
+              <RevenueAnalysisTable
+                planId={selectedPlan.plId}
+                status={selectedPlan.status}
+                fiscalYear={fiscalYear}
+              />
+            </div>
+          )}
 
-            {/* {activeTab === "plc" && selectedPlan && (
+        {/* Analysis By Period Tab */}
+        {activeTab === "analysisByPeriod" &&
+          selectedPlan &&
+          currentUserRole === "admin" && (
+            <div
+              className="relative   p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+              ref={(el) => (analysisRefs.current[searchTerm] = el)}
+            >
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <button
+                  className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                  onClick={handleCloseTab}
+                  title="Close project details"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
+                  <span>
+                    <span className="font-semibold blue-text">
+                      Project ID:{" "}
+                    </span>
+                    {selectedPlan.projId}
+                  </span>
+                  <span>
+                    <span className="font-semibold ">Type: </span>
+                    {selectedPlan.plType || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Version: </span>
+                    {selectedPlan.version || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Status: </span>
+                    {selectedPlan.status || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">
+                      Period of Performance:{" "}
+                    </span>
+                    Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"}{" "}
+                    | End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                  </span>
+                </div>
+              </div>
+              <AnalysisByPeriodContent
+                onCancel={handleCloseTab}
+                planID={selectedPlan.plId}
+                templateId={selectedPlan.templateId || 1}
+                type={selectedPlan.plType || "TARGET"}
+                initialApiData={analysisApiData}
+                isLoading={isAnalysisLoading}
+                error={analysisError}
+                fiscalYear={fiscalYear}
+              />
+            </div>
+          )}
+
+        {/* {activeTab === "plc" && selectedPlan && (
               <div
                 className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
                 ref={(el) => (hoursRefs.current[searchTerm] = el)}
@@ -1183,15 +1000,13 @@ const ProjectBudgetStatus = () => {
               </div>
             )} */}
 
-            {/* PLC Tab */}
-            {activeTab === "plc" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (hoursRefs.current[searchTerm] = el)}
-                >
-                  {/* <button
+        {/* PLC Tab */}
+        {activeTab === "plc" && selectedPlan && currentUserRole === "admin" && (
+          <div
+            className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+            ref={(el) => (hoursRefs.current[searchTerm] = el)}
+          >
+            {/* <button
                   className="absolute top-2 right-2 text-gray-500 hover:text-red-500 text-xl z-10"
                   onClick={handleCloseTab}
                 >
@@ -1210,326 +1025,315 @@ const ProjectBudgetStatus = () => {
                     />
                   </svg>
                 </button> */}
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">
-                          Period of Performance:{" "}
-                        </span>
-                        Start Date:{" "}
-                        {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                        Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <PLCComponent
-                    selectedProjectId={selectedPlan.projId}
-                    selectedPlan={selectedPlan}
-                    showPLC={activeTab === "plc"}
-                  />
-                </div>
-              )}
-
-            {/* RevenueSetup Tab */}
-            {activeTab === "revenueSetup" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (revenueSetupRefs.current[searchTerm] = el)}
-                >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">
-                          Period of Performance:{" "}
-                        </span>
-                        Start Date:{" "}
-                        {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                        Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <RevenueSetupComponent
-                    selectedPlan={{
-                      ...selectedPlan,
-                      startDate: selectedPlan.startDate,
-                      endDate: selectedPlan.endDate,
-                      orgId: filteredProjects[0]?.orgId,
-                    }}
-                    revenueAccount={revenueAccount}
-                  />
-                </div>
-              )}
-
-            {/* Revenue Ceiling Tab */}
-            {activeTab === "revenueCeiling" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (revenueCeilingRefs.current[searchTerm] = el)}
-                >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">
-                          Period of Performance:{" "}
-                        </span>
-                        Start Date:{" "}
-                        {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                        Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <RevenueCeilingComponent
-                    selectedPlan={{
-                      ...selectedPlan,
-                      startDate: selectedPlan.startDate,
-                      endDate: selectedPlan.endDate,
-                      orgId: filteredProjects[0]?.orgId,
-                    }}
-                    revenueAccount={revenueAccount}
-                  />
-                </div>
-              )}
-
-            {/* Funding Tab */}
-            {activeTab === "funding" &&
-              selectedPlan &&
-              currentUserRole === "admin" && (
-                <div
-                  className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                  ref={(el) => (fundingRefs.current[searchTerm] = el)}
-                >
-                  <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                    <button
-                      className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                      onClick={handleCloseTab}
-                      title="Close project details"
-                    >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
-                    </button>
-                    <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                      <span>
-                        <span className="font-semibold">Project ID: </span>
-                        {selectedPlan.projId}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Type: </span>
-                        {selectedPlan.plType || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Version: </span>
-                        {selectedPlan.version || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">Status: </span>
-                        {selectedPlan.status || "N/A"}
-                      </span>
-                      <span>
-                        <span className="font-semibold">
-                          Period of Performance:{" "}
-                        </span>
-                        Start Date:{" "}
-                        {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                        Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                      </span>
-                    </div>
-                  </div>
-                  <FundingComponent
-                    selectedProjectId={selectedPlan.projId}
-                    selectedPlan={selectedPlan}
-                  />
-                </div>
-              )}
-
-            {/* Warning Tab */}
-            {activeTab === "warning" && selectedPlan && (
-              <div
-                className="relative border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16"
-                ref={(el) => (warningRefs.current[searchTerm] = el)}
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+              <button
+                className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                onClick={handleCloseTab}
+                title="Close project details"
               >
-                <div className="bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4 relative">
-                  <button
-                    className="absolute top-2 right-2 text-green-700 hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
-                    onClick={handleCloseTab}
-                    title="Close project details"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                  <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs">
-                    <span>
-                      <span className="font-semibold">Project ID: </span>
-                      {selectedPlan.projId}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Type: </span>
-                      {selectedPlan.plType || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Version: </span>
-                      {selectedPlan.version || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">Status: </span>
-                      {selectedPlan.status || "N/A"}
-                    </span>
-                    <span>
-                      <span className="font-semibold">
-                        Period of Performance:{" "}
-                      </span>
-                      Start Date:{" "}
-                      {formatDate(selectedPlan.projStartDt) || "N/A"} | End
-                      Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
-                    </span>
-                  </div>
-                </div>
-                <Warning
-                  planId={selectedPlan.plId}
-                  projectId={selectedPlan.projId}
-                  templateId={selectedPlan.templateId}
-                  planType={selectedPlan.plType}
-                />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
+                <span>
+                  <span className="font-semibold">Project ID: </span>
+                  {selectedPlan.projId}
+                </span>
+                <span>
+                  <span className="font-semibold">Type: </span>
+                  {selectedPlan.plType || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold">Version: </span>
+                  {selectedPlan.version || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold">Status: </span>
+                  {selectedPlan.status || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold">Period of Performance: </span>
+                  Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"} |
+                  End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                </span>
               </div>
-            )}
+            </div>
+            <PLCComponent
+              selectedProjectId={selectedPlan.projId}
+              selectedPlan={selectedPlan}
+              showPLC={activeTab === "plc"}
+            />
           </div>
-        )
-      )}
+        )}
+
+        {/* RevenueSetup Tab */}
+        {activeTab === "revenueSetup" &&
+          selectedPlan &&
+          currentUserRole === "admin" && (
+            <div
+              className="relative  p-2 sm:p-4 border-line  min-h-[150px] scroll-mt-16"
+              ref={(el) => (revenueSetupRefs.current[searchTerm] = el)}
+            >
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <button
+                  className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                  onClick={handleCloseTab}
+                  title="Close project details"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
+                  <span>
+                    <span className="font-semibold">Project ID: </span>
+                    {selectedPlan.projId}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Type: </span>
+                    {selectedPlan.plType || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Version: </span>
+                    {selectedPlan.version || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Status: </span>
+                    {selectedPlan.status || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">
+                      Period of Performance:{" "}
+                    </span>
+                    Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"}{" "}
+                    | End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                  </span>
+                </div>
+              </div>
+              <RevenueSetupComponent
+                selectedPlan={{
+                  ...selectedPlan,
+                  startDate: selectedPlan.startDate,
+                  endDate: selectedPlan.endDate,
+                  orgId: filteredProjects[0]?.orgId,
+                }}
+                revenueAccount={revenueAccount}
+              />
+            </div>
+          )}
+
+        {/* Revenue Ceiling Tab */}
+        {activeTab === "revenueCeiling" &&
+          selectedPlan &&
+          currentUserRole === "admin" && (
+            <div
+              className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+              ref={(el) => (revenueCeilingRefs.current[searchTerm] = el)}
+            >
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <button
+                  className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                  onClick={handleCloseTab}
+                  title="Close project details"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
+                  <span>
+                    <span className="font-semibold">Project ID: </span>
+                    {selectedPlan.projId}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Type: </span>
+                    {selectedPlan.plType || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Version: </span>
+                    {selectedPlan.version || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Status: </span>
+                    {selectedPlan.status || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">
+                      Period of Performance:{" "}
+                    </span>
+                    Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"}{" "}
+                    | End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                  </span>
+                </div>
+              </div>
+              <RevenueCeilingComponent
+                selectedPlan={{
+                  ...selectedPlan,
+                  startDate: selectedPlan.startDate,
+                  endDate: selectedPlan.endDate,
+                  orgId: filteredProjects[0]?.orgId,
+                }}
+                revenueAccount={revenueAccount}
+              />
+            </div>
+          )}
+
+        {/* Funding Tab */}
+        {activeTab === "funding" &&
+          selectedPlan &&
+          currentUserRole === "admin" && (
+            <div
+              className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+              ref={(el) => (fundingRefs.current[searchTerm] = el)}
+            >
+              <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+                <button
+                  className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                  onClick={handleCloseTab}
+                  title="Close project details"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+                <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
+                  <span>
+                    <span className="font-semibold">Project ID: </span>
+                    {selectedPlan.projId}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Type: </span>
+                    {selectedPlan.plType || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Version: </span>
+                    {selectedPlan.version || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">Status: </span>
+                    {selectedPlan.status || "N/A"}
+                  </span>
+                  <span>
+                    <span className="font-semibold">
+                      Period of Performance:{" "}
+                    </span>
+                    Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"}{" "}
+                    | End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                  </span>
+                </div>
+              </div>
+              <FundingComponent
+                selectedProjectId={selectedPlan.projId}
+                selectedPlan={selectedPlan}
+              />
+            </div>
+          )}
+
+        {/* Warning Tab */}
+        {activeTab === "warning" && selectedPlan && (
+          <div
+            className="relative  p-2 sm:p-4 border-line min-h-[150px] scroll-mt-16"
+            ref={(el) => (warningRefs.current[searchTerm] = el)}
+          >
+            <div className="bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 relative">
+              <button
+                className="absolute top-2 right-2 blue-text hover:text-red-500 text-xl z-20 cursor-pointer bg-white bg-opacity-80 rounded-full p-0.5 transition-shadow shadow"
+                onClick={handleCloseTab}
+                title="Close project details"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <div className="flex flex-wrap gap-x-2 gap-y-2 text-xs blue-text">
+                <span>
+                  <span className="font-semibold">Project ID: </span>
+                  {selectedPlan.projId}
+                </span>
+                <span>
+                  <span className="font-semibold">Type: </span>
+                  {selectedPlan.plType || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold">Version: </span>
+                  {selectedPlan.version || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold">Status: </span>
+                  {selectedPlan.status || "N/A"}
+                </span>
+                <span>
+                  <span className="font-semibold">Period of Performance: </span>
+                  Start Date: {formatDate(selectedPlan.projStartDt) || "N/A"} |
+                  End Date: {formatDate(selectedPlan.projEndDt) || "N/A"}
+                </span>
+              </div>
+            </div>
+            <Warning
+              planId={selectedPlan.plId}
+              projectId={selectedPlan.projId}
+              templateId={selectedPlan.templateId}
+              planType={selectedPlan.plType}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -11,7 +11,7 @@ const FundingComponent = ({ selectedProjectId }) => {
       percent: "",
     },
     { label: "Cost", funding: "", budget: "", balance: "", percent: "" },
-    { label: "Profit", funding: "", budget: "", balance: "", percent: "" },
+    // { label: "Profit", funding: "", budget: "", balance: "", percent: "" },
   ]);
 
   useEffect(() => {
@@ -44,7 +44,7 @@ const FundingComponent = ({ selectedProjectId }) => {
         setFundingData([
           { label: "Cost Fee + Funding", ...roundedData[0] },
           { label: "Cost", ...roundedData[1] },
-          { label: "Profit", ...roundedData[2] },
+          // { label: "Profit", ...roundedData[2] },
         ]);
       } catch (error) {
         setFundingData([
@@ -57,7 +57,7 @@ const FundingComponent = ({ selectedProjectId }) => {
           },
           { label: "Cost", funding: "", budget: "", balance: "", percent: "" },
           {
-            label: "Profit",
+            // label: "Profit",
             funding: "",
             budget: "",
             balance: "",
@@ -73,25 +73,25 @@ const FundingComponent = ({ selectedProjectId }) => {
   }, [selectedProjectId]);
 
   return (
-    <div className="border p-2 sm:p-4 bg-gray-50 rounded shadow min-h-[150px] scroll-mt-16">
-      <table className="w-full text-xs sm:text-sm border-collapse">
-        <thead>
-          <tr className="bg-gray-100">
-            <th className="border p-2 font-normal"></th>
-            <th className="border p-2 font-normal">Funded</th>
-            <th className="border p-2 font-normal">Budget</th>
-            <th className="border p-2 font-normal">Balance</th>
-            <th className="border p-2 font-normal">Percent</th>
+    <div className="border-line overflow-hidden">
+      <table className="w-full table">
+        <thead className="thead">
+          <tr>
+            <th className="th-thead"></th>
+            <th className="th-thead">Funded</th>
+            <th className="th-thead">Budget</th>
+            <th className="th-thead">Balance</th>
+            <th className="th-thead">Percent</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="tbody">
           {fundingData.map((row) => (
             <tr key={row.label}>
-              <td className="border p-2">{row.label}</td>
-              <td className="border p-2">{row.funding}</td>
-              <td className="border p-2">{row.budget}</td>
-              <td className="border p-2">{row.balance}</td>
-              <td className="border p-2">{row.percent}</td>
+              <td className="tbody-td">{row.label}</td>
+              <td className="tbody-td">{row.funding}</td>
+              <td className="tbody-td">{row.budget}</td>
+              <td className="tbody-td">{row.balance}</td>
+              <td className="tbody-td">{row.percent}</td>
             </tr>
           ))}
         </tbody>

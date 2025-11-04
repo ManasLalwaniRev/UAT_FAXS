@@ -76,30 +76,20 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
         </div>
       ) : (
         <div
-          className="overflow-x-auto overflow-y-auto"
+          className="overflow-x-auto overflow-y-auto border-line"
           style={{ maxHeight: "300px" }}
         >
-          <table className="min-w-full border-collapse border border-gray-300">
-            <thead>
-              <tr className="text-black sticky top-0 bg-gray-200">
-                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
-                  Warning
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
-                  ProjId
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
-                  EmplId
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
-                  Year
-                </th>
-                <th className="border border-gray-300 px-3 py-2 text-left text-xs font-semibold">
-                  Month
-                </th>
+          <table className="min-w-full table">
+            <thead className="thead">
+              <tr>
+                <th className="th-thead">Warning</th>
+                <th className="th-thead">ProjId</th>
+                <th className="th-thead">EmplId</th>
+                <th className="th-thead">Year</th>
+                <th className="th-thead">Month</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="tbody">
               {warnings.map((warning, index) => (
                 <tr
                   key={index}
@@ -115,19 +105,13 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
                   }
                   title={index === 1 ? "Click to view employee schedule" : ""}
                 >
-                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
+                  <td className="tbody-td text-left">
                     {warning.warning || ""}
                   </td>
-                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.projId || ""}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.emplId || ""}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
-                    {warning.year || ""}
-                  </td>
-                  <td className="border border-gray-300 px-3 py-2 text-xs text-gray-900">
+                  <td className="tbody-td">{warning.projId || ""}</td>
+                  <td className="tbody-td">{warning.emplId || ""}</td>
+                  <td className="tbody-td">{warning.year || ""}</td>
+                  <td className="tbody-td">
                     {warning.month === 0 ? "All Year" : warning.month || ""}
                   </td>
                 </tr>

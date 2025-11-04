@@ -1029,15 +1029,9 @@ const ProspectiveIDSetup = () => {
         <div className="w-full px-8 bg-white rounded-xl shadow-lg p-8 space-y-6 border border-gray-300">
           {/* Header */}
           <div className="flex justify-between items-center gap-2 mb-6">
-            <h2 className="w-full bg-green-50 border-l-4 border-green-400 p-3 rounded-lg shadow-sm mb-4">
+            <h2 className="w-full bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
               Prospective ID Setup
             </h2>
-            <button
-              onClick={handleSaveAll}
-              className="bg-blue-600 text-white font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs py-1.5 px-3 -mt-4 shadow-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Save All
-            </button>
           </div>
 
           {/* Tabs */}
@@ -1161,9 +1155,18 @@ const ProspectiveIDSetup = () => {
                   </button>
                 </div>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-gray-800">
-                  All Employees
-                </h3>
+                <div className="flex items-center justify-between mt-8 mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    All Employees
+                  </h3>
+                  <button
+                    onClick={handleSaveAll}
+                    className="bg-blue-600 text-white font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs py-2 px-4 shadow-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save All
+                  </button>
+                </div>
+
                 <div className="overflow-x-auto rounded-lg border border-gray-300">
                   <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-200">
@@ -1357,9 +1360,17 @@ const ProspectiveIDSetup = () => {
                   </button>
                 </div>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-gray-800">
-                  All Vendors
-                </h3>
+                <div className="flex items-center justify-between mt-8 mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    All Vendors
+                  </h3>
+                  <button
+                    onClick={handleSaveAll}
+                    className="bg-blue-600 text-white font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs py-2 px-4 shadow-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save All
+                  </button>
+                </div>
                 <div className="overflow-x-auto rounded-lg border border-gray-300">
                   <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-200">
@@ -1505,9 +1516,17 @@ const ProspectiveIDSetup = () => {
                   </button>
                 </div>
 
-                <h3 className="text-xl font-semibold mt-8 mb-4 text-gray-800">
-                  All PLCs
-                </h3>
+                <div className="flex items-center justify-between mt-8 mb-4">
+                  <h3 className="text-xl font-semibold text-gray-800">
+                    All PLCs
+                  </h3>
+                  <button
+                    onClick={handleSaveAll}
+                    className="bg-blue-600 text-white font-semibold rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer text-xs py-2 px-4 shadow-sm hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save All
+                  </button>
+                </div>
                 <div className="overflow-x-auto rounded-lg border border-gray-300">
                   <table className="min-w-full divide-y divide-gray-300">
                     <thead className="bg-gray-200">

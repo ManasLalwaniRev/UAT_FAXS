@@ -58,6 +58,9 @@ const ProjectHoursDetails = ({
   fiscalYear,
   onSaveSuccess,
 }) => {
+   // ADD THIS RIGHT HERE - Normalize fiscal year
+  const normalizedFiscalYear = fiscalYear === "All" || !fiscalYear ? "All" : String(fiscalYear).trim();
+  console.log("FISCAL YEAR DEBUG:", fiscalYear, "Normalized:", normalizedFiscalYear);
   const [durations, setDurations] = useState([]);
   const [isDurationLoading, setIsDurationLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -132,6 +135,14 @@ const ProjectHoursDetails = ({
   const [pastedEntryAccounts, setPastedEntryAccounts] = useState({});
   const [pastedEntryOrgs, setPastedEntryOrgs] = useState({});
   const [pastedEntryPlcs, setPastedEntryPlcs] = useState({});
+
+  const [showFindOnly, setShowFindOnly] = useState(false);
+  const [findMatches, setFindMatches] = useState([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+
+  // ADD THIS NEW STATE at the top with other useState declarations
+ const [cachedProjectData, setCachedProjectData] = useState(null);
+ const [cachedOrgData, setCachedOrgData] = useState(null);
 
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
@@ -1557,6 +1568,7 @@ const ProjectHoursDetails = ({
       "Brd",
       "Status",
       "Hour Rate",
+      "Total", // ADD Total header
     ];
 
     // Store month metadata for matching during paste
@@ -1592,6 +1604,26 @@ const ProjectHoursDetails = ({
           employeeRow.perHourRate,
         ];
 
+        // Calculate total hours
+        let totalHours = 0;
+
+        sortedDurations.forEach((duration) => {
+          const uniqueKey = `${duration.monthNo}_${duration.year}`;
+          const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
+          const monthHours = getMonthHours(emp);
+          const forecastValue = monthHours[uniqueKey]?.value;
+          const value =
+            inputValue !== undefined && inputValue !== ""
+              ? inputValue
+              : forecastValue || "0.00";
+
+          totalHours += value && !isNaN(value) ? Number(value) : 0;
+        });
+
+        // ADD Total to rowData - CRITICAL for both Excel and structuredData
+        rowData.push(totalHours.toFixed(2));
+
+        // Now add month values
         sortedDurations.forEach((duration) => {
           const uniqueKey = `${duration.monthNo}_${duration.year}`;
           const inputValue = inputValues[`${rowIndex}_${uniqueKey}`];
@@ -1605,7 +1637,7 @@ const ProjectHoursDetails = ({
         });
 
         copyData.push(rowData);
-        structuredData.push(rowData);
+        structuredData.push(rowData); // Now includes Total at position 11
       }
     });
 
@@ -1616,7 +1648,7 @@ const ProjectHoursDetails = ({
       .then(() => {
         // CRITICAL: Store month metadata with copied data
         setCopiedRowsData(() => structuredData);
-        setCopiedMonthMetadata(() => monthMetadata); // ← Add this state
+        setCopiedMonthMetadata(() => monthMetadata);
         setHasClipboardData(() => true);
 
         toast.success(`Copied ${structuredData.length} rows!`, {
@@ -1634,232 +1666,286 @@ const ProjectHoursDetails = ({
       });
   };
 
-  const handlePasteMultipleRows = () => {
-    if (copiedRowsData.length === 0) {
-      toast.error("No copied data available to paste", { autoClose: 2000 });
-      return;
+  // const handlePasteMultipleRows = () => {
+  //   if (copiedRowsData.length === 0) {
+  //     toast.error("No copied data available to paste", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   // Close single new form if open
+  //   if (showNewForm) {
+  //     setShowNewForm(false);
+  //   }
+
+  //   // Filter durations by selected fiscal year
+  //   const sortedDurations = [...durations]
+  //     .filter((d) => {
+  //       if (fiscalYear === "All") return true;
+  //       return d.year === parseInt(fiscalYear);
+  //     })
+  //     .sort((a, b) => {
+  //       if (a.year !== b.year) return a.year - b.year;
+  //       return a.monthNo - b.monthNo;
+  //     });
+
+  //   const processedEntries = [];
+  //   const processedHoursArray = [];
+
+  //   copiedRowsData.forEach((rowData, rowIndex) => {
+  //     // Extract employee data (first 11 columns + skip Total column at position 11)
+  //     const [
+  //       idTypeLabel,
+  //       id,
+  //       name,
+  //       acctId,
+  //       acctName,
+  //       orgId,
+  //       plcGlcCode,
+  //       isRev,
+  //       isBrd,
+  //       status,
+  //       perHourRate,
+  //       total, // Position 11 - capture but don't use
+  //       ...monthValues // Position 12+ - actual month values
+  //     ] = rowData;
+
+  //     // Map ID Type
+  //     const idType =
+  //       ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+  //       idTypeLabel;
+
+  //     // Parse name based on ID type
+  //     let firstName = "";
+  //     let lastName = "";
+
+  //     if (idType === "PLC") {
+  //       firstName = name;
+  //     } else if (idType === "Vendor") {
+  //       if (name.includes(", ")) {
+  //         const nameParts = name.split(", ");
+  //         lastName = nameParts[0];
+  //         firstName = nameParts[1];
+  //       } else {
+  //         lastName = name;
+  //       }
+  //     } else if (idType === "Employee") {
+  //       const nameParts = name.split(" ");
+  //       firstName = nameParts[0];
+  //       lastName = nameParts.slice(1).join(" ");
+  //     } else {
+  //       firstName = name;
+  //     }
+
+  //     const entry = {
+  //       id: id,
+  //       firstName: firstName,
+  //       lastName: lastName,
+  //       idType: idType,
+  //       acctId: acctId,
+  //       orgId: orgId,
+  //       plcGlcCode: plcGlcCode,
+  //       perHourRate: perHourRate,
+  //       status: status || "ACT",
+  //       isRev: isRev === "✓",
+  //       isBrd: isBrd === "✓",
+  //     };
+
+  //     // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+  //     const periodHours = {};
+
+  //     // Build a lookup map from copiedMonthMetadata to monthValues
+  //     const copiedHoursMap = {};
+  //     copiedMonthMetadata.forEach((meta, index) => {
+  //       const key = `${meta.monthNo}_${meta.year}`;
+  //       copiedHoursMap[key] = monthValues[index];
+  //     });
+
+  //     // Now map to current fiscal year durations
+  //     sortedDurations.forEach((duration) => {
+  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //       const value = copiedHoursMap[uniqueKey];
+
+  //       // Only add non-zero values that exist in copied data
+  //       if (value && value !== "0.00" && value !== "0" && value !== "") {
+  //         periodHours[uniqueKey] = value;
+  //       }
+  //     });
+
+  //     processedEntries.push(entry);
+  //     processedHoursArray.push(periodHours);
+  //   });
+
+  //   // Set state with all processed data
+  //   setNewEntries(processedEntries);
+  //   setNewEntryPeriodHoursArray(processedHoursArray);
+
+  //   // **ADD THIS** - Fetch suggestions for each pasted entry
+  //   processedEntries.forEach((entry, index) => {
+  //     fetchSuggestionsForPastedEntry(index, entry);
+  //   });
+
+  //   // Disable paste button
+  //   setHasClipboardData(false);
+  //   setCopiedRowsData([]);
+  //   setCopiedMonthMetadata([]);
+
+  //   toast.success(
+  //     `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
+  //     { autoClose: 3000 }
+  //   );
+  // };
+
+  // ADD this useEffect to clear cache when projectId or planType changes
+  
+  // **NEW OPTIMIZED FUNCTION** - Fetches all data with minimal API calls
+const fetchAllSuggestionsOptimized = async (processedEntries) => {
+  
+  // if (planType === "NBBUD" || processedEntries.length === 0) return;
+
+  const encodedProjectId = encodeURIComponent(projectId);
+
+  try {
+    // **STEP 1: Fetch common project-level data ONCE**
+    let projectData = cachedProjectData;
+    let orgOptions = cachedOrgData;
+
+    // Fetch project data if not cached
+    if (!projectData) {
+      const projectResponse = await axios.get(
+        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+      );
+      projectData = Array.isArray(projectResponse.data)
+        ? projectResponse.data[0]
+        : projectResponse.data;
+      setCachedProjectData(projectData);
     }
 
-    // Close single new form if open
-    if (showNewForm) {
-      setShowNewForm(false);
+    // Fetch org data if not cached
+    if (!orgOptions) {
+      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+      orgOptions = Array.isArray(orgResponse.data)
+        ? orgResponse.data.map((org) => ({
+            value: org.orgId,
+            label: `${org.orgId}`,
+          }))
+        : [];
+      setCachedOrgData(orgOptions);
     }
 
-    // Filter durations by selected fiscal year
-    const sortedDurations = [...durations]
-      .filter((d) => {
-        if (fiscalYear === "All") return true;
-        return d.year === parseInt(fiscalYear);
-      })
-      .sort((a, b) => {
-        if (a.year !== b.year) return a.year - b.year;
-        return a.monthNo - b.monthNo;
-      });
+    // **STEP 2: Group entries by idType to minimize API calls**
+    const employeeEntries = [];
+    const vendorEntries = [];
+    const otherEntries = [];
 
-    const processedEntries = [];
-    const processedHoursArray = [];
-
-    copiedRowsData.forEach((rowData, rowIndex) => {
-      // Extract employee data (first 11 columns)
-      const [
-        idTypeLabel,
-        id,
-        name,
-        acctId,
-        acctName,
-        orgId,
-        plcGlcCode,
-        isRev,
-        isBrd,
-        status,
-        perHourRate,
-        ...monthValues
-      ] = rowData;
-
-      // Map ID Type
-      const idType =
-        ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-        idTypeLabel;
-
-      // Parse name based on ID type
-      let firstName = "";
-      let lastName = "";
-
-      if (idType === "PLC") {
-        firstName = name;
-      } else if (idType === "Vendor") {
-        if (name.includes(", ")) {
-          const nameParts = name.split(", ");
-          lastName = nameParts[0];
-          firstName = nameParts[1];
-        } else {
-          lastName = name;
-        }
-      } else if (idType === "Employee") {
-        const nameParts = name.split(" ");
-        firstName = nameParts[0];
-        lastName = nameParts.slice(1).join(" ");
-      } else {
-        firstName = name;
-      }
-
-      const entry = {
-        id: id,
-        firstName: firstName,
-        lastName: lastName,
-        idType: idType,
-        acctId: acctId,
-        orgId: orgId,
-        plcGlcCode: plcGlcCode,
-        perHourRate: perHourRate,
-        status: status || "ACT",
-        isRev: isRev === "✓",
-        isBrd: isBrd === "✓",
-      };
-
-      // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
-      const periodHours = {};
-
-      // Build a lookup map from copiedMonthMetadata to monthValues
-      const copiedHoursMap = {};
-      copiedMonthMetadata.forEach((meta, index) => {
-        const key = `${meta.monthNo}_${meta.year}`;
-        copiedHoursMap[key] = monthValues[index];
-      });
-
-      // Now map to current fiscal year durations
-      sortedDurations.forEach((duration) => {
-        const uniqueKey = `${duration.monthNo}_${duration.year}`;
-        const value = copiedHoursMap[uniqueKey]; // ← Match by month/year
-
-        // Only add non-zero values that exist in copied data
-        if (value && value !== "0.00" && value !== "0" && value !== "") {
-          periodHours[uniqueKey] = value;
-        }
-      });
-
-      processedEntries.push(entry);
-      processedHoursArray.push(periodHours);
-    });
-
-    // Set state with all processed data
-    setNewEntries(processedEntries);
-    setNewEntryPeriodHoursArray(processedHoursArray);
-
-    // **ADD THIS** - Fetch suggestions for each pasted entry
     processedEntries.forEach((entry, index) => {
-      fetchSuggestionsForPastedEntry(index, entry);
+      if (entry.idType === "Employee") {
+        employeeEntries.push({ entry, index });
+      } else if (entry.idType === "Vendor") {
+        vendorEntries.push({ entry, index });
+      } else if (entry.idType !== "PLC") {
+        otherEntries.push({ entry, index });
+      }
     });
 
-    // Disable paste button
-    setHasClipboardData(false);
-    setCopiedRowsData([]);
-    setCopiedMonthMetadata([]);
+    // **STEP 3: Fetch employee suggestions ONCE per type**
+    let employeeSuggestions = [];
+    let vendorSuggestions = [];
 
-    toast.success(
-      `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
-      { autoClose: 3000 }
-    );
-  };
-
-  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-    if (planType === "NBBUD") return;
-
-    // CRITICAL FIX: URL encode project ID
-    const encodedProjectId = encodeURIComponent(projectId);
-    const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
-
-    // Fetch employee suggestions based on ID type
-    if (entry.idType && entry.idType !== "") {
+    // Fetch Employee suggestions only if there are Employee entries
+    if (employeeEntries.length > 0) {
       try {
-        const endpoint =
-          entry.idType === "Vendor"
-            ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
-            : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
-
-        const response = await axios.get(endpoint);
-        const suggestions = Array.isArray(response.data)
+        const response = await axios.get(
+          `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+        );
+        employeeSuggestions = Array.isArray(response.data)
           ? response.data.map((emp) => {
-              if (entry.idType === "Vendor") {
-                return {
-                  emplId: emp.vendId,
-                  firstName: "",
-                  lastName: emp.employeeName,
-                  perHourRate: emp.perHourRate || emp.hrRate || "",
-                  plc: emp.plc || "",
-                  orgId: emp.orgId || "",
-                };
-              } else {
-                const [lastName, firstName] = (emp.employeeName || "")
-                  .split(", ")
-                  .map((str) => str.trim());
-                return {
-                  emplId: emp.empId,
-                  firstName: firstName || "",
-                  lastName: lastName || "",
-                  perHourRate: emp.perHourRate || emp.hrRate || "",
-                  plc: emp.plc || "",
-                  orgId: emp.orgId || "",
-                };
-              }
+              const [lastName, firstName] = emp.employeeName
+                .split(",")
+                .map((str) => str.trim());
+              return {
+                emplId: emp.empId,
+                firstName: firstName || "",
+                lastName: lastName || "",
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
             })
           : [];
-
-        setPastedEntrySuggestions((prev) => ({
-          ...prev,
-          [entryIndex]: suggestions,
-        }));
       } catch (err) {
-        console.error(
-          `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
-          err
-        );
+        console.error("Failed to fetch employee suggestions:", err);
       }
     }
 
-    // Fetch account, org, and PLC options
-    try {
-      const response = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
-      );
-      const data = Array.isArray(response.data)
-        ? response.data[0]
-        : response.data;
+    // Fetch Vendor suggestions only if there are Vendor entries
+    if (vendorEntries.length > 0) {
+      try {
+        const response = await axios.get(
+          `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+        );
+        vendorSuggestions = Array.isArray(response.data)
+          ? response.data.map((emp) => ({
+              emplId: emp.vendId,
+              firstName: "",
+              lastName: emp.employeeName,
+              perHourRate: emp.perHourRate || emp.hrRate || "",
+              plc: emp.plc || "",
+              orgId: emp.orgId || "",
+            }))
+          : [];
+      } catch (err) {
+        console.error("Failed to fetch vendor suggestions:", err);
+      }
+    }
 
-      // Fetch accounts
+    // **STEP 4: Apply cached data to all entries**
+    processedEntries.forEach((entry, entryIndex) => {
+      // Set employee/vendor suggestions based on type
+      if (entry.idType === "Employee") {
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: employeeSuggestions,
+        }));
+      } else if (entry.idType === "Vendor") {
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: vendorSuggestions,
+        }));
+      }
+
+      // Set account options based on idType
       let accountsWithNames = [];
-
       if (entry.idType === "PLC") {
-        const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
-          ? data.employeeLaborAccounts.map((account) => ({
+        const employeeAccounts = Array.isArray(projectData.employeeLaborAccounts)
+          ? projectData.employeeLaborAccounts.map((account) => ({
               id: account.accountId,
               name: account.acctName,
             }))
           : [];
-        const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
-          ? data.sunContractorLaborAccounts.map((account) => ({
+        const vendorAccounts = Array.isArray(projectData.sunContractorLaborAccounts)
+          ? projectData.sunContractorLaborAccounts.map((account) => ({
               id: account.accountId,
               name: account.acctName,
             }))
           : [];
         accountsWithNames = [...employeeAccounts, ...vendorAccounts];
       } else if (entry.idType === "Employee") {
-        accountsWithNames = Array.isArray(data.employeeLaborAccounts)
-          ? data.employeeLaborAccounts.map((account) => ({
+        accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
+          ? projectData.employeeLaborAccounts.map((account) => ({
               id: account.accountId,
               name: account.acctName,
             }))
           : [];
       } else if (entry.idType === "Vendor") {
-        accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
-          ? data.sunContractorLaborAccounts.map((account) => ({
+        accountsWithNames = Array.isArray(projectData.sunContractorLaborAccounts)
+          ? projectData.sunContractorLaborAccounts.map((account) => ({
               id: account.accountId,
               name: account.acctName,
             }))
           : [];
       } else if (entry.idType === "Other") {
-        accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
-          ? data.otherDirectCostLaborAccounts.map((account) => ({
+        accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
+          ? projectData.otherDirectCostLaborAccounts.map((account) => ({
               id: account.accountId,
               name: account.acctName,
             }))
@@ -1871,25 +1957,15 @@ const ProjectHoursDetails = ({
         [entryIndex]: accountsWithNames,
       }));
 
-      // Fetch organizations
-      const orgResponse = await axios.get(
-        `${backendUrl}/Orgnization/GetAllOrgs`
-      );
-      const orgOptions = Array.isArray(orgResponse.data)
-        ? orgResponse.data.map((org) => ({
-            value: org.orgId,
-            label: org.orgId,
-          }))
-        : [];
-
+      // Set org options (same for all)
       setPastedEntryOrgs((prev) => ({
         ...prev,
         [entryIndex]: orgOptions,
       }));
 
-      // Fetch PLC options
-      if (data.plc && Array.isArray(data.plc)) {
-        const plcOptions = data.plc.map((plc) => ({
+      // Set PLC options (same for all)
+      if (projectData.plc && Array.isArray(projectData.plc)) {
+        const plcOptions = projectData.plc.map((plc) => ({
           value: plc.laborCategoryCode,
           label: `${plc.laborCategoryCode} - ${plc.description}`,
         }));
@@ -1899,13 +1975,591 @@ const ProjectHoursDetails = ({
           [entryIndex]: plcOptions,
         }));
       }
+    });
+  } catch (err) {
+    console.error("Failed to fetch suggestions for pasted entries:", err);
+  }
+};
+
+  const handlePasteMultipleRows = async () => {
+  if (copiedRowsData.length === 0) {
+    toast.error("No copied data available to paste", { autoClose: 2000 });
+    return;
+  }
+
+  // Close single new form if open
+  if (showNewForm) {
+    setShowNewForm(false);
+  }
+
+  // Filter durations by selected fiscal year
+  const sortedDurations = [...durations]
+    .filter((d) => {
+      if (fiscalYear === "All") return true;
+      return d.year === parseInt(fiscalYear);
+    })
+    .sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.monthNo - b.monthNo;
+    });
+
+  const processedEntries = [];
+  const processedHoursArray = [];
+
+  copiedRowsData.forEach((rowData, rowIndex) => {
+    // Extract employee data (first 11 columns + skip Total column at position 11)
+    const [
+      idTypeLabel,
+      id,
+      name,
+      acctId,
+      acctName,
+      orgId,
+      plcGlcCode,
+      isRev,
+      isBrd,
+      status,
+      perHourRate,
+      total, // Position 11 - capture but don't use
+      ...monthValues // Position 12+ - actual month values
+    ] = rowData;
+
+    // Map ID Type
+    const idType =
+      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+      idTypeLabel;
+
+    // Parse name based on ID type
+    let firstName = "";
+    let lastName = "";
+
+    if (idType === "PLC") {
+      firstName = name;
+    } else if (idType === "Vendor") {
+      if (name.includes(", ")) {
+        const nameParts = name.split(", ");
+        lastName = nameParts[0];
+        firstName = nameParts[1];
+      } else {
+        lastName = name;
+      }
+    } else if (idType === "Employee") {
+      const nameParts = name.split(" ");
+      firstName = nameParts[0];
+      lastName = nameParts.slice(1).join(" ");
+    } else {
+      firstName = name;
+    }
+
+    const entry = {
+      id: id,
+      firstName: firstName,
+      lastName: lastName,
+      idType: idType,
+      acctId: acctId,
+      orgId: orgId,
+      plcGlcCode: plcGlcCode,
+      perHourRate: perHourRate,
+      status: status || "ACT",
+      isRev: isRev === "✓",
+      isBrd: isBrd === "✓",
+    };
+
+    // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+    const periodHours = {};
+
+    // Build a lookup map from copiedMonthMetadata to monthValues
+    const copiedHoursMap = {};
+    copiedMonthMetadata.forEach((meta, index) => {
+      const key = `${meta.monthNo}_${meta.year}`;
+      copiedHoursMap[key] = monthValues[index];
+    });
+
+    // Now map to current fiscal year durations
+    sortedDurations.forEach((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      const value = copiedHoursMap[uniqueKey];
+
+      // Only add non-zero values that exist in copied data
+      if (value && value !== "0.00" && value !== "0" && value !== "") {
+        periodHours[uniqueKey] = value;
+      }
+    });
+
+    processedEntries.push(entry);
+    processedHoursArray.push(periodHours);
+  });
+
+  // Set state with all processed data
+  setNewEntries(processedEntries);
+  setNewEntryPeriodHoursArray(processedHoursArray);
+
+  // **OPTIMIZED** - Fetch common data ONCE, then process all entries
+  await fetchAllSuggestionsOptimized(processedEntries);
+
+  // Disable paste button
+  setHasClipboardData(false);
+  setCopiedRowsData([]);
+  setCopiedMonthMetadata([]);
+
+  toast.success(
+    `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
+    { autoClose: 3000 }
+  );
+};
+
+
+
+  useEffect(() => {
+  // Clear cached data when project changes
+  setCachedProjectData(null);
+  setCachedOrgData(null);
+}, [projectId, planType]);
+
+
+  // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  //   // if (planType === "NBBUD") return;
+
+  //   // CRITICAL FIX: URL encode project ID
+  //   const encodedProjectId = encodeURIComponent(projectId);
+  //   const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //   // Fetch employee suggestions based on ID type
+  //   if (entry.idType && entry.idType !== "") {
+  //     try {
+  //       const endpoint =
+  //         entry.idType === "Vendor"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+  //       const response = await axios.get(endpoint);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (entry.idType === "Vendor") {
+  //               return {
+  //                 emplId: emp.vendId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName,
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             }
+  //           })
+  //         : [];
+
+  //       setPastedEntrySuggestions((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: suggestions,
+  //       }));
+  //     } catch (err) {
+  //       console.error(
+  //         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+  //         err
+  //       );
+  //     }
+  //   }
+
+  //   // Fetch account, org, and PLC options
+  //   try {
+  //     const response = await axios.get(
+  //       `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${apiPlanType}`
+  //     );
+  //     const data = Array.isArray(response.data)
+  //       ? response.data[0]
+  //       : response.data;
+
+  //     // Fetch accounts
+  //     let accountsWithNames = [];
+
+  //     if (entry.idType === "PLC") {
+  //       const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+  //     } else if (entry.idType === "Employee") {
+  //       accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Vendor") {
+  //       accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Other") {
+  //       accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+  //         ? data.otherDirectCostLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     }
+
+  //     setPastedEntryAccounts((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: accountsWithNames,
+  //     }));
+
+  //     // Fetch organizations
+  //     const orgResponse = await axios.get(
+  //       `${backendUrl}/Orgnization/GetAllOrgs`
+  //     );
+  //     const orgOptions = Array.isArray(orgResponse.data)
+  //       ? orgResponse.data.map((org) => ({
+  //           value: org.orgId,
+  //           label: org.orgId,
+  //         }))
+  //       : [];
+
+  //     setPastedEntryOrgs((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: orgOptions,
+  //     }));
+
+  //     // Fetch PLC options
+  //     if (data.plc && Array.isArray(data.plc)) {
+  //       const plcOptions = data.plc.map((plc) => ({
+  //         value: plc.laborCategoryCode,
+  //         label: `${plc.laborCategoryCode} - ${plc.description}`,
+  //       }));
+
+  //       setPastedEntryPlcs((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: plcOptions,
+  //       }));
+  //     }
+  //   } catch (err) {
+  //     console.error(
+  //       `Failed to fetch pasted entry options for index ${entryIndex}:`,
+  //       err
+  //     );
+  //   }
+  // };
+  
+  // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  //   // CRITICAL FIX: URL encode project ID
+  //   const encodedProjectId = encodeURIComponent(projectId);
+  //   // REMOVE THIS LINE: const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
+
+  //   // Fetch employee suggestions based on ID type
+  //   if (entry.idType && entry.idType !== "") {
+  //     try {
+  //       const endpoint =
+  //         entry.idType === "Vendor"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+  //       const response = await axios.get(endpoint);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (entry.idType === "Vendor") {
+  //               return {
+  //                 emplId: emp.vendId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName,
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 perHourRate: emp.perHourRate || emp.hrRate || "",
+  //                 plc: emp.plc || "",
+  //                 orgId: emp.orgId || "",
+  //               };
+  //             }
+  //           })
+  //         : [];
+
+  //       setPastedEntrySuggestions((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: suggestions,
+  //       }));
+  //     } catch (err) {
+  //       console.error(
+  //         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+  //         err
+  //       );
+  //     }
+  //   }
+
+  //   // Fetch account, org, and PLC options
+  //   try {
+  //     // USE planType DIRECTLY instead of apiPlanType
+  //     const response = await axios.get(
+  //       `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+  //     );
+  //     const data = Array.isArray(response.data)
+  //       ? response.data[0]
+  //       : response.data;
+
+  //     // Fetch accounts
+  //     let accountsWithNames = [];
+
+  //     if (entry.idType === "PLC") {
+  //       const employeeAccounts = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       const vendorAccounts = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //       accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+  //     } else if (entry.idType === "Employee") {
+  //       accountsWithNames = Array.isArray(data.employeeLaborAccounts)
+  //         ? data.employeeLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Vendor") {
+  //       accountsWithNames = Array.isArray(data.sunContractorLaborAccounts)
+  //         ? data.sunContractorLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Other") {
+  //       accountsWithNames = Array.isArray(data.otherDirectCostLaborAccounts)
+  //         ? data.otherDirectCostLaborAccounts.map((account) => ({
+  //             id: account.accountId,
+  //             name: account.acctName,
+  //           }))
+  //         : [];
+  //     }
+
+  //     setPastedEntryAccounts((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: accountsWithNames,
+  //     }));
+
+  //     // Fetch organizations
+  //     const orgResponse = await axios.get(
+  //       `${backendUrl}/Orgnization/GetAllOrgs`
+  //     );
+  //     const orgOptions = Array.isArray(orgResponse.data)
+  //       ? orgResponse.data.map((org) => ({
+  //           value: org.orgId,
+  //           label: org.orgId,
+  //         }))
+  //       : [];
+
+  //     setPastedEntryOrgs((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: orgOptions,
+  //     }));
+
+  //     // Fetch PLC options
+  //     if (data.plc && Array.isArray(data.plc)) {
+  //       const plcOptions = data.plc.map((plc) => ({
+  //         value: plc.laborCategoryCode,
+  //         label: `${plc.laborCategoryCode} - ${plc.description}`,
+  //       }));
+
+  //       setPastedEntryPlcs((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: plcOptions,
+  //       }));
+  //     }
+  //   } catch (err) {
+  //     console.error(
+  //       `Failed to fetch pasted entry options for index ${entryIndex}:`,
+  //       err
+  //     );
+  //   }
+  // };
+  
+  // REPLACE the entire fetchSuggestionsForPastedEntry function with this optimized version
+const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  // if (planType === "NBBUD") return;
+
+  // CRITICAL FIX: URL encode project ID
+  const encodedProjectId = encodeURIComponent(projectId);
+
+  // Fetch employee suggestions based on ID type (this is entry-specific, must be called per entry)
+  if (entry.idType && entry.idType !== "") {
+    try {
+      const endpoint =
+        entry.idType === "Vendor"
+          ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+          : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+      const response = await axios.get(endpoint);
+      const suggestions = Array.isArray(response.data)
+        ? response.data.map((emp) => {
+            if (entry.idType === "Vendor") {
+              return {
+                emplId: emp.vendId,
+                firstName: "",
+                lastName: emp.employeeName,
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            } else {
+              const [lastName, firstName] = emp.employeeName
+                .split(",")
+                .map((str) => str.trim());
+              return {
+                emplId: emp.empId,
+                firstName: firstName || "",
+                lastName: lastName || "",
+                perHourRate: emp.perHourRate || emp.hrRate || "",
+                plc: emp.plc || "",
+                orgId: emp.orgId || "",
+              };
+            }
+          })
+        : [];
+
+      setPastedEntrySuggestions((prev) => ({
+        ...prev,
+        [entryIndex]: suggestions,
+      }));
     } catch (err) {
       console.error(
-        `Failed to fetch pasted entry options for index ${entryIndex}:`,
+        `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
         err
       );
     }
-  };
+  }
+
+  // OPTIMIZATION: Fetch project and org data only once, then cache it
+  try {
+    let projectData = cachedProjectData;
+    let orgOptions = cachedOrgData;
+
+    // Only fetch project data if not already cached
+    if (!projectData) {
+      const response = await axios.get(
+        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+      );
+      projectData = Array.isArray(response.data)
+        ? response.data[0]
+        : response.data;
+      setCachedProjectData(projectData);
+    }
+
+    // Only fetch org data if not already cached
+    if (!orgOptions) {
+      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+      orgOptions = Array.isArray(orgResponse.data)
+        ? orgResponse.data.map((org) => ({
+            value: org.orgId,
+            label: `${org.orgId}`,
+          }))
+        : [];
+      setCachedOrgData(orgOptions);
+    }
+
+    // Now use the cached data to populate entry-specific options
+    // Fetch accounts
+    let accountsWithNames = [];
+    if (entry.idType === "PLC") {
+      const employeeAccounts = Array.isArray(projectData.employeeLaborAccounts)
+        ? projectData.employeeLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+      const vendorAccounts = Array.isArray(projectData.sunContractorLaborAccounts)
+        ? projectData.sunContractorLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+      accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+    } else if (entry.idType === "Employee") {
+      accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
+        ? projectData.employeeLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+    } else if (entry.idType === "Vendor") {
+      accountsWithNames = Array.isArray(projectData.sunContractorLaborAccounts)
+        ? projectData.sunContractorLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+    } else if (entry.idType === "Other") {
+      accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
+        ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+            id: account.accountId,
+            name: account.acctName,
+          }))
+        : [];
+    }
+
+    setPastedEntryAccounts((prev) => ({
+      ...prev,
+      [entryIndex]: accountsWithNames,
+    }));
+
+    // Use cached organizations
+    setPastedEntryOrgs((prev) => ({
+      ...prev,
+      [entryIndex]: orgOptions,
+    }));
+
+    // Fetch PLC options
+    if (projectData.plc && Array.isArray(projectData.plc)) {
+      const plcOptions = projectData.plc.map((plc) => ({
+        value: plc.laborCategoryCode,
+        label: `${plc.laborCategoryCode} - ${plc.description}`,
+      }));
+
+      setPastedEntryPlcs((prev) => ({
+        ...prev,
+        [entryIndex]: plcOptions,
+      }));
+    }
+  } catch (err) {
+    console.error(
+      `Failed to fetch pasted entry options for index ${entryIndex}:`,
+      err
+    );
+  }
+};
+
 
   const handlePasteToNewEntry = async () => {
     try {
@@ -2263,43 +2917,258 @@ const ProjectHoursDetails = ({
   };
 
   // Calculate column totals for each month
-  const calculateColumnTotals = () => {
-    const columnTotals = {};
+  // const calculateColumnTotals = () => {
+  //   const columnTotals = {};
 
-    sortedDurations.forEach((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
+
+  //     // Sum hours from existing employees
+  //     localEmployees.forEach((emp, idx) => {
+  //       if (hiddenRows[idx]) return; // Skip hidden rows
+
+  //       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //       const monthHours = getMonthHours(emp);
+  //       const forecastValue = monthHours[uniqueKey]?.value;
+  //       const value =
+  //         inputValue !== undefined && inputValue !== ""
+  //           ? inputValue
+  //           : forecastValue;
+
+  //       total += value && !isNaN(value) ? Number(value) : 0;
+  //     });
+
+  //     // Add hours from new entry form if visible
+  //     if (showNewForm) {
+  //       const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //       total +=
+  //         newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     }
+
+  //     columnTotals[uniqueKey] = total;
+  //   });
+
+  //   return columnTotals;
+  // };
+
+  // Calculate column totals for each month
+// const calculateColumnTotals = () => {
+//   const columnTotals = {};
+  
+//   // Initialize CTD and Prior Year totals
+//   let ctdTotal = 0;
+//   let priorYearTotal = 0;
+  
+//   const currentFiscalYear = fiscalYear !== "All" ? parseInt(fiscalYear) : null;
+  
+//   sortedDurations.forEach((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     let total = 0;
+
+//     // Sum hours from existing employees
+//     localEmployees.forEach((emp, idx) => {
+//       if (hiddenRows[idx]) return; // Skip hidden rows
+//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//       const monthHours = getMonthHours(emp);
+//       const forecastValue = monthHours[uniqueKey]?.value;
+//       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//       total += value && !isNaN(value) ? Number(value) : 0;
+//     });
+
+//     // Add hours from new entry form if visible
+//     if (showNewForm) {
+//       const newEntryValue = newEntryPeriodHours[uniqueKey];
+//       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+//     }
+
+//     columnTotals[uniqueKey] = total;
+    
+//     // Calculate CTD and Prior Year based on fiscal year selection
+//     if (currentFiscalYear) {
+//       const startYear = parseInt(startDate.split('-')[0]); // Extract start year from startDate
+      
+//       // Prior Year: sum of (selected fiscal year - 1)
+//       if (duration.year === currentFiscalYear - 1) {
+//         priorYearTotal += total;
+//       }
+      
+//       // CTD: sum from start year to (selected fiscal year - 2)
+//       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+//         ctdTotal += total;
+//       }
+//     }
+//   });
+  
+//   // Add CTD and Prior Year to columnTotals
+//   columnTotals['ctd'] = ctdTotal;
+//   columnTotals['priorYear'] = priorYearTotal;
+  
+//   return columnTotals;
+// };
+
+// const calculateColumnTotals = () => {
+//   const columnTotals = {};
+  
+//   let ctdTotal = 0;
+//   let priorYearTotal = 0;
+  
+//   // const currentFiscalYear = normalizedFiscalYear !== "All"  ? parseInt(fiscalYear) : null;
+//    const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+//   const startYear = parseInt(startDate.split('-')[0]);
+  
+//   // ✅ First, calculate CTD and Prior Year from ALL durations
+//   if (currentFiscalYear) {
+//     durations.forEach((duration) => {
+//       let total = 0;
+//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+//       // Sum hours from existing employees
+//       localEmployees.forEach((emp, idx) => {
+//         if (hiddenRows[idx]) return;
+//         const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//         const monthHours = getMonthHours(emp);
+//         const forecastValue = monthHours[uniqueKey]?.value;
+//         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//         total += value && !isNaN(value) ? Number(value) : 0;
+//       });
+
+//       // Add hours from new entry form if visible
+//       if (showNewForm) {
+//         const newEntryValue = newEntryPeriodHours[uniqueKey];
+//         total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+//       }
+
+//       // Prior Year: sum of (selected fiscal year - 1)
+//       if (duration.year === currentFiscalYear - 1) {
+//         priorYearTotal += total;
+//       }
+      
+//       // CTD: sum from start year to (selected fiscal year - 2)
+//       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+//         ctdTotal += total;
+//       }
+//     });
+//   }
+  
+//   // Now calculate monthly totals for visible columns (filtered by fiscal year)
+//   sortedDurations.forEach((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     let total = 0;
+
+//     // Sum hours from existing employees
+//     localEmployees.forEach((emp, idx) => {
+//       if (hiddenRows[idx]) return;
+//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+//       const monthHours = getMonthHours(emp);
+//       const forecastValue = monthHours[uniqueKey]?.value;
+//       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//       total += value && !isNaN(value) ? Number(value) : 0;
+//     });
+
+//     // Add hours from new entry form if visible
+//     if (showNewForm) {
+//       const newEntryValue = newEntryPeriodHours[uniqueKey];
+//       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+//     }
+
+//     columnTotals[uniqueKey] = total;
+//   });
+  
+//   // Add CTD and Prior Year to columnTotals
+//   // columnTotals['ctd'] = ctdTotal;
+//   // columnTotals['priorYear'] = priorYearTotal;
+//   if (currentFiscalYear) {
+//   columnTotals['ctd'] = ctdTotal;
+//   columnTotals['priorYear'] = priorYearTotal;
+// }
+  
+//   return columnTotals;
+// };
+
+const calculateColumnTotals = () => {
+  const columnTotals = {};
+  
+  let ctdTotal = 0;
+  let priorYearTotal = 0;
+  
+  const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+  
+  // ✅ Only calculate CTD and Prior Year when a specific fiscal year is selected
+  if (currentFiscalYear !== null) {
+    const startYear = parseInt(startDate.split('-')[0]);
+    
+    // Calculate CTD and Prior Year from ALL durations
+    durations.forEach((duration) => {
       let total = 0;
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
 
       // Sum hours from existing employees
       localEmployees.forEach((emp, idx) => {
-        if (hiddenRows[idx]) return; // Skip hidden rows
-
+        if (hiddenRows[idx]) return;
         const inputValue = inputValues[`${idx}_${uniqueKey}`];
         const monthHours = getMonthHours(emp);
         const forecastValue = monthHours[uniqueKey]?.value;
-        const value =
-          inputValue !== undefined && inputValue !== ""
-            ? inputValue
-            : forecastValue;
-
+        const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
         total += value && !isNaN(value) ? Number(value) : 0;
       });
 
       // Add hours from new entry form if visible
       if (showNewForm) {
         const newEntryValue = newEntryPeriodHours[uniqueKey];
-        total +=
-          newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+        total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
       }
 
-      columnTotals[uniqueKey] = total;
+      // Prior Year: sum of (selected fiscal year - 1)
+      if (duration.year === currentFiscalYear - 1) {
+        priorYearTotal += total;
+      }
+      
+      // CTD: sum from start year to (selected fiscal year - 2)
+      if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+        ctdTotal += total;
+      }
+    });
+    
+    // Add CTD and Prior Year to columnTotals only when fiscal year is selected
+    columnTotals['ctd'] = ctdTotal;
+    columnTotals['priorYear'] = priorYearTotal;
+  }
+  
+  // Now calculate monthly totals for visible columns (filtered by fiscal year)
+  sortedDurations.forEach((duration) => {
+    const uniqueKey = `${duration.monthNo}_${duration.year}`;
+    let total = 0;
+
+    // Sum hours from existing employees
+    localEmployees.forEach((emp, idx) => {
+      if (hiddenRows[idx]) return;
+      const inputValue = inputValues[`${idx}_${uniqueKey}`];
+      const monthHours = getMonthHours(emp);
+      const forecastValue = monthHours[uniqueKey]?.value;
+      const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+      total += value && !isNaN(value) ? Number(value) : 0;
     });
 
-    return columnTotals;
-  };
+    // Add hours from new entry form if visible
+    if (showNewForm) {
+      const newEntryValue = newEntryPeriodHours[uniqueKey];
+      total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+    }
+
+    columnTotals[uniqueKey] = total;
+  });
+  
+  return columnTotals;
+};
+
+
+
 
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
     if (!isEditable) return;
+
+    
 
     // Allow only numbers and dots
     if (!/^[0-9.]*$/.test(newValue)) return;
@@ -3702,6 +4571,200 @@ const ProjectHoursDetails = ({
     }
   };
 
+  //  const handleFind = () => {
+  //   if (!findValue) {
+  //     toast.warn("Please enter a value to find.", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   const matches = [];
+  //   const findValueTrimmed = findValue.trim();
+
+  //   // Helper function to check if value is zero-like
+  //   function isZeroLike(val) {
+  //     if (val === undefined || val === null) return true;
+  //     if (typeof val === "number") return val === 0;
+  //     if (typeof val === "string") {
+  //       const trimmed = val.trim();
+  //       return (
+  //         !trimmed ||
+  //         trimmed === "0" ||
+  //         trimmed === "0.0" ||
+  //         trimmed === "0.00" ||
+  //         (!isNaN(Number(trimmed)) && Number(trimmed) === 0)
+  //       );
+  //     }
+  //     return false;
+  //   }
+
+  //   // Search through all employees and their hours
+  //   for (const empIdx in localEmployees) {
+  //     const emp = localEmployees[empIdx];
+  //     const actualEmpIdx = parseInt(empIdx, 10);
+
+  //     // Apply scope filter
+  //     if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) continue;
+
+  //     for (const duration of sortedDurations) {
+  //       const uniqueKey = `${duration.monthNo}${duration.year}`;
+
+  //       // Apply scope filter
+  //       if (replaceScope === "column" && uniqueKey !== selectedColumnKey) continue;
+
+  //       if (!isMonthEditable(duration, closedPeriod, planType)) continue;
+
+  //       const currentInputKey = `${actualEmpIdx}${uniqueKey}`;
+  //       let displayedValue;
+
+  //       if (inputValues[currentInputKey] !== undefined) {
+  //         displayedValue = String(inputValues[currentInputKey]);
+  //       } else {
+  //         const monthHours = getMonthHours(emp);
+  //         const forecast = monthHours[uniqueKey];
+  //         if (forecast && forecast.value !== undefined) {
+  //           displayedValue = String(forecast.value);
+  //         } else {
+  //           displayedValue = "0";
+  //         }
+  //       }
+
+  //       const displayedValueTrimmed = displayedValue.trim();
+
+  //       let isMatch = false;
+
+  //       // Check if we're searching for zero/empty
+  //       if (!isNaN(Number(findValueTrimmed)) && Number(findValueTrimmed) === 0) {
+  //         isMatch = isZeroLike(displayedValueTrimmed);
+  //       } else {
+  //         // Exact string match
+  //         isMatch = displayedValueTrimmed === findValueTrimmed;
+
+  //         // Also try numeric comparison
+  //         if (!isMatch) {
+  //           const findNum = parseFloat(findValueTrimmed);
+  //           const displayNum = parseFloat(displayedValueTrimmed);
+  //           if (!isNaN(findNum) && !isNaN(displayNum)) {
+  //             isMatch = findNum === displayNum;
+  //           }
+  //         }
+  //       }
+
+  //       if (isMatch) {
+  //         matches.push({ empIdx: actualEmpIdx, uniqueKey });
+  //       }
+  //     }
+  //   }
+
+  //   setFindMatches(matches);
+
+  //   if (matches.length === 0) {
+  //     toast.info("No matches found.", { autoClose: 2000 });
+  //   } else {
+  //     // toast.success(`Found ${matches.length} matches highlighted in the table.`, { autoClose: 3000 });
+  //     // Close the modal to show the table
+  //     setShowFindReplace(false);
+  //   }
+  // };
+
+  const handleFind = () => {
+    if (!findValue) {
+      toast.warn("Please enter a value to find.", { autoClose: 2000 });
+      return;
+    }
+
+    const matches = [];
+    const findValueTrimmed = findValue.trim();
+
+    // Helper function to check if value is zero-like
+    function isZeroLike(val) {
+      if (val === undefined || val === null) return true;
+      if (typeof val === "number") return val === 0;
+      if (typeof val === "string") {
+        const trimmed = val.trim();
+        return (
+          !trimmed ||
+          trimmed === "0" ||
+          trimmed === "0.0" ||
+          trimmed === "0.00" ||
+          (!isNaN(Number(trimmed)) && Number(trimmed) === 0)
+        );
+      }
+      return false;
+    }
+
+    // Search through all employees and their hours
+    for (const empIdx in localEmployees) {
+      const emp = localEmployees[empIdx];
+      const actualEmpIdx = parseInt(empIdx, 10);
+
+      // Apply scope filter
+      if (replaceScope === "row" && actualEmpIdx !== selectedRowIndex) continue;
+
+      for (const duration of sortedDurations) {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`; // FIXED: Added underscore
+
+        // Apply scope filter
+        if (replaceScope === "column" && uniqueKey !== selectedColumnKey)
+          continue;
+
+        if (!isMonthEditable(duration, closedPeriod, planType)) continue;
+
+        const currentInputKey = `${actualEmpIdx}_${uniqueKey}`; // FIXED: Added underscore
+        let displayedValue;
+
+        if (inputValues[currentInputKey] !== undefined) {
+          displayedValue = String(inputValues[currentInputKey]);
+        } else {
+          const monthHours = getMonthHours(emp);
+          const forecast = monthHours[uniqueKey];
+          if (forecast && forecast.value !== undefined) {
+            displayedValue = String(forecast.value);
+          } else {
+            displayedValue = "0";
+          }
+        }
+
+        const displayedValueTrimmed = displayedValue.trim();
+
+        let isMatch = false;
+
+        // Check if we're searching for zero/empty
+        if (
+          !isNaN(Number(findValueTrimmed)) &&
+          Number(findValueTrimmed) === 0
+        ) {
+          isMatch = isZeroLike(displayedValueTrimmed);
+        } else {
+          // Exact string match
+          isMatch = displayedValueTrimmed === findValueTrimmed;
+
+          // Also try numeric comparison
+          if (!isMatch) {
+            const findNum = parseFloat(findValueTrimmed);
+            const displayNum = parseFloat(displayedValueTrimmed);
+            if (!isNaN(findNum) && !isNaN(displayNum)) {
+              isMatch = findNum === displayNum;
+            }
+          }
+        }
+
+        if (isMatch) {
+          matches.push({ empIdx: actualEmpIdx, uniqueKey });
+        }
+      }
+    }
+
+    setFindMatches(matches);
+
+    if (matches.length === 0) {
+      toast.info("No matches found.", { autoClose: 2000 });
+    } else {
+      // toast.success(`Found ${matches.length} matches highlighted in the table.`, { autoClose: 3000 });
+      // Close the modal to show the table
+      setShowFindReplace(false);
+    }
+  };
+
   const handleRowClick = (actualEmpIdx) => {
     if (!isEditable) return;
     setSelectedRowIndex(
@@ -3979,18 +5042,16 @@ const ProjectHoursDetails = ({
                 New
               </button>
 
-              {hasClipboardData && (
+              {hasClipboardData && status === "In Progress" && (
                 <button
                   onClick={() => {
                     handlePasteMultipleRows();
-
-                    // Disable paste button after pasting
                     setHasClipboardData(false);
                     setCopiedRowsData([]);
                   }}
                   className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 text-xs font-medium"
                 >
-                  Paste ({copiedRowsData.length})
+                  Paste ({copiedRowsData.length} data)
                 </button>
               )}
 
@@ -4222,85 +5283,83 @@ const ProjectHoursDetails = ({
           No forecast data available for this plan.
         </div>
       ) : (
-        <div className="synchronized-tables-container flex w-full">
-          <div
-            ref={firstTableRef}
-            onScroll={handleFirstScroll}
-            className="hide-scrollbar flex-1"
-            style={{
-              maxHeight: "400px",
-              overflowY: "auto",
-              overflowX: "auto",
-            }}
-          >
-            <table className="table-fixed text-xs text-left min-w-full border border-gray-300 rounded-lg">
-              <thead className="sticky-thead">
-                <tr
-                  style={{
-                    height: `${ROW_HEIGHT_DEFAULT}px`,
-                    lineHeight: "normal",
-                  }}
-                >
-                  {EMPLOYEE_COLUMNS.map((col) => (
-                    <th
-                      key={col.key}
-                      className="p-1.5 border border-gray-200 whitespace-nowrap text-xs text-gray-900 font-normal min-w-[70px]"
-                    >
-                      {col.label}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {showNewForm && (
+        <div className="border-line">
+          <div className="synchronized-tables-container flex w-full">
+            <div
+              ref={firstTableRef}
+              onScroll={handleFirstScroll}
+              className="hide-scrollbar flex-1"
+              style={{
+                maxHeight: "400px",
+                overflowY: "auto",
+                overflowX: "auto",
+              }}
+            >
+              <table className="table-fixed table min-w-full  ">
+                <thead className="thead">
                   <tr
-                    key="new-entry"
-                    className="bg-gray-50"
                     style={{
                       height: `${ROW_HEIGHT_DEFAULT}px`,
                       lineHeight: "normal",
                     }}
                   >
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <select
-                        name="idType"
-                        value={newEntry.idType || ""}
-                        onChange={(e) => handleIdTypeChange(e.target.value)}
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                      >
-                        {ID_TYPE_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="id"
-                        value={newEntry.id}
-                        // value={
-                        //   newEntry.idType === "Other" ? "KBD001" : newEntry.id
-                        // }
-                        onChange={(e) => handleIdChange(e.target.value)}
-                        disabled={newEntry.idType === "PLC"}
-                        className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
-                          newEntry.idType === "PLC"
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        // list={
-                        //   planType === "NBBUD" ? undefined : "employee-id-list"
-                        // }
-                        list="employee-id-list"
-                        placeholder={
-                          newEntry.idType === "PLC"
-                            ? "Not required for PLC"
-                            : "Enter ID"
-                        }
-                      />
-                      {/* <datalist id="employee-id-list">
+                    {EMPLOYEE_COLUMNS.map((col) => (
+                      <th key={col.key} className="th-thead min-w-[70px]">
+                        {col.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="tbody">
+                  {showNewForm && (
+                    <tr
+                      key="new-entry"
+                      className="bg-gray-50"
+                      style={{
+                        height: `${ROW_HEIGHT_DEFAULT}px`,
+                        lineHeight: "normal",
+                      }}
+                    >
+                      <td className="tbody-td">
+                        <select
+                          name="idType"
+                          value={newEntry.idType || ""}
+                          onChange={(e) => handleIdTypeChange(e.target.value)}
+                          className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                        >
+                          {ID_TYPE_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="tbody-td">
+                        <input
+                          type="text"
+                          name="id"
+                          value={newEntry.id}
+                          // value={
+                          //   newEntry.idType === "Other" ? "KBD001" : newEntry.id
+                          // }
+                          onChange={(e) => handleIdChange(e.target.value)}
+                          disabled={newEntry.idType === "PLC"}
+                          className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+                            newEntry.idType === "PLC"
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
+                          }`}
+                          // list={
+                          //   planType === "NBBUD" ? undefined : "employee-id-list"
+                          // }
+                          list="employee-id-list"
+                          placeholder={
+                            newEntry.idType === "PLC"
+                              ? "Not required for PLC"
+                              : "Enter ID"
+                          }
+                        />
+                        {/* <datalist id="employee-id-list">
                                         {employeeSuggestions
                                           .filter(
                                             (emp) =>
@@ -4317,463 +5376,9 @@ const ProjectHoursDetails = ({
                                             </option>
                                           ))}
                                       </datalist> */}
-                      <datalist id="employee-id-list">
-                        {newEntry.idType !== "Other" &&
-                          employeeSuggestions
-                            .filter(
-                              (emp) =>
-                                emp.emplId && typeof emp.emplId === "string"
-                            )
-                            .map((emp, index) => (
-                              <option
-                                key={`${emp.emplId}-${index}`}
-                                value={emp.emplId}
-                              >
-                                {emp.lastName && emp.firstName
-                                  ? `${emp.lastName}, ${emp.firstName}`
-                                  : emp.lastName || emp.firstName || emp.emplId}
-                              </option>
-                            ))}
-                      </datalist>
-                    </td>
-
-                    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                      <span className="text-gray-400 text-xs">-</span>
-                    </td>
-
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      {newEntry.idType === "PLC" ? (
-                        // PLC Name field - automatically show selected PLC description
-                        <input
-                          type="text"
-                          name="name"
-                          value={newEntry.firstName || ""} // This will contain the PLC description
-                          readOnly
-                          className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                          // placeholder="PLC description will appear here"
-                        />
-                      ) : (
-                        // Existing logic for other ID types
-                        <input
-                          type="text"
-                          name="name"
-                          value={
-                            newEntry.idType === "Other" || planType === "NBBUD"
-                              ? `${newEntry.firstName || ""} ${
-                                  newEntry.lastName || ""
-                                }`.trim()
-                              : newEntry.idType === "Vendor"
-                              ? newEntry.lastName || newEntry.firstName || ""
-                              : newEntry.lastName && newEntry.firstName
-                              ? `${newEntry.lastName}, ${newEntry.firstName}`
-                              : newEntry.lastName || newEntry.firstName || ""
-                          }
-                          readOnly={
-                            planType !== "NBBUD" && newEntry.idType !== "Other"
-                          }
-                          onChange={(e) => {
-                            if (
-                              newEntry.idType === "Other" ||
-                              planType === "NBBUD"
-                            ) {
-                              const fullName = e.target.value.trim();
-                              const nameParts = fullName.split(" ");
-                              const firstName = nameParts[0] || "";
-                              const lastName =
-                                nameParts.slice(1).join(" ") || "";
-
-                              setNewEntry((prev) => ({
-                                ...prev,
-                                firstName: firstName,
-                                lastName: lastName,
-                              }));
-                            }
-                          }}
-                          className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                            newEntry.idType === "Other" || planType === "NBBUD"
-                              ? "bg-white"
-                              : "bg-gray-100 cursor-not-allowed"
-                          }`}
-                          placeholder={
-                            newEntry.idType === "Other" || planType === "NBBUD"
-                              ? "Enter name"
-                              : "Name (auto-filled)"
-                          }
-                        />
-                      )}
-                    </td>
-
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="acctId"
-                        value={newEntry.acctId}
-                        onChange={(e) => handleAccountChange(e.target.value)}
-                        onBlur={(e) => handleAccountBlur(e.target.value)}
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          !isFieldEditable
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        list="account-list"
-                        placeholder="Enter Account"
-                        //   disabled={!isBudPlan}
-                        disabled={!isFieldEditable}
-                      />
-                      <datalist id="account-list">
-                        {laborAccounts.map((account, index) => (
-                          <option
-                            key={`${account.id}-${index}`}
-                            value={account.id}
-                          >
-                            {account.id}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-                    {/* ADD THIS NEW TD FOR ACCOUNT NAME IN NEW ENTRY FORM */}
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        value={(() => {
-                          const accountWithName = accountOptionsWithNames.find(
-                            (acc) => acc.id === newEntry.acctId
-                          );
-                          return accountWithName ? accountWithName.name : "";
-                        })()}
-                        readOnly
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                        placeholder="Account Name (auto-filled)"
-                      />
-                    </td>
-                    {/* <td className="border border-gray-300 px-1.5 py-0.5">
-                                      <input
-                                        type="text"
-                                        name="orgId"
-                                        value={newEntry.orgId}
-                                        onChange={(e) => handleOrgChange(e.target.value)}
-                                        onBlur={(e) => handleOrgBlur(e.target.value)}
-                                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                                          !isBudPlan ? "bg-gray-100 cursor-not-allowed" : ""
-                                        }`}
-                                        placeholder="Enter Organization"
-                                        disabled={!isBudPlan}
-                                      />
-                                    </td> */}
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="orgId"
-                        value={newEntry.orgId}
-                        onChange={(e) => handleOrgInputChange(e.target.value)}
-                        onBlur={(e) => handleOrgBlur(e.target.value)}
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          !isFieldEditable
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                        list="organization-list"
-                        placeholder="Enter Organization ID (numeric)"
-                        // disabled={!isBudPlan}
-                        disabled={!isFieldEditable}
-                      />
-                      <datalist id="organization-list">
-                        {organizationOptions.map((org, index) => (
-                          <option
-                            key={`${org.value}-${index}`}
-                            value={org.value}
-                          >
-                            {org.label}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="plcGlcCode"
-                        value={plcSearch}
-                        onChange={(e) => handlePlcInputChange(e.target.value)}
-                        onBlur={(e) => {
-                          if (planType === "NBBUD") return;
-                          const val = e.target.value.trim();
-
-                          if (
-                            val !== "" &&
-                            !plcOptions.some(
-                              (option) =>
-                                option.value.toLowerCase() === val.toLowerCase()
-                            )
-                          ) {
-                            toast.error(
-                              "PLC must be selected from the available suggestions.",
-                              {
-                                autoClose: 3000,
-                              }
-                            );
-                            // Clear invalid input
-                            setPlcSearch("");
-                            setNewEntry((prev) => ({
-                              ...prev,
-                              plcGlcCode: "",
-                            }));
-                          }
-                        }}
-                        disabled={newEntry.idType === ""}
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                        list="plc-list"
-                        placeholder="Enter or select PLC"
-                        autoComplete="off"
-                      />
-
-                      <datalist id="plc-list">
-                        {filteredPlcOptions.map((plc, index) => (
-                          <option
-                            key={`${plc.value}-${index}`}
-                            value={plc.value}
-                          >
-                            {plc.label}
-                          </option>
-                        ))}
-                      </datalist>
-                    </td>
-
-                    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                      <input
-                        type="checkbox"
-                        name="isRev"
-                        checked={newEntry.isRev}
-                        //   onChange={(e) =>
-                        //     isBudPlan &&
-                        //     setNewEntry({
-                        //       ...newEntry,
-                        //       isRev: e.target.checked,
-                        //     })
-                        //   }
-                        // CHANGE TO:
-                        onChange={(e) =>
-                          isFieldEditable &&
-                          setNewEntry({
-                            ...newEntry,
-                            isRev: e.target.checked,
-                          })
-                        }
-                        disabled={!isFieldEditable}
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                      <input
-                        type="checkbox"
-                        name="isBrd"
-                        checked={newEntry.isBrd}
-                        //   onChange={(e) =>
-                        //     isBudPlan &&
-                        //     setNewEntry({
-                        //       ...newEntry,
-                        //       isBrd: e.target.checked,
-                        //     })
-                        //   }
-                        //   className="w-4 h-4"
-                        //   disabled={!isBudPlan}
-                        // CHANGE TO:
-                        onChange={(e) =>
-                          isFieldEditable &&
-                          setNewEntry({
-                            ...newEntry,
-                            isBrd: e.target.checked,
-                          })
-                        }
-                        disabled={!isFieldEditable}
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="text"
-                        name="status"
-                        value={newEntry.status}
-                        disabled={newEntry.idType === "Other"}
-                        onChange={(e) =>
-                          setNewEntry({ ...newEntry, status: e.target.value })
-                        }
-                        className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                        placeholder="Enter Status"
-                      />
-                    </td>
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      <input
-                        type="password"
-                        name="perHourRate"
-                        value={isEditingNewEntry ? newEntry.perHourRate : ""}
-                        placeholder={isEditingNewEntry ? "" : "**"}
-                        onFocus={() => setIsEditingNewEntry(true)}
-                        onBlur={() => setIsEditingNewEntry(false)}
-                        // onChange={(e) =>
-                        //   isFieldEditable &&
-                        //   setNewEntry({
-                        //     ...newEntry,
-                        //     perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
-                        //   })
-                        // }
-                        // className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                        //   !isFieldEditable
-                        //     ? "bg-gray-100 cursor-not-allowed"
-                        //     : ""
-                        // }`}
-                        // disabled={!isFieldEditable}
-                        onChange={(e) => {
-                          const isFieldEditable = !(
-                            newEntry.idType === "Employee" ||
-                            newEntry.idType === "Vendor"
-                          );
-                          if (isFieldEditable) {
-                            setNewEntry((prev) => ({
-                              ...prev,
-                              perHourRate: e.target.value.replace(
-                                /[^0-9.]/g,
-                                ""
-                              ),
-                            }));
-                          }
-                        }}
-                        disabled={
-                          newEntry.idType === "Employee" ||
-                          newEntry.idType === "Vendor"
-                        } // Disable for Employee and Vendor
-                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                          newEntry.idType === "Employee" ||
-                          newEntry.idType === "Vendor"
-                            ? "bg-gray-100 cursor-not-allowed"
-                            : ""
-                        }`}
-                      />
-                    </td>
-
-                    <td className="border border-gray-300 px-1.5 py-0.5">
-                      {Object.values(newEntryPeriodHours)
-                        .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
-                        .toFixed(2)}
-                    </td>
-                  </tr>
-                )}
-
-                {newEntries.length > 0 &&
-                  newEntries.map((entry, entryIndex) => (
-                    <React.Fragment key={`new-entry-months-${entryIndex}`}>
-                      <tr
-                        key={`new-entry-${entryIndex}`}
-                        className="bg-gray-50"
-                        style={{
-                          height: `${ROW_HEIGHT_DEFAULT}px`,
-                          lineHeight: "normal",
-                        }}
-                      >
-                        {/* ID Type */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <select
-                            name="idType"
-                            value={entry.idType}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? {
-                                        id: "",
-                                        firstName: "",
-                                        lastName: "",
-                                        isRev: false,
-                                        isBrd: false,
-                                        idType: value,
-                                        acctId:
-                                          laborAccounts.length > 0
-                                            ? laborAccounts[0].id
-                                            : "",
-                                        orgId: "",
-                                        plcGlcCode: "",
-                                        perHourRate: "",
-                                        status: "Act",
-                                      }
-                                    : ent
-                                )
-                              );
-                              setPlcSearch("");
-                              setAutoPopulatedPLC(false);
-                            }}
-                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                          >
-                            {ID_TYPE_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-
-                        {/* ID */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            name="id"
-                            value={entry.id}
-                            onChange={(e) => {
-                              const trimmedValue = e.target.value.trim();
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, id: trimmedValue }
-                                    : ent
-                                )
-                              );
-
-                              // Auto-populate fields if employee found
-                              const suggestions =
-                                pastedEntrySuggestions[entryIndex] || [];
-                              const selectedEmployee = suggestions.find(
-                                (emp) => emp.emplId === trimmedValue
-                              );
-                              if (selectedEmployee) {
-                                setNewEntries((prev) =>
-                                  prev.map((ent, idx) =>
-                                    idx === entryIndex
-                                      ? {
-                                          ...ent,
-                                          id: trimmedValue,
-                                          firstName:
-                                            selectedEmployee.firstName || "",
-                                          lastName:
-                                            selectedEmployee.lastName || "",
-                                          perHourRate:
-                                            selectedEmployee.perHourRate || "",
-                                          orgId:
-                                            selectedEmployee.orgId || ent.orgId,
-                                          plcGlcCode:
-                                            selectedEmployee.plc || "",
-                                        }
-                                      : ent
-                                  )
-                                );
-                              }
-                            }}
-                            disabled={entry.idType === "PLC"}
-                            className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
-                              entry.idType === "PLC"
-                                ? "bg-gray-100 cursor-not-allowed"
-                                : ""
-                            }`}
-                            list={
-                              planType === "NBBUD"
-                                ? undefined
-                                : `employee-id-list-${entryIndex}`
-                            }
-                            placeholder={
-                              entry.idType === "PLC"
-                                ? "Not required for PLC"
-                                : "Enter ID"
-                            }
-                          />
-                          <datalist id={`employee-id-list-${entryIndex}`}>
-                            {(pastedEntrySuggestions[entryIndex] || [])
+                        <datalist id="employee-id-list">
+                          {newEntry.idType !== "Other" &&
+                            employeeSuggestions
                               .filter(
                                 (emp) =>
                                   emp.emplId && typeof emp.emplId === "string"
@@ -4790,815 +5395,1309 @@ const ProjectHoursDetails = ({
                                       emp.emplId}
                                 </option>
                               ))}
-                          </datalist>
-                        </td>
+                        </datalist>
+                      </td>
 
-                        {/* Warning Column - Empty */}
-                        <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                          <span className="text-gray-400 text-xs">-</span>
-                        </td>
+                      <td className="tbody-td text-center">
+                        <span className="text-gray-400 text-xs">-</span>
+                      </td>
 
-                        {/* Name */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
+                      <td className="tbody-td">
+                        {newEntry.idType === "PLC" ? (
+                          // PLC Name field - automatically show selected PLC description
+                          <input
+                            type="text"
+                            name="name"
+                            value={newEntry.firstName || ""} // This will contain the PLC description
+                            readOnly
+                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+                            // placeholder="PLC description will appear here"
+                          />
+                        ) : (
+                          // Existing logic for other ID types
                           <input
                             type="text"
                             name="name"
                             value={
-                              entry.idType === "PLC"
-                                ? entry.firstName
-                                : entry.idType === "Vendor"
-                                ? entry.lastName || entry.firstName
-                                : `${entry.firstName || ""} ${
-                                    entry.lastName || ""
+                              newEntry.idType === "Other" ||
+                              planType === "NBBUD"
+                                ? `${newEntry.firstName || ""} ${
+                                    newEntry.lastName || ""
                                   }`.trim()
+                                : newEntry.idType === "Vendor"
+                                ? newEntry.lastName || newEntry.firstName || ""
+                                : newEntry.lastName && newEntry.firstName
+                                ? `${newEntry.lastName}, ${newEntry.firstName}`
+                                : newEntry.lastName || newEntry.firstName || ""
                             }
-                            readOnly
-                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                            placeholder="Name auto-filled"
-                          />
-                        </td>
-
-                        {/* Account */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            name="acctId"
-                            value={entry.acctId}
+                            readOnly={
+                              planType !== "NBBUD" &&
+                              newEntry.idType !== "Other"
+                            }
                             onChange={(e) => {
-                              const value = e.target.value;
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, acctId: value }
-                                    : ent
-                                )
-                              );
+                              if (
+                                newEntry.idType === "Other" ||
+                                planType === "NBBUD"
+                              ) {
+                                const fullName = e.target.value.trim();
+                                const nameParts = fullName.split(" ");
+                                const firstName = nameParts[0] || "";
+                                const lastName =
+                                  nameParts.slice(1).join(" ") || "";
 
-                              // Auto-populate account name if account found
-                              const accounts =
-                                pastedEntryAccounts[entryIndex] || [];
-                              const selectedAccount = accounts.find(
-                                (acc) => acc.id === value
+                                setNewEntry((prev) => ({
+                                  ...prev,
+                                  firstName: firstName,
+                                  lastName: lastName,
+                                }));
+                              }
+                            }}
+                            className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                              newEntry.idType === "Other" ||
+                              planType === "NBBUD"
+                                ? "bg-white"
+                                : "bg-gray-100 cursor-not-allowed"
+                            }`}
+                            placeholder={
+                              newEntry.idType === "Other" ||
+                              planType === "NBBUD"
+                                ? "Enter name"
+                                : "Name (auto-filled)"
+                            }
+                          />
+                        )}
+                      </td>
+
+                      <td className="tbody-td">
+                        <input
+                          type="text"
+                          name="acctId"
+                          value={newEntry.acctId}
+                          onChange={(e) => handleAccountChange(e.target.value)}
+                          onBlur={(e) => handleAccountBlur(e.target.value)}
+                          className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                            !isFieldEditable
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
+                          }`}
+                          list="account-list"
+                          placeholder="Enter Account"
+                          //   disabled={!isBudPlan}
+                          disabled={!isFieldEditable}
+                        />
+                        <datalist id="account-list">
+                          {laborAccounts.map((account, index) => (
+                            <option
+                              key={`${account.id}-${index}`}
+                              value={account.id}
+                            >
+                              {account.id}
+                            </option>
+                          ))}
+                        </datalist>
+                      </td>
+                      {/* ADD THIS NEW TD FOR ACCOUNT NAME IN NEW ENTRY FORM */}
+                      <td className="tbody-td">
+                        <input
+                          type="text"
+                          value={(() => {
+                            const accountWithName =
+                              accountOptionsWithNames.find(
+                                (acc) => acc.id === newEntry.acctId
                               );
-                              if (selectedAccount) {
+                            return accountWithName ? accountWithName.name : "";
+                          })()}
+                          readOnly
+                          className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+                          placeholder="Account Name (auto-filled)"
+                        />
+                      </td>
+                      {/* <td className="tbody-td">
+                                      <input
+                                        type="text"
+                                        name="orgId"
+                                        value={newEntry.orgId}
+                                        onChange={(e) => handleOrgChange(e.target.value)}
+                                        onBlur={(e) => handleOrgBlur(e.target.value)}
+                                        className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                                          !isBudPlan ? "bg-gray-100 cursor-not-allowed" : ""
+                                        }`}
+                                        placeholder="Enter Organization"
+                                        disabled={!isBudPlan}
+                                      />
+                                    </td> */}
+                      <td className="tbody-td">
+                        <input
+                          type="text"
+                          name="orgId"
+                          value={newEntry.orgId}
+                          onChange={(e) => handleOrgInputChange(e.target.value)}
+                          onBlur={(e) => handleOrgBlur(e.target.value)}
+                          className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                            !isFieldEditable
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
+                          }`}
+                          list="organization-list"
+                          placeholder="Enter Organization ID (numeric)"
+                          // disabled={!isBudPlan}
+                          disabled={!isFieldEditable}
+                        />
+                        <datalist id="organization-list">
+                          {organizationOptions.map((org, index) => (
+                            <option
+                              key={`${org.value}-${index}`}
+                              value={org.value}
+                            >
+                              {org.label}
+                            </option>
+                          ))}
+                        </datalist>
+                      </td>
+
+                      <td className="tbody-td">
+                        <input
+                          type="text"
+                          name="plcGlcCode"
+                          value={plcSearch}
+                          onChange={(e) => handlePlcInputChange(e.target.value)}
+                          onBlur={(e) => {
+                            if (planType === "NBBUD") return;
+                            const val = e.target.value.trim();
+
+                            if (
+                              val !== "" &&
+                              !plcOptions.some(
+                                (option) =>
+                                  option.value.toLowerCase() ===
+                                  val.toLowerCase()
+                              )
+                            ) {
+                              toast.error(
+                                "PLC must be selected from the available suggestions.",
+                                {
+                                  autoClose: 3000,
+                                }
+                              );
+                              // Clear invalid input
+                              setPlcSearch("");
+                              setNewEntry((prev) => ({
+                                ...prev,
+                                plcGlcCode: "",
+                              }));
+                            }
+                          }}
+                          disabled={newEntry.idType === ""}
+                          className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                          list="plc-list"
+                          placeholder="Enter or select PLC"
+                          autoComplete="off"
+                        />
+
+                        <datalist id="plc-list">
+                          {filteredPlcOptions.map((plc, index) => (
+                            <option
+                              key={`${plc.value}-${index}`}
+                              value={plc.value}
+                            >
+                              {plc.label}
+                            </option>
+                          ))}
+                        </datalist>
+                      </td>
+
+                      <td className="tbody-td text-center">
+                        <input
+                          type="checkbox"
+                          name="isRev"
+                          checked={newEntry.isRev}
+                          //   onChange={(e) =>
+                          //     isBudPlan &&
+                          //     setNewEntry({
+                          //       ...newEntry,
+                          //       isRev: e.target.checked,
+                          //     })
+                          //   }
+                          // CHANGE TO:
+                          onChange={(e) =>
+                            isFieldEditable &&
+                            setNewEntry({
+                              ...newEntry,
+                              isRev: e.target.checked,
+                            })
+                          }
+                          disabled={!isFieldEditable}
+                        />
+                      </td>
+                      <td className="tbody-td text-center">
+                        <input
+                          type="checkbox"
+                          name="isBrd"
+                          checked={newEntry.isBrd}
+                          //   onChange={(e) =>
+                          //     isBudPlan &&
+                          //     setNewEntry({
+                          //       ...newEntry,
+                          //       isBrd: e.target.checked,
+                          //     })
+                          //   }
+                          //   className="w-4 h-4"
+                          //   disabled={!isBudPlan}
+                          // CHANGE TO:
+                          onChange={(e) =>
+                            isFieldEditable &&
+                            setNewEntry({
+                              ...newEntry,
+                              isBrd: e.target.checked,
+                            })
+                          }
+                          disabled={!isFieldEditable}
+                        />
+                      </td>
+                      <td className="tbody-td">
+                        <input
+                          type="text"
+                          name="status"
+                          value={newEntry.status}
+                          disabled={newEntry.idType === "Other"}
+                          onChange={(e) =>
+                            setNewEntry({ ...newEntry, status: e.target.value })
+                          }
+                          className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                          placeholder="Enter Status"
+                        />
+                      </td>
+                      <td className="tbody-td">
+                        <input
+                          type="password"
+                          name="perHourRate"
+                          value={isEditingNewEntry ? newEntry.perHourRate : ""}
+                          placeholder={isEditingNewEntry ? "" : "**"}
+                          onFocus={() => setIsEditingNewEntry(true)}
+                          onBlur={() => setIsEditingNewEntry(false)}
+                          // onChange={(e) =>
+                          //   isFieldEditable &&
+                          //   setNewEntry({
+                          //     ...newEntry,
+                          //     perHourRate: e.target.value.replace(/[^0-9.]/g, ""),
+                          //   })
+                          // }
+                          // className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                          //   !isFieldEditable
+                          //     ? "bg-gray-100 cursor-not-allowed"
+                          //     : ""
+                          // }`}
+                          // disabled={!isFieldEditable}
+                          onChange={(e) => {
+                            const isFieldEditable = !(
+                              newEntry.idType === "Employee" ||
+                              newEntry.idType === "Vendor"
+                            );
+                            if (isFieldEditable) {
+                              setNewEntry((prev) => ({
+                                ...prev,
+                                perHourRate: e.target.value.replace(
+                                  /[^0-9.]/g,
+                                  ""
+                                ),
+                              }));
+                            }
+                          }}
+                          disabled={
+                            newEntry.idType === "Employee" ||
+                            newEntry.idType === "Vendor"
+                          } // Disable for Employee and Vendor
+                          className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+                            newEntry.idType === "Employee" ||
+                            newEntry.idType === "Vendor"
+                              ? "bg-gray-100 cursor-not-allowed"
+                              : ""
+                          }`}
+                        />
+                      </td>
+
+                      <td className="tbody-td">
+                        {Object.values(newEntryPeriodHours)
+                          .reduce((sum, val) => sum + (parseFloat(val) || 0), 0)
+                          .toFixed(2)}
+                      </td>
+                    </tr>
+                  )}
+
+                  {newEntries.length > 0 &&
+                    newEntries.map((entry, entryIndex) => (
+                      <React.Fragment key={`new-entry-months-${entryIndex}`}>
+                        <tr
+                          key={`new-entry-${entryIndex}`}
+                          className="bg-gray-50"
+                          style={{
+                            height: `${ROW_HEIGHT_DEFAULT}px`,
+                            lineHeight: "normal",
+                          }}
+                        >
+                          {/* ID Type */}
+                          <td className="tbody-td">
+                            <select
+                              name="idType"
+                              value={entry.idType}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? {
+                                          id: "",
+                                          firstName: "",
+                                          lastName: "",
+                                          isRev: false,
+                                          isBrd: false,
+                                          idType: value,
+                                          acctId:
+                                            laborAccounts.length > 0
+                                              ? laborAccounts[0].id
+                                              : "",
+                                          orgId: "",
+                                          plcGlcCode: "",
+                                          perHourRate: "",
+                                          status: "Act",
+                                        }
+                                      : ent
+                                  )
+                                );
+                                setPlcSearch("");
+                                setAutoPopulatedPLC(false);
+                              }}
+                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                            >
+                              {ID_TYPE_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          {/* ID */}
+                          <td className="tbody-td">
+                            {/* <input
+                              type="text"
+                              name="id"
+                              value={entry.id}
+                              onChange={(e) => {
+                                const trimmedValue = e.target.value.trim();
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, id: trimmedValue }
+                                      : ent
+                                  )
+                                );
+
+                                // Auto-populate fields if employee found
+                                const suggestions =
+                                  pastedEntrySuggestions[entryIndex] || [];
+                                const selectedEmployee = suggestions.find(
+                                  (emp) => emp.emplId === trimmedValue
+                                );
+                                if (selectedEmployee) {
+                                  setNewEntries((prev) =>
+                                    prev.map((ent, idx) =>
+                                      idx === entryIndex
+                                        ? {
+                                            ...ent,
+                                            id: trimmedValue,
+                                            firstName:
+                                              selectedEmployee.firstName || "",
+                                            lastName:
+                                              selectedEmployee.lastName || "",
+                                            perHourRate:
+                                              selectedEmployee.perHourRate ||
+                                              "",
+                                            orgId:
+                                              selectedEmployee.orgId ||
+                                              ent.orgId,
+                                            plcGlcCode:
+                                              selectedEmployee.plc || "",
+                                          }
+                                        : ent
+                                    )
+                                  );
+                                }
+                              }}
+                              disabled={entry.idType === "PLC"}
+                              className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+                                entry.idType === "PLC"
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              list={
+                                planType === "NBBUD"
+                                  ? undefined
+                                  : `employee-id-list-${entryIndex}`
+                              }
+                              placeholder={
+                                entry.idType === "PLC"
+                                  ? "Not required for PLC"
+                                  : "Enter ID"
+                              }
+                            /> */}
+                            <input
+  type="text"
+  name="id"
+  value={entry.id}
+  onChange={(e) => {
+    const trimmedValue = e.target.value.trim();
+    setNewEntries((prev) =>
+      prev.map((ent, idx) =>
+        idx === entryIndex
+          ? { ...ent, id: trimmedValue }
+          : ent
+      )
+    );
+
+    // Auto-populate fields if employee found
+    const suggestions =
+      pastedEntrySuggestions[entryIndex] || [];
+    const selectedEmployee = suggestions.find(
+      (emp) => emp.emplId === trimmedValue
+    );
+    if (selectedEmployee) {
+      setNewEntries((prev) =>
+        prev.map((ent, idx) =>
+          idx === entryIndex
+            ? {
+                ...ent,
+                id: trimmedValue,
+                firstName:
+                  selectedEmployee.firstName || "",
+                lastName:
+                  selectedEmployee.lastName || "",
+                perHourRate:
+                  selectedEmployee.perHourRate ||
+                  "",
+                orgId:
+                  selectedEmployee.orgId ||
+                  ent.orgId,
+                plcGlcCode:
+                  selectedEmployee.plc || "",
+              }
+            : ent
+        )
+      );
+    }
+  }}
+  disabled={entry.idType === "PLC"}
+  className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+    entry.idType === "PLC"
+      ? "bg-gray-100 cursor-not-allowed"
+      : ""
+  }`}
+  list={`employee-id-list-${entryIndex}`}
+  placeholder={
+    entry.idType === "PLC"
+      ? "Not required for PLC"
+      : "Enter ID"
+  }
+/>
+
+                            <datalist id={`employee-id-list-${entryIndex}`}>
+                              {(pastedEntrySuggestions[entryIndex] || [])
+                                .filter(
+                                  (emp) =>
+                                    emp.emplId && typeof emp.emplId === "string"
+                                )
+                                .map((emp, index) => (
+                                  <option
+                                    key={`${emp.emplId}-${index}`}
+                                    value={emp.emplId}
+                                  >
+                                    {emp.lastName && emp.firstName
+                                      ? `${emp.lastName}, ${emp.firstName}`
+                                      : emp.lastName ||
+                                        emp.firstName ||
+                                        emp.emplId}
+                                  </option>
+                                ))}
+                            </datalist>
+                          </td>
+                          {/* Warning Column - Empty */}
+                          <td className="tbody-td text-center">
+                            <span className="text-gray-400 text-xs">-</span>
+                          </td>
+                          {/* Name */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              name="name"
+                              value={
+                                entry.idType === "PLC"
+                                  ? entry.firstName
+                                  : entry.idType === "Vendor"
+                                  ? entry.lastName || entry.firstName
+                                  : `${entry.firstName || ""} ${
+                                      entry.lastName || ""
+                                    }`.trim()
+                              }
+                              readOnly
+                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+                              placeholder="Name auto-filled"
+                            />
+                          </td>
+                          {/* Account */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              name="acctId"
+                              value={entry.acctId}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, acctId: value }
+                                      : ent
+                                  )
+                                );
+
+                                // Auto-populate account name if account found
+                                const accounts =
+                                  pastedEntryAccounts[entryIndex] || [];
+                                const selectedAccount = accounts.find(
+                                  (acc) => acc.id === value
+                                );
+                                if (selectedAccount) {
+                                  setNewEntries((prev) =>
+                                    prev.map((ent, idx) =>
+                                      idx === entryIndex
+                                        ? {
+                                            ...ent,
+                                            acctId: value,
+                                            acctName: selectedAccount.name,
+                                          }
+                                        : ent
+                                    )
+                                  );
+                                }
+                              }}
+                              className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+                              list={`account-list-${entryIndex}`}
+                              placeholder="Enter Account"
+                            />
+                            <datalist id={`account-list-${entryIndex}`}>
+                              {(pastedEntryAccounts[entryIndex] || []).map(
+                                (account, index) => (
+                                  <option
+                                    key={`${account.id}-${index}`}
+                                    value={account.id}
+                                  >
+                                    {account.name}
+                                  </option>
+                                )
+                              )}
+                            </datalist>
+                          </td>
+                          {/* Account Name */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              value={(() => {
+                                const accountWithName =
+                                  accountOptionsWithNames.find(
+                                    (acc) => acc.id === entry.acctId
+                                  );
+                                return accountWithName
+                                  ? accountWithName.name
+                                  : "";
+                              })()}
+                              readOnly
+                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+                              placeholder="Account Name auto-filled"
+                            />
+                          </td>
+                          {/* Organization */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              name="orgId"
+                              value={entry.orgId}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, orgId: value }
+                                      : ent
+                                  )
+                                );
+                              }}
+                              className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+                              list={`organization-list-${entryIndex}`}
+                              placeholder="Enter Organization"
+                            />
+                            <datalist id={`organization-list-${entryIndex}`}>
+                              {(pastedEntryOrgs[entryIndex] || []).map(
+                                (org, index) => (
+                                  <option
+                                    key={`${org.value}-${index}`}
+                                    value={org.value}
+                                  >
+                                    {org.label}
+                                  </option>
+                                )
+                              )}
+                            </datalist>
+                          </td>
+                          {/* PLC */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              name="plcGlcCode"
+                              value={entry.plcGlcCode}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, plcGlcCode: value }
+                                      : ent
+                                  )
+                                );
+                              }}
+                              className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+                              list={`plc-list-${entryIndex}`}
+                              placeholder="Enter PLC"
+                            />
+                            <datalist id={`plc-list-${entryIndex}`}>
+                              {(pastedEntryPlcs[entryIndex] || []).map(
+                                (plc, index) => (
+                                  <option
+                                    key={`${plc.value}-${index}`}
+                                    value={plc.value}
+                                  >
+                                    {plc.label}
+                                  </option>
+                                )
+                              )}
+                            </datalist>
+                          </td>
+                          {/* Rev */}
+                          <td className="tbody-td text-center">
+                            <input
+                              type="checkbox"
+                              name="isRev"
+                              checked={entry.isRev}
+                              onChange={(e) => {
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, isRev: e.target.checked }
+                                      : ent
+                                  )
+                                );
+                              }}
+                            />
+                          </td>
+                          {/* Brd */}
+                          <td className="tbody-td text-center">
+                            <input
+                              type="checkbox"
+                              name="isBrd"
+                              checked={entry.isBrd}
+                              onChange={(e) => {
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, isBrd: e.target.checked }
+                                      : ent
+                                  )
+                                );
+                              }}
+                            />
+                          </td>
+                          {/* Status */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              name="status"
+                              value={entry.status}
+                              onChange={(e) => {
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, status: e.target.value }
+                                      : ent
+                                  )
+                                );
+                              }}
+                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                            />
+                          </td>
+                          {/* Hour Rate */}
+                          <td className="tbody-td">
+                            <input
+                              type="text"
+                              name="perHourRate"
+                              value={entry.perHourRate}
+                              onChange={(e) => {
                                 setNewEntries((prev) =>
                                   prev.map((ent, idx) =>
                                     idx === entryIndex
                                       ? {
                                           ...ent,
-                                          acctId: value,
-                                          acctName: selectedAccount.name,
+                                          perHourRate: e.target.value.replace(
+                                            /[^0-9.]/g,
+                                            ""
+                                          ),
                                         }
                                       : ent
                                   )
                                 );
-                              }
-                            }}
-                            className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
-                            list={`account-list-${entryIndex}`}
-                            placeholder="Enter Account"
-                          />
-                          <datalist id={`account-list-${entryIndex}`}>
-                            {(pastedEntryAccounts[entryIndex] || []).map(
-                              (account, index) => (
+                              }}
+                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                            />
+                          </td>
+                          {/* Total */}
+                          <td className="tbody-td">
+                            {Object.values(
+                              newEntryPeriodHoursArray[entryIndex] || {}
+                            )
+                              .reduce(
+                                (sum, val) => sum + parseFloat(val || 0),
+                                0
+                              )
+                              .toFixed(2)}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    ))}
+
+                  {localEmployees
+                    .filter((_, idx) => !hiddenRows[idx])
+                    .map((emp, idx) => {
+                      const actualEmpIdx = localEmployees.findIndex(
+                        (e) => e === emp
+                      );
+                      const row = getEmployeeRow(emp, actualEmpIdx);
+                      const editedData = editedEmployeeData[actualEmpIdx] || {};
+                      return (
+                        <tr
+                          key={`employee-${actualEmpIdx}`}
+                          className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
+                            selectedRows.has(actualEmpIdx)
+                              ? "bg-blue-100"
+                              : selectedRowIndex === actualEmpIdx
+                              ? "bg-yellow-100"
+                              : "even:bg-gray-50"
+                          }`}
+                          style={{
+                            height: `${ROW_HEIGHT_DEFAULT}px`,
+                            lineHeight: "normal",
+                            cursor: "pointer", // Make it clear it's clickable
+                          }}
+                          onClick={() => {
+                            // Handle row click for selection
+                            handleRowSelection(
+                              actualEmpIdx,
+                              !selectedRows.has(actualEmpIdx)
+                            );
+                            handleRowClick(actualEmpIdx); // Keep existing row click functionality
+                          }}
+                        >
+                          <td className="tbody-td min-w-[70px]">
+                            {row.idType}
+                          </td>
+                          <td className="tbody-td min-w-[70px]">
+                            {row.emplId}
+                          </td>
+
+                          {/* UPDATE THIS WARNING CELL */}
+                          <td className="tbody-td min-w-[70px]">
+                            {row.warning ? (
+                              <span
+                                className="text-yellow-500 text-lg cursor-pointer hover:text-yellow-600"
+                                title="Click to view warnings"
+                                onClick={(e) =>
+                                  handleWarningClick(e, row.emplId)
+                                }
+                              >
+                                ⚠️
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 text-xs">-</span>
+                            )}
+                          </td>
+
+                          <td className="tbody-td min-w-[70px]">{row.name}</td>
+
+                          <td className="tbody-td min-w-[70px]">
+                            {isBudPlan && isEditable ? (
+                              <input
+                                type="text"
+                                value={
+                                  editedData.acctId !== undefined
+                                    ? editedData.acctId
+                                    : row.acctId
+                                }
+                                onChange={(e) =>
+                                  handleAccountInputChangeForUpdate(
+                                    e.target.value,
+                                    actualEmpIdx
+                                  )
+                                }
+                                onBlur={(e) => {
+                                  if (planType === "NBBUD") return; // Add this line
+                                  const val = e.target.value;
+                                  const originalValue = row.acctId;
+
+                                  if (
+                                    val !== originalValue &&
+                                    !isValidAccountForUpdate(
+                                      val,
+                                      updateAccountOptions
+                                    )
+                                  ) {
+                                    toast.error(
+                                      "Please enter a valid Account from the available list.",
+                                      {
+                                        autoClose: 3000,
+                                      }
+                                    );
+                                  } else {
+                                    // handleEmployeeDataBlur(actualEmpIdx, emp);
+                                  }
+                                }}
+                                className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                list={`account-list-${actualEmpIdx}`}
+                                placeholder="Enter Account"
+                              />
+                            ) : (
+                              row.acctId
+                            )}
+                            <datalist id={`account-list-${actualEmpIdx}`}>
+                              {updateAccountOptions.map((account, index) => (
                                 <option
                                   key={`${account.id}-${index}`}
                                   value={account.id}
                                 >
-                                  {account.name}
+                                  {account.id}
                                 </option>
-                              )
+                              ))}
+                            </datalist>
+                          </td>
+
+                          {/* ADD THIS MISSING TD FOR ACCOUNT NAME */}
+                          <td className="tbody-td min-w-[70px]">
+                            {row.acctName}
+                          </td>
+
+                          <td className="tbody-td min-w-[70px]">
+                            {isBudPlan && isEditable ? (
+                              <input
+                                type="text"
+                                value={
+                                  editedData.orgId !== undefined
+                                    ? editedData.orgId
+                                    : row.orgId
+                                }
+                                onChange={(e) =>
+                                  handleOrgInputChangeForUpdate(
+                                    e.target.value,
+                                    actualEmpIdx
+                                  )
+                                }
+                                onBlur={(e) => {
+                                  if (planType === "NBBUD") return; // Add this line
+                                  const val = e.target.value;
+                                  const originalValue = row.orgId;
+
+                                  if (
+                                    val !== originalValue &&
+                                    val &&
+                                    !isValidOrgForUpdate(
+                                      val,
+                                      updateOrganizationOptions
+                                    )
+                                  ) {
+                                    toast.error(
+                                      "Please enter a valid numeric Organization ID from the available list.",
+                                      {
+                                        autoClose: 3000,
+                                      }
+                                    );
+                                  } else {
+                                    // handleEmployeeDataBlur(actualEmpIdx, emp);
+                                  }
+                                }}
+                                className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                list={`organization-list-${actualEmpIdx}`}
+                                placeholder="Enter Organization ID"
+                              />
+                            ) : (
+                              row.orgId
                             )}
-                          </datalist>
-                        </td>
-
-                        {/* Account Name */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            value={(() => {
-                              const accountWithName =
-                                accountOptionsWithNames.find(
-                                  (acc) => acc.id === entry.acctId
-                                );
-                              return accountWithName
-                                ? accountWithName.name
-                                : "";
-                            })()}
-                            readOnly
-                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                            placeholder="Account Name auto-filled"
-                          />
-                        </td>
-
-                        {/* Organization */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            name="orgId"
-                            value={entry.orgId}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, orgId: value }
-                                    : ent
-                                )
-                              );
-                            }}
-                            className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
-                            list={`organization-list-${entryIndex}`}
-                            placeholder="Enter Organization"
-                          />
-                          <datalist id={`organization-list-${entryIndex}`}>
-                            {(pastedEntryOrgs[entryIndex] || []).map(
-                              (org, index) => (
+                            <datalist id={`organization-list-${actualEmpIdx}`}>
+                              {updateOrganizationOptions.map((org, index) => (
                                 <option
                                   key={`${org.value}-${index}`}
                                   value={org.value}
                                 >
                                   {org.label}
                                 </option>
-                              )
-                            )}
-                          </datalist>
-                        </td>
+                              ))}
+                            </datalist>
+                          </td>
 
-                        {/* PLC */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            name="plcGlcCode"
-                            value={entry.plcGlcCode}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, plcGlcCode: value }
-                                    : ent
-                                )
-                              );
-                            }}
-                            className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
-                            list={`plc-list-${entryIndex}`}
-                            placeholder="Enter PLC"
-                          />
-                          <datalist id={`plc-list-${entryIndex}`}>
-                            {(pastedEntryPlcs[entryIndex] || []).map(
-                              (plc, index) => (
+                          <td className="tbody-td min-w-[70px]">
+                            {isBudPlan && isEditable ? (
+                              <input
+                                type="text"
+                                value={
+                                  editedData.glcPlc !== undefined
+                                    ? editedData.glcPlc
+                                    : row.glcPlc
+                                }
+                                onChange={(e) =>
+                                  handlePlcInputChangeForUpdate(
+                                    e.target.value,
+                                    actualEmpIdx
+                                  )
+                                }
+                                onBlur={(e) => {
+                                  if (planType === "NBBUD") return;
+                                  const val = e.target.value.trim();
+                                  const originalValue = row.glcPlc;
+
+                                  // Only validate if value has changed and is not empty
+                                  if (val !== originalValue && val !== "") {
+                                    const exactPlcMatch = plcOptions.find(
+                                      (option) =>
+                                        option.value.toLowerCase() ===
+                                        val.toLowerCase()
+                                    );
+
+                                    if (!exactPlcMatch) {
+                                      toast.error(
+                                        "PLC must be selected from the available suggestions. Custom values are not allowed.",
+                                        {
+                                          autoClose: 4000,
+                                        }
+                                      );
+                                      // Reset to original value
+                                      handleEmployeeDataChange(
+                                        actualEmpIdx,
+                                        "glcPlc",
+                                        originalValue
+                                      );
+                                      setPlcSearch(originalValue);
+                                    }
+                                  }
+                                }}
+                                className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                list={`plc-list-${actualEmpIdx}`}
+                                placeholder="Enter PLC"
+                              />
+                            ) : (
+                              row.glcPlc
+                            )}
+                            <datalist id={`plc-list-${actualEmpIdx}`}>
+                              {/* Use updatePlcOptions if available, otherwise fallback to plcOptions */}
+                              {(updatePlcOptions.length > 0
+                                ? updatePlcOptions
+                                : plcOptions
+                              ).map((plc, index) => (
                                 <option
                                   key={`${plc.value}-${index}`}
                                   value={plc.value}
                                 >
                                   {plc.label}
                                 </option>
-                              )
+                              ))}
+                            </datalist>
+                          </td>
+
+                          <td className="tbody-td min-w-[70px] text-center">
+                            {isFieldEditable && isEditable ? (
+                              <input
+                                type="checkbox"
+                                checked={
+                                  editedData.isRev !== undefined
+                                    ? editedData.isRev
+                                    : emp.emple.isRev
+                                }
+                                onChange={(e) =>
+                                  handleEmployeeDataChange(
+                                    actualEmpIdx,
+                                    "isRev",
+                                    e.target.checked
+                                  )
+                                }
+                                className="w-4 h-4"
+                              />
+                            ) : (
+                              row.isRev
                             )}
-                          </datalist>
-                        </td>
-
-                        {/* Rev */}
-                        <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                          <input
-                            type="checkbox"
-                            name="isRev"
-                            checked={entry.isRev}
-                            onChange={(e) => {
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, isRev: e.target.checked }
-                                    : ent
-                                )
-                              );
-                            }}
-                          />
-                        </td>
-
-                        {/* Brd */}
-                        <td className="border border-gray-300 px-1.5 py-0.5 text-center">
-                          <input
-                            type="checkbox"
-                            name="isBrd"
-                            checked={entry.isBrd}
-                            onChange={(e) => {
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, isBrd: e.target.checked }
-                                    : ent
-                                )
-                              );
-                            }}
-                          />
-                        </td>
-
-                        {/* Status */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            name="status"
-                            value={entry.status}
-                            onChange={(e) => {
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? { ...ent, status: e.target.value }
-                                    : ent
-                                )
-                              );
-                            }}
-                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                          />
-                        </td>
-
-                        {/* Hour Rate */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          <input
-                            type="text"
-                            name="perHourRate"
-                            value={entry.perHourRate}
-                            onChange={(e) => {
-                              setNewEntries((prev) =>
-                                prev.map((ent, idx) =>
-                                  idx === entryIndex
-                                    ? {
-                                        ...ent,
-                                        perHourRate: e.target.value.replace(
-                                          /[^0-9.]/g,
-                                          ""
-                                        ),
-                                      }
-                                    : ent
-                                )
-                              );
-                            }}
-                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                          />
-                        </td>
-
-                        {/* Total */}
-                        <td className="border border-gray-300 px-1.5 py-0.5">
-                          {Object.values(
-                            newEntryPeriodHoursArray[entryIndex] || {}
-                          )
-                            .reduce((sum, val) => sum + parseFloat(val || 0), 0)
-                            .toFixed(2)}
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  ))}
-
-                {localEmployees
-                  .filter((_, idx) => !hiddenRows[idx])
-                  .map((emp, idx) => {
-                    const actualEmpIdx = localEmployees.findIndex(
-                      (e) => e === emp
-                    );
-                    const row = getEmployeeRow(emp, actualEmpIdx);
-                    const editedData = editedEmployeeData[actualEmpIdx] || {};
-                    return (
-                      <tr
-                        key={`employee-${actualEmpIdx}`}
-                        className={`whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200 ${
-                          selectedRows.has(actualEmpIdx)
-                            ? "bg-blue-100"
-                            : selectedRowIndex === actualEmpIdx
-                            ? "bg-yellow-100"
-                            : "even:bg-gray-50"
-                        }`}
-                        style={{
-                          height: `${ROW_HEIGHT_DEFAULT}px`,
-                          lineHeight: "normal",
-                          cursor: "pointer", // Make it clear it's clickable
-                        }}
-                        onClick={() => {
-                          // Handle row click for selection
-                          handleRowSelection(
-                            actualEmpIdx,
-                            !selectedRows.has(actualEmpIdx)
-                          );
-                          handleRowClick(actualEmpIdx); // Keep existing row click functionality
-                        }}
-                      >
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {row.idType}
-                        </td>
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {row.emplId}
-                        </td>
-
-                        {/* UPDATE THIS WARNING CELL */}
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-center min-w-[70px]">
-                          {row.warning ? (
-                            <span
-                              className="text-yellow-500 text-lg cursor-pointer hover:text-yellow-600"
-                              title="Click to view warnings"
-                              onClick={(e) => handleWarningClick(e, row.emplId)}
-                            >
-                              ⚠️
-                            </span>
-                          ) : (
-                            <span className="text-gray-300 text-xs">-</span>
-                          )}
-                        </td>
-
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {row.name}
-                        </td>
-
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {isBudPlan && isEditable ? (
-                            <input
-                              type="text"
-                              value={
-                                editedData.acctId !== undefined
-                                  ? editedData.acctId
-                                  : row.acctId
-                              }
-                              onChange={(e) =>
-                                handleAccountInputChangeForUpdate(
-                                  e.target.value,
-                                  actualEmpIdx
-                                )
-                              }
-                              onBlur={(e) => {
-                                if (planType === "NBBUD") return; // Add this line
-                                const val = e.target.value;
-                                const originalValue = row.acctId;
-
-                                if (
-                                  val !== originalValue &&
-                                  !isValidAccountForUpdate(
-                                    val,
-                                    updateAccountOptions
+                          </td>
+                          <td className="tbody-td min-w-[70px] text-center">
+                            {isFieldEditable && isEditable ? (
+                              <input
+                                type="checkbox"
+                                checked={
+                                  editedData.isBrd !== undefined
+                                    ? editedData.isBrd
+                                    : emp.emple.isBrd
+                                }
+                                onChange={(e) =>
+                                  handleEmployeeDataChange(
+                                    actualEmpIdx,
+                                    "isBrd",
+                                    e.target.checked
                                   )
-                                ) {
-                                  toast.error(
-                                    "Please enter a valid Account from the available list.",
-                                    {
-                                      autoClose: 3000,
-                                    }
-                                  );
-                                } else {
-                                  // handleEmployeeDataBlur(actualEmpIdx, emp);
                                 }
-                              }}
-                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                              list={`account-list-${actualEmpIdx}`}
-                              placeholder="Enter Account"
-                            />
-                          ) : (
-                            row.acctId
-                          )}
-                          <datalist id={`account-list-${actualEmpIdx}`}>
-                            {updateAccountOptions.map((account, index) => (
-                              <option
-                                key={`${account.id}-${index}`}
-                                value={account.id}
-                              >
-                                {account.id}
-                              </option>
-                            ))}
-                          </datalist>
-                        </td>
+                                className="w-4 h-4"
+                              />
+                            ) : (
+                              row.isBrd
+                            )}
+                          </td>
+                          <td className="tbody-td min-w-[70px]">
+                            {row.status}
+                          </td>
 
-                        {/* ADD THIS MISSING TD FOR ACCOUNT NAME */}
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {row.acctName}
-                        </td>
-
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {isBudPlan && isEditable ? (
-                            <input
-                              type="text"
-                              value={
-                                editedData.orgId !== undefined
-                                  ? editedData.orgId
-                                  : row.orgId
-                              }
-                              onChange={(e) =>
-                                handleOrgInputChangeForUpdate(
-                                  e.target.value,
-                                  actualEmpIdx
-                                )
-                              }
-                              onBlur={(e) => {
-                                if (planType === "NBBUD") return; // Add this line
-                                const val = e.target.value;
-                                const originalValue = row.orgId;
-
-                                if (
-                                  val !== originalValue &&
-                                  val &&
-                                  !isValidOrgForUpdate(
-                                    val,
-                                    updateOrganizationOptions
+                          <td className="tbody-td min-w-[70px]">
+                            {isBudPlan &&
+                            isEditable &&
+                            emp.emple.type !== "Employee" &&
+                            emp.emple.type !== "Vendor Employee" &&
+                            emp.emple.type !== "Vendor" ? (
+                              <input
+                                type="password"
+                                value={
+                                  editingPerHourRateIdx === actualEmpIdx
+                                    ? editedData.perHourRate !== undefined
+                                      ? editedData.perHourRate
+                                      : row.perHourRate
+                                    : ""
+                                }
+                                placeholder={
+                                  editingPerHourRateIdx === actualEmpIdx
+                                    ? ""
+                                    : "**"
+                                }
+                                onFocus={() =>
+                                  setEditingPerHourRateIdx(actualEmpIdx)
+                                }
+                                onChange={(e) =>
+                                  handleEmployeeDataChange(
+                                    actualEmpIdx,
+                                    "perHourRate",
+                                    e.target.value.replace(/[^0-9.]/g, "")
                                   )
-                                ) {
-                                  toast.error(
-                                    "Please enter a valid numeric Organization ID from the available list.",
-                                    {
-                                      autoClose: 3000,
-                                    }
-                                  );
-                                } else {
-                                  // handleEmployeeDataBlur(actualEmpIdx, emp);
                                 }
-                              }}
-                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                              list={`organization-list-${actualEmpIdx}`}
-                              placeholder="Enter Organization ID"
-                            />
-                          ) : (
-                            row.orgId
-                          )}
-                          <datalist id={`organization-list-${actualEmpIdx}`}>
-                            {updateOrganizationOptions.map((org, index) => (
-                              <option
-                                key={`${org.value}-${index}`}
-                                value={org.value}
-                              >
-                                {org.label}
-                              </option>
-                            ))}
-                          </datalist>
-                        </td>
-
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {isBudPlan && isEditable ? (
-                            <input
-                              type="text"
-                              value={
-                                editedData.glcPlc !== undefined
-                                  ? editedData.glcPlc
-                                  : row.glcPlc
-                              }
-                              onChange={(e) =>
-                                handlePlcInputChangeForUpdate(
-                                  e.target.value,
-                                  actualEmpIdx
-                                )
-                              }
-                              onBlur={(e) => {
-                                if (planType === "NBBUD") return;
-                                const val = e.target.value.trim();
-                                const originalValue = row.glcPlc;
-
-                                // Only validate if value has changed and is not empty
-                                if (val !== originalValue && val !== "") {
-                                  const exactPlcMatch = plcOptions.find(
-                                    (option) =>
-                                      option.value.toLowerCase() ===
-                                      val.toLowerCase()
-                                  );
-
-                                  if (!exactPlcMatch) {
-                                    toast.error(
-                                      "PLC must be selected from the available suggestions. Custom values are not allowed.",
-                                      {
-                                        autoClose: 4000,
-                                      }
-                                    );
-                                    // Reset to original value
-                                    handleEmployeeDataChange(
-                                      actualEmpIdx,
-                                      "glcPlc",
-                                      originalValue
-                                    );
-                                    setPlcSearch(originalValue);
-                                  }
+                                className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+                                // disabled={false}
+                                disabled={
+                                  emp.emple.type !== "Employee" &&
+                                  emp.emple.type !== "Vendor Employee" &&
+                                  emp.emple.type !== "Vendor"
                                 }
-                              }}
-                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                              list={`plc-list-${actualEmpIdx}`}
-                              placeholder="Enter PLC"
-                            />
-                          ) : (
-                            row.glcPlc
-                          )}
-                          <datalist id={`plc-list-${actualEmpIdx}`}>
-                            {/* Use updatePlcOptions if available, otherwise fallback to plcOptions */}
-                            {(updatePlcOptions.length > 0
-                              ? updatePlcOptions
-                              : plcOptions
-                            ).map((plc, index) => (
-                              <option
-                                key={`${plc.value}-${index}`}
-                                value={plc.value}
-                              >
-                                {plc.label}
-                              </option>
-                            ))}
-                          </datalist>
-                        </td>
+                              />
+                            ) : (
+                              <span className="text-gray-400 cursor-not-allowed">
+                                **
+                              </span>
+                            )}
+                          </td>
 
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px] text-center">
-                          {isFieldEditable && isEditable ? (
-                            <input
-                              type="checkbox"
-                              checked={
-                                editedData.isRev !== undefined
-                                  ? editedData.isRev
-                                  : emp.emple.isRev
-                              }
-                              onChange={(e) =>
-                                handleEmployeeDataChange(
-                                  actualEmpIdx,
-                                  "isRev",
-                                  e.target.checked
-                                )
-                              }
-                              className="w-4 h-4"
-                            />
-                          ) : (
-                            row.isRev
-                          )}
-                        </td>
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px] text-center">
-                          {isFieldEditable && isEditable ? (
-                            <input
-                              type="checkbox"
-                              checked={
-                                editedData.isBrd !== undefined
-                                  ? editedData.isBrd
-                                  : emp.emple.isBrd
-                              }
-                              onChange={(e) =>
-                                handleEmployeeDataChange(
-                                  actualEmpIdx,
-                                  "isBrd",
-                                  e.target.checked
-                                )
-                              }
-                              className="w-4 h-4"
-                            />
-                          ) : (
-                            row.isBrd
-                          )}
-                        </td>
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {row.status}
-                        </td>
-
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {isBudPlan &&
-                          isEditable &&
-                          emp.emple.type !== "Employee" &&
-                          emp.emple.type !== "Vendor Employee" &&
-                          emp.emple.type !== "Vendor" ? (
-                            <input
-                              type="password"
-                              value={
-                                editingPerHourRateIdx === actualEmpIdx
-                                  ? editedData.perHourRate !== undefined
-                                    ? editedData.perHourRate
-                                    : row.perHourRate
-                                  : ""
-                              }
-                              placeholder={
-                                editingPerHourRateIdx === actualEmpIdx
-                                  ? ""
-                                  : "**"
-                              }
-                              onFocus={() =>
-                                setEditingPerHourRateIdx(actualEmpIdx)
-                              }
-                              onChange={(e) =>
-                                handleEmployeeDataChange(
-                                  actualEmpIdx,
-                                  "perHourRate",
-                                  e.target.value.replace(/[^0-9.]/g, "")
-                                )
-                              }
-                              className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
-                              // disabled={false}
-                              disabled={
-                                emp.emple.type !== "Employee" &&
-                                emp.emple.type !== "Vendor Employee" &&
-                                emp.emple.type !== "Vendor"
-                              }
-                            />
-                          ) : (
-                            <span className="text-gray-400 cursor-not-allowed">
-                              **
-                            </span>
-                          )}
-                        </td>
-
-                        <td className="p-1.5 border-r border-gray-200 text-xs text-gray-700 min-w-[70px]">
-                          {row.total}
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-              <tfoot>
-                <tr
-                  className="bg-gray-200 font-normal text-center text-gray-200 "
-                  style={{
-                    position: "sticky",
-                    bottom: 0,
-                    zIndex: 20,
-                    height: `${ROW_HEIGHT_DEFAULT}px`,
-                    // height: "25px",
-                    lineHeight: "normal",
-                    borderTop: "2px solid #d1d5db", // tailwind gray-300
-                  }}
-                >
-                  <td colSpan={EMPLOYEE_COLUMNS.length}> Total Hours</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          <div
-            ref={secondTableRef}
-            onScroll={handleSecondScroll}
-            className="flex-1"
-            style={{
-              maxHeight: "400px",
-              overflowY: "auto", // show scrollbar
-              overflowX: "auto",
-            }}
-          >
-            <table className="min-w-full text-xs text-center border-collapse border border-gray-300 rounded-lg">
-              <thead className="sticky-thead">
-                <tr
-                  style={{
-                    height: `${ROW_HEIGHT_DEFAULT}px`,
-                    lineHeight: "normal",
-                  }}
-                >
-                  {sortedDurations.map((duration) => {
-                    const uniqueKey = `${duration.monthNo}_${duration.year}`;
-                    return (
-                      <th
-                        key={uniqueKey}
-                        className={`px-2 py-1.5 border border-gray-200 text-center min-w-[80px] text-xs text-gray-900 font-normal ${
-                          selectedColumnKey === uniqueKey ? "bg-yellow-100" : ""
-                        }`}
-                        style={{ cursor: isEditable ? "pointer" : "default" }}
-                        onClick={() => handleColumnHeaderClick(uniqueKey)}
-                      >
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <span className="whitespace-nowrap text-xs text-gray-900 font-normal">
-                            {duration.month}
-                          </span>
-                          <span className="text-xs text-gray-600 font-normal">
-                            {duration.workingHours || 0} hrs
-                          </span>
-                        </div>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-
-              <tbody>
-                {showNewForm && (
+                          <td className="tbody-td min-w-[70px]">{row.total}</td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+                <tfoot>
                   <tr
-                    key="new-entry"
-                    className="bg-gray-50"
+                    className="bg-white font-normal text-center text-white "
+                    style={{
+                      position: "sticky",
+                      bottom: 0,
+                      zIndex: 20,
+                      height: `${ROW_HEIGHT_DEFAULT}px`,
+                      // height: "25px",
+                      lineHeight: "normal",
+                      borderTop: "2px solid #d1d5db", // tailwind gray-300
+                    }}
+                  >
+                    <td colSpan={EMPLOYEE_COLUMNS.length}>" "</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            <div
+              ref={secondTableRef}
+              onScroll={handleSecondScroll}
+              className="flex-1"
+              style={{
+                maxHeight: "400px",
+                overflowY: "auto", // show scrollbar
+                overflowX: "auto",
+              }}
+            >
+              <table className="min-w-full table">
+                <thead className="thead">
+                  <tr
                     style={{
                       height: `${ROW_HEIGHT_DEFAULT}px`,
                       lineHeight: "normal",
                     }}
                   >
+
+                     {/* CTD Header */}
+    {/* <th
+      key="ctd-header"
+      className="th-thead min-w-[80px]"
+      style={{ cursor: "default" }}
+    >
+      <div className="flex flex-col items-center justify-center h-full">
+        <span className="whitespace-nowrap th-thead">CTD</span>
+        <span className="text-xs text-gray-600 font-normal normal-case">
+          {(() => {
+            if (fiscalYear === "All") return "N/A";
+            const startYear = parseInt(startDate.split('-')[0]);
+            const selectedYear = parseInt(fiscalYear);
+            return `${startYear}-${selectedYear - 2}`;
+          })()}
+        </span>
+      </div>
+    </th> */}
+
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <th
+    key="ctd-header"
+    className="th-thead min-w-[80px]"
+    style={{ cursor: "default" }}
+  >
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="whitespace-nowrap th-thead">CTD</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {(() => {
+          const startYear = parseInt(startDate.split('-')[0]);
+          const selectedYear = parseInt(normalizedFiscalYear);
+          return `${startYear}-${selectedYear - 2}`;
+        })()}
+      </span>
+    </div>
+  </th>
+)}
+    
+    {/* Prior Year Header */}
+    {/* <th
+      key="prior-year-header"
+      className="th-thead min-w-[80px]"
+      style={{ cursor: "default" }}
+    >
+      <div className="flex flex-col items-center justify-center h-full">
+        <span className="whitespace-nowrap th-thead">Prior Year</span>
+        <span className="text-xs text-gray-600 font-normal normal-case">
+          {fiscalYear !== "All" ? parseInt(fiscalYear) - 1 : "N/A"}
+        </span>
+      </div>
+    </th> */}
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <th
+    key="prior-year-header"
+    className="th-thead min-w-[80px]"
+    style={{ cursor: "default" }}
+  >
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="whitespace-nowrap th-thead">Prior Year</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {parseInt(normalizedFiscalYear) - 1}
+      </span>
+    </div>
+  </th>
+)}
                     {sortedDurations.map((duration) => {
                       const uniqueKey = `${duration.monthNo}_${duration.year}`;
-                      const value = newEntryPeriodHours[uniqueKey] || 0; // ← Use newEntryPeriodHours for new form
-                      const isInputEditable =
-                        isEditable &&
-                        isMonthEditable(duration, closedPeriod, planType);
-
                       return (
-                        <td key={`new-entry-${uniqueKey}`}>
-                          <input
-                            type="text"
-                            inputMode="numeric"
-                            className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
-                              !isInputEditable
-                                ? "cursor-not-allowed text-gray-400"
-                                : "text-gray-700"
-                            }`}
-                            value={value || ""} // Ensure empty string when undefined/null
-                            onChange={(e) => {
-                              const inputValue = e.target.value;
-
-                              // Allow completely empty input (for clearing with backspace)
-                              if (inputValue === "") {
-                                setNewEntryPeriodHours((prev) => ({
-                                  ...prev,
-                                  [uniqueKey]: "",
-                                }));
-                                return;
-                              }
-
-                              // Only allow numeric input with decimal
-                              if (!/^[0-9]*\.?[0-9]*$/.test(inputValue)) {
-                                return; // Don't update if not numeric
-                              }
-
-                              // Get available hours for validation
-                              const currentDuration = sortedDurations.find(
-                                (d) => `${d.monthNo}_${d.year}` === uniqueKey
-                              );
-                              if (
-                                currentDuration &&
-                                currentDuration.workingHours
-                              ) {
-                                const maxAllowedHours =
-                                  currentDuration.workingHours * 2;
-                                const numericValue =
-                                  parseFloat(inputValue) || 0;
-
-                                // Prevent input if exceeds limit
-                                if (numericValue > maxAllowedHours) {
-                                  toast.error(
-                                    `Hours cannot exceed more than available hours * 2`,
-                                    {
-                                      autoClose: 3000,
-                                    }
-                                  );
-                                  return; // Don't update the state
-                                }
-                              }
-
-                              setNewEntryPeriodHours((prev) => ({
-                                ...prev,
-                                [uniqueKey]: inputValue,
-                              }));
-                            }}
-                            onKeyDown={(e) => {
-                              // Allow backspace to completely clear the field
-                              if (
-                                e.key === "Backspace" &&
-                                (value === "0" || value === "")
-                              ) {
-                                e.preventDefault();
-                                setNewEntryPeriodHours((prev) => ({
-                                  ...prev,
-                                  [uniqueKey]: "",
-                                }));
-                              }
-                            }}
-                            disabled={!isInputEditable}
-                            placeholder="Enter Hours"
-                          />
-                        </td>
+                        <th
+                          key={uniqueKey}
+                          className={`th-thead min-w-[80px]  ${
+                            selectedColumnKey === uniqueKey
+                              ? "bg-yellow-100"
+                              : ""
+                          }`}
+                          style={{ cursor: isEditable ? "pointer" : "default" }}
+                          onClick={() => handleColumnHeaderClick(uniqueKey)}
+                        >
+                          <div className="flex flex-col items-center justify-center h-full">
+                            <span className="whitespace-nowrap th-thead">
+                              {duration.month}
+                            </span>
+                            <span className="text-xs text-gray-600 font-normal normal-case">
+                              {duration.workingHours || 0} hrs
+                            </span>
+                          </div>
+                        </th>
                       );
                     })}
                   </tr>
-                )}
+                </thead>
 
-                {/* PASTED ENTRIES - ADD THIS SECTION */}
-                {newEntries.length > 0 &&
-                  newEntries.map((entry, entryIndex) => (
+                <tbody className="tbody">
+                  {showNewForm && (
                     <tr
-                      key={`new-entry-duration-${entryIndex}`}
+                      key="new-entry"
                       className="bg-gray-50"
                       style={{
                         height: `${ROW_HEIGHT_DEFAULT}px`,
                         lineHeight: "normal",
                       }}
                     >
+
+                        {/* CTD Cell - read-only for new entry */}
+    {/* <td className="tbody-td text-center text-xs bg-gray-100">
+      0.00
+    </td> */}
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <td className="tbody-td text-center text-xs bg-gray-100">
+    0.00
+  </td>
+)}
+    
+    {/* Prior Year Cell - read-only for new entry */}
+    {/* <td className="tbody-td text-center text-xs bg-gray-100">
+      0.00
+    </td> */}
+    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <td className="tbody-td text-center text-xs bg-gray-100">
+    0.00
+  </td>
+)}
                       {sortedDurations.map((duration) => {
                         const uniqueKey = `${duration.monthNo}_${duration.year}`;
-                        const value =
-                          newEntryPeriodHoursArray[entryIndex]?.[uniqueKey] ||
-                          "";
+                        const value = newEntryPeriodHours[uniqueKey] || 0; // ← Use newEntryPeriodHours for new form
                         const isInputEditable =
                           isEditable &&
                           isMonthEditable(duration, closedPeriod, planType);
 
                         return (
-                          <td
-                            key={`new-entry-${entryIndex}-${uniqueKey}`}
-                            className="border border-gray-300 px-1.5 py-0.5"
-                          >
+                          <td key={`new-entry-${uniqueKey}`}>
                             <input
                               type="text"
                               inputMode="numeric"
-                              className={`text-center w-full text-xs ${
+                              className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
                                 !isInputEditable
-                                  ? "cursor-not-allowed text-gray-400 bg-gray-100"
-                                  : "text-gray-700 bg-white"
+                                  ? "cursor-not-allowed text-gray-400"
+                                  : "text-gray-700"
                               }`}
-                              value={value}
+                              value={value || ""} // Ensure empty string when undefined/null
                               onChange={(e) => {
                                 const inputValue = e.target.value;
 
-                                // Allow completely empty input for clearing
+                                // Allow completely empty input (for clearing with backspace)
                                 if (inputValue === "") {
-                                  setNewEntryPeriodHoursArray((prev) =>
-                                    prev.map((hours, idx) =>
-                                      idx === entryIndex
-                                        ? { ...hours, [uniqueKey]: "" }
-                                        : hours
-                                    )
-                                  );
+                                  setNewEntryPeriodHours((prev) => ({
+                                    ...prev,
+                                    [uniqueKey]: "",
+                                  }));
                                   return;
                                 }
 
@@ -5607,44 +6706,35 @@ const ProjectHoursDetails = ({
                                   return; // Don't update if not numeric
                                 }
 
-                                // Check for negative values
-                                const numericValue = parseFloat(inputValue);
-                                if (numericValue < 0) {
-                                  toast.error("Hours cannot be negative", {
-                                    autoClose: 2000,
-                                  });
-                                  return;
-                                }
-
-                                // Check against available hours * 2
+                                // Get available hours for validation
                                 const currentDuration = sortedDurations.find(
                                   (d) => `${d.monthNo}_${d.year}` === uniqueKey
                                 );
-
                                 if (
                                   currentDuration &&
                                   currentDuration.workingHours
                                 ) {
                                   const maxAllowedHours =
                                     currentDuration.workingHours * 2;
+                                  const numericValue =
+                                    parseFloat(inputValue) || 0;
 
+                                  // Prevent input if exceeds limit
                                   if (numericValue > maxAllowedHours) {
                                     toast.error(
                                       `Hours cannot exceed more than available hours * 2`,
-                                      { autoClose: 3000 }
+                                      {
+                                        autoClose: 3000,
+                                      }
                                     );
                                     return; // Don't update the state
                                   }
                                 }
 
-                                // Update state if validation passes
-                                setNewEntryPeriodHoursArray((prev) =>
-                                  prev.map((hours, idx) =>
-                                    idx === entryIndex
-                                      ? { ...hours, [uniqueKey]: inputValue }
-                                      : hours
-                                  )
-                                );
+                                setNewEntryPeriodHours((prev) => ({
+                                  ...prev,
+                                  [uniqueKey]: inputValue,
+                                }));
                               }}
                               onKeyDown={(e) => {
                                 // Allow backspace to completely clear the field
@@ -5653,117 +6743,411 @@ const ProjectHoursDetails = ({
                                   (value === "0" || value === "")
                                 ) {
                                   e.preventDefault();
-                                  setNewEntryPeriodHoursArray((prev) =>
-                                    prev.map((hours, idx) =>
-                                      idx === entryIndex
-                                        ? { ...hours, [uniqueKey]: "" }
-                                        : hours
-                                    )
-                                  );
+                                  setNewEntryPeriodHours((prev) => ({
+                                    ...prev,
+                                    [uniqueKey]: "",
+                                  }));
                                 }
                               }}
                               disabled={!isInputEditable}
-                              placeholder=""
+                              placeholder="Enter Hours"
                             />
                           </td>
                         );
                       })}
                     </tr>
-                  ))}
+                  )}
 
-                {localEmployees
-                  .filter((_, idx) => !hiddenRows[idx])
-                  .map((emp, idx) => {
-                    const actualEmpIdx = localEmployees.findIndex(
-                      (e) => e === emp
-                    );
-                    const monthHours = getMonthHours(emp);
+                
 
-                    return (
+                  {/* PASTED ENTRIES - ADD THIS SECTION */}
+                  {newEntries.length > 0 &&
+                    newEntries.map((entry, entryIndex) => (
                       <tr
-                        key={`hours-${actualEmpIdx}`}
-                        className="whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200"
+                        key={`new-entry-duration-${entryIndex}`}
+                        // className="bg-gray-50"
                         style={{
                           height: `${ROW_HEIGHT_DEFAULT}px`,
                           lineHeight: "normal",
                         }}
                       >
                         {sortedDurations.map((duration) => {
-                          // const actualEmpIdx = 0;
                           const uniqueKey = `${duration.monthNo}_${duration.year}`;
-                          const forecast = monthHours[uniqueKey];
                           const value =
-                            inputValues[`${actualEmpIdx}_${uniqueKey}`] ??
-                            forecast?.value ??
-                            0;
+                            newEntryPeriodHoursArray[entryIndex]?.[uniqueKey] ||
+                            "";
                           const isInputEditable =
                             isEditable &&
                             isMonthEditable(duration, closedPeriod, planType);
 
                           return (
-                            <td key={`hours-${actualEmpIdx}-${uniqueKey}`}>
+                            <td
+                              key={`new-entry-${entryIndex}-${uniqueKey}`}
+                              className="tbody-td"
+                            >
                               <input
                                 type="text"
                                 inputMode="numeric"
-                                className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+                                className={`text-center w-full text-xs ${
                                   !isInputEditable
-                                    ? "cursor-not-allowed text-gray-400"
-                                    : "text-gray-700"
+                                    ? "cursor-not-allowed text-gray-400 bg-gray-100"
+                                    : "text-gray-700 bg-white"
                                 }`}
                                 value={value}
-                                onChange={(e) =>
-                                  handleInputChange(
-                                    actualEmpIdx,
-                                    uniqueKey,
-                                    e.target.value.replace(/[^0-9.]/g, "")
-                                  )
-                                }
+                                onChange={(e) => {
+                                  const inputValue = e.target.value;
+
+                                  // Allow completely empty input for clearing
+                                  if (inputValue === "") {
+                                    setNewEntryPeriodHoursArray((prev) =>
+                                      prev.map((hours, idx) =>
+                                        idx === entryIndex
+                                          ? { ...hours, [uniqueKey]: "" }
+                                          : hours
+                                      )
+                                    );
+                                    return;
+                                  }
+
+                                  // Only allow numeric input with decimal
+                                  if (!/^[0-9]*\.?[0-9]*$/.test(inputValue)) {
+                                    return; // Don't update if not numeric
+                                  }
+
+                                  // Check for negative values
+                                  const numericValue = parseFloat(inputValue);
+                                  if (numericValue < 0) {
+                                    toast.error("Hours cannot be negative", {
+                                      autoClose: 2000,
+                                    });
+                                    return;
+                                  }
+
+                                  // Check against available hours * 2
+                                  const currentDuration = sortedDurations.find(
+                                    (d) =>
+                                      `${d.monthNo}_${d.year}` === uniqueKey
+                                  );
+
+                                  if (
+                                    currentDuration &&
+                                    currentDuration.workingHours
+                                  ) {
+                                    const maxAllowedHours =
+                                      currentDuration.workingHours * 2;
+
+                                    if (numericValue > maxAllowedHours) {
+                                      toast.error(
+                                        `Hours cannot exceed more than available hours * 2`,
+                                        { autoClose: 3000 }
+                                      );
+                                      return; // Don't update the state
+                                    }
+                                  }
+
+                                  // Update state if validation passes
+                                  setNewEntryPeriodHoursArray((prev) =>
+                                    prev.map((hours, idx) =>
+                                      idx === entryIndex
+                                        ? { ...hours, [uniqueKey]: inputValue }
+                                        : hours
+                                    )
+                                  );
+                                }}
+                                onKeyDown={(e) => {
+                                  // Allow backspace to completely clear the field
+                                  if (
+                                    e.key === "Backspace" &&
+                                    (value === "0" || value === "")
+                                  ) {
+                                    e.preventDefault();
+                                    setNewEntryPeriodHoursArray((prev) =>
+                                      prev.map((hours, idx) =>
+                                        idx === entryIndex
+                                          ? { ...hours, [uniqueKey]: "" }
+                                          : hours
+                                      )
+                                    );
+                                  }
+                                }}
                                 disabled={!isInputEditable}
-                                placeholder="Enter Hours"
+                                placeholder=""
                               />
                             </td>
                           );
                         })}
                       </tr>
-                    );
-                  })}
-              </tbody>
-              <tfoot>
-                <tr
-                  className="bg-gray-200 font-bold text-center"
-                  style={{
-                    position: "sticky",
-                    bottom: 0,
-                    zIndex: 20,
-                    height: `${ROW_HEIGHT_DEFAULT}px`,
-                    // height: "10px",
-                    lineHeight: "normal",
-                    borderTop: "2px solid #d1d5db", // tailwind gray-300
-                  }}
-                >
-                  {(() => {
-                    const columnTotals = calculateColumnTotals();
-                    return sortedDurations.map((duration) => {
-                      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-                      const total = columnTotals[uniqueKey] || 0;
+                    ))}
+
+                  {localEmployees
+                    .filter((_, idx) => !hiddenRows[idx])
+                    .map((emp, idx) => {
+                      const actualEmpIdx = localEmployees.findIndex(
+                        (e) => e === emp
+                      );
+                      const monthHours = getMonthHours(emp);
+
+
+                      // Calculate CTD and Prior Year for this employee
+    // Calculate CTD and Prior Year for this employee
+// let empCtd = 0;
+// let empPriorYear = 0;
+
+// if (fiscalYear !== "All") {
+//   const currentFiscalYear = parseInt(fiscalYear);
+//   const startYear = parseInt(startDate.split('-')[0]);
+  
+//   // ✅ CORRECT - Use ALL durations, not filtered sortedDurations
+//   durations.forEach((duration) => {
+//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+//     const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
+//     const forecastValue = monthHours[uniqueKey]?.value;
+//     const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+//     const hours = value && !isNaN(value) ? Number(value) : 0;
+    
+//     // Prior Year: sum of (selected fiscal year - 1)
+//     if (duration.year === currentFiscalYear - 1) {
+//       empPriorYear += hours;
+//     }
+    
+//     // CTD: sum from start year to (selected fiscal year - 2)
+//     if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+//       empCtd += hours;
+//     }
+//   });
+// }
+
+// Calculate CTD and Prior Year for this employee
+    let empCtd = 0;
+    let empPriorYear = 0;
+
+    if (normalizedFiscalYear !== "All" ) {
+      // const currentFiscalYear = parseInt(fiscalYear);
+       const currentFiscalYear = parseInt(normalizedFiscalYear);
+      const startYear = parseInt(startDate.split('-')[0]);
+      
+      // ✅ CRITICAL: Use ALL durations, not sortedDurations
+      durations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        
+        // ✅ CRITICAL FIX: Use actualEmpIdx (not idx) consistently
+        const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
+        const forecastValue = monthHours[uniqueKey]?.value;
+        const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+        const hours = value && !isNaN(value) ? Number(value) : 0;
+        
+        // Prior Year: sum of (selected fiscal year - 1)
+        if (duration.year === currentFiscalYear - 1) {
+          empPriorYear += hours;
+        }
+        
+        // CTD: sum from start year to (selected fiscal year - 2)
+        if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+          empCtd += hours;
+        }
+      });
+    }
+
+
 
                       return (
-                        <td
-                          key={`total-${uniqueKey}`}
-                          className="border border-gray-300 px-1.5 py-0.5 text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                        <tr
+                          key={`hours-${actualEmpIdx}`}
+                          // className="whitespace-nowrap hover:bg-blue-50 transition border-b border-gray-200"
+                          style={{
+                            height: `${ROW_HEIGHT_DEFAULT}px`,
+                            lineHeight: "normal",
+                          }}
                         >
-                          {total.toFixed(2)}
-                        </td>
+
+                           {/* CTD Cell */}
+        {/* <td className="tbody-td text-center text-xs">
+          {empCtd.toFixed(2)}
+        </td> */}
+        {normalizedFiscalYear !== "All"  && (
+  <td className="tbody-td text-center text-xs">
+    {empCtd.toFixed(2)}
+  </td>
+)}
+        
+        {/* Prior Year Cell */}
+        {/* <td className="tbody-td text-center text-xs">
+          {empPriorYear.toFixed(2)}
+        </td>
+         */}
+        {normalizedFiscalYear !== "All"  && (
+  <td className="tbody-td text-center text-xs">
+    {empPriorYear.toFixed(2)}
+  </td>
+)}
+                          {sortedDurations.map((duration) => {
+                            // const actualEmpIdx = 0;
+                            const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                            const forecast = monthHours[uniqueKey];
+                            const value =
+                              inputValues[`${actualEmpIdx}_${uniqueKey}`] ??
+                              forecast?.value ??
+                              0;
+                            const isInputEditable =
+                              isEditable &&
+                              isMonthEditable(duration, closedPeriod, planType);
+
+                            return (
+                              <td
+                                key={`hours-${actualEmpIdx}-${uniqueKey}`}
+                                className="tbody-td"
+                              >
+                                {/* <input
+  type="text"
+  inputMode="numeric"
+  data-cell-key={`${actualEmpIdx}${uniqueKey}`}  // ADD THIS LINE
+  className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+    !isInputEditable ? "cursor-not-allowed text-gray-400" : "text-gray-700"
+  } ${
+    findMatches.some((match) => match.empIdx === actualEmpIdx && match.uniqueKey === uniqueKey)
+      ? "bg-yellow-200 border-yellow-500 border-2"
+      : ""
+  }`}
+  value={value}
+  onChange={(e) => handleInputChange(actualEmpIdx, uniqueKey, e.target.value.replace(/[^0-9.]/g, ""))}
+  disabled={!isInputEditable}
+  placeholder="0.00"
+/> */}
+                                <input
+                                  type="text"
+                                  inputMode="numeric"
+                                  className={`text-center border border-gray-300 bg-white text-xs w-[50px] h-[18px] p-[2px] ${
+                                    !isInputEditable
+                                      ? "cursor-not-allowed text-gray-400"
+                                      : "text-gray-700"
+                                  } ${
+                                    findMatches.some(
+                                      (match) =>
+                                        match.empIdx === actualEmpIdx &&
+                                        match.uniqueKey === uniqueKey
+                                    )
+                                      ? "bg-yellow-200 border-yellow-500 border-2"
+                                      : ""
+                                  }`}
+                                  value={value}
+                                  onChange={(e) =>
+                                    handleInputChange(
+                                      actualEmpIdx,
+                                      uniqueKey,
+                                      e.target.value.replace(/[^0-9.]/g, "")
+                                    )
+                                  }
+                                  disabled={!isInputEditable}
+                                  placeholder="0.00"
+                                />
+                              </td>
+                            );
+                          })}
+                        </tr>
                       );
-                    });
-                  })()}
-                </tr>
-              </tfoot>
-            </table>
+                    })}
+                </tbody>
+                {/* <tfoot>
+                  <tr
+                    className="bg-gray-200 font-bold text-center"
+                    style={{
+                      position: "sticky",
+                      bottom: 0,
+                      zIndex: 20,
+                      height: `${ROW_HEIGHT_DEFAULT}px`,
+                      // height: "10px",
+                      lineHeight: "normal",
+                      borderTop: "2px solid #d1d5db", // tailwind gray-300
+                    }}
+                  >
+                    {(() => {
+                      const columnTotals = calculateColumnTotals();
+                      return sortedDurations.map((duration) => {
+                        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                        const total = columnTotals[uniqueKey] || 0;
+
+                        return (
+                          <td
+                            key={`total-${uniqueKey}`}
+                            className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                          >
+                            {total.toFixed(2)}
+                          </td>
+                        );
+                      });
+                    })()}
+                  </tr>
+                </tfoot> */}
+                <tfoot>
+  <tr
+    className="bg-gray-200 font-bold text-center"
+    style={{
+      position: "sticky",
+      bottom: 0,
+      zIndex: 20,
+      height: `${ROW_HEIGHT_DEFAULT}px`,
+      lineHeight: "normal",
+      borderTop: "2px solid #d1d5db",
+    }}
+  >
+    {/* CTD Column */}
+  {normalizedFiscalYear !== "All"  && (
+  <td
+    key="total-ctd"
+    className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+  >
+    {(() => {
+      const columnTotals = calculateColumnTotals();
+      return columnTotals['ctd']?.toFixed(2) || '0.00';
+    })()}
+  </td>
+)}
+    
+    {/* Prior Year Column */}
+    {/* <td
+      key="total-prior-year"
+      className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+    >
+      {(() => {
+        const columnTotals = calculateColumnTotals();
+        return columnTotals['priorYear']?.toFixed(2) || '0.00';
+      })()}
+    </td> */}
+    {normalizedFiscalYear !== "All"  && (
+  <td
+    key="total-prior-year"
+    className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+  >
+    {(() => {
+      const columnTotals = calculateColumnTotals();
+      return columnTotals['priorYear']?.toFixed(2) || '0.00';
+    })()}
+  </td>
+)}
+    
+    {/* Existing month columns */}
+    {sortedDurations.map((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      const columnTotals = calculateColumnTotals();
+      const total = columnTotals[uniqueKey] || 0;
+      return (
+        <td
+          key={`total-${uniqueKey}`}
+          className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+        >
+          {total.toFixed(2)}
+        </td>
+      );
+    })}
+  </tr>
+</tfoot>
+
+              </table>
+            </div>
           </div>
         </div>
       )}
-      {showFindReplace && (
+      {/* {showFindReplace && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-sm">
             <h3 className="text-lg font-semibold mb-4">
@@ -5880,6 +7264,180 @@ const ProjectHoursDetails = ({
               >
                 Replace All
               </button>
+            </div>
+          </div>
+        </div>
+      )} */}
+      {showFindReplace && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-sm">
+            <h3 className="text-lg font-semibold mb-4">
+              {showFindOnly ? "Find Hours" : "Find and Replace Hours"}
+            </h3>
+
+            {/* Toggle Find/Replace Mode */}
+            <div className="mb-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFindOnly(false);
+                  setFindMatches([]);
+                }}
+                className={`px-3 py-1 rounded text-xs ${
+                  !showFindOnly
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                Find & Replace
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFindOnly(true);
+                  setFindMatches([]);
+                }}
+                className={`px-3 py-1 rounded text-xs ${
+                  showFindOnly
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+              >
+                Find Only
+              </button>
+            </div>
+
+            {/* Find Value Input */}
+            <div className="mb-3">
+              <label
+                htmlFor="findValue"
+                className="block text-gray-700 text-xs font-medium mb-1"
+              >
+                Find
+              </label>
+              <input
+                type="text"
+                id="findValue"
+                className="w-full border border-gray-300 rounded-md p-2 text-xs"
+                value={findValue}
+                onChange={(e) => setFindValue(e.target.value)}
+                placeholder="Value to find (e.g., 100 or 0)"
+              />
+            </div>
+
+            {/* Replace Value Input - Only show in Replace mode */}
+            {!showFindOnly && (
+              <div className="mb-4">
+                <label
+                  htmlFor="replaceValue"
+                  className="block text-gray-700 text-xs font-medium mb-1"
+                >
+                  Replace with
+                </label>
+                <input
+                  type="text"
+                  id="replaceValue"
+                  className="w-full border border-gray-300 rounded-md p-2 text-xs"
+                  value={replaceValue}
+                  onChange={(e) =>
+                    setReplaceValue(e.target.value.replace(/[^0-9.]/g, ""))
+                  }
+                  placeholder="New value (e.g., 120)"
+                />
+              </div>
+            )}
+
+            {/* Scope Selection */}
+            <div className="mb-4">
+              <label className="block text-gray-700 text-xs font-medium mb-1">
+                Scope
+              </label>
+              <div className="flex gap-4 flex-wrap">
+                <label className="inline-flex items-center text-xs cursor-pointer">
+                  <input
+                    type="radio"
+                    className="form-radio text-blue-600"
+                    name="replaceScope"
+                    value="all"
+                    checked={replaceScope === "all"}
+                    onChange={(e) => setReplaceScope(e.target.value)}
+                  />
+                  <span className="ml-2">All</span>
+                </label>
+                <label className="inline-flex items-center text-xs cursor-pointer">
+                  <input
+                    type="radio"
+                    className="form-radio text-blue-600"
+                    name="replaceScope"
+                    value="row"
+                    checked={replaceScope === "row"}
+                    onChange={(e) => setReplaceScope(e.target.value)}
+                    disabled={selectedRowIndex === null}
+                  />
+                  <span className="ml-2">
+                    Selected Row (
+                    {selectedRowIndex !== null
+                      ? localEmployees[selectedRowIndex]?.emple.emplId
+                      : "NA"}
+                    )
+                  </span>
+                </label>
+                <label className="inline-flex items-center text-xs cursor-pointer">
+                  <input
+                    type="radio"
+                    className="form-radio text-blue-600"
+                    name="replaceScope"
+                    value="column"
+                    checked={replaceScope === "column"}
+                    onChange={(e) => setReplaceScope(e.target.value)}
+                    disabled={selectedColumnKey === null}
+                  />
+                  <span className="ml-2">
+                    Selected Column (
+                    {selectedColumnKey
+                      ? sortedDurations.find(
+                          (d) => `${d.monthNo}${d.year}` === selectedColumnKey
+                        )?.month
+                      : "NA"}
+                    )
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowFindReplace(false);
+                  setSelectedRowIndex(null);
+                  setSelectedColumnKey(null);
+                  setReplaceScope("all");
+                  setFindMatches([]);
+                  setShowFindOnly(false);
+                }}
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 text-xs"
+              >
+                Cancel
+              </button>
+              {showFindOnly ? (
+                <button
+                  type="button"
+                  onClick={handleFind}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs"
+                >
+                  Find & Highlight
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleFindReplace}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-xs"
+                >
+                  Replace All
+                </button>
+              )}
             </div>
           </div>
         </div>

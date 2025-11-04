@@ -459,6 +459,7 @@
 
 import React, { useEffect, useState } from "react";
 import NavigationSidebar from "../components/NavigationSidebar";
+import { Navigate } from "react-router-dom";
 import { Routes, Route, useNavigate } from "react-router-dom";
 import ProjectBudgetStatus from "../components/ProjectBudgetStatus";
 import NewBusiness from "../components/NewBusiness";
@@ -501,6 +502,18 @@ const Dashboard = () => {
     }
   }, []);
 
+  const ProtectedRoute = ({ children, allowedRoles }) => {
+    const storedUser = localStorage.getItem("currentUser");
+    if (!storedUser) {
+      return <Navigate to="/" replace />;
+    }
+    const userObj = JSON.parse(storedUser);
+    if (!userObj.role || !allowedRoles.includes(userObj.role.toLowerCase())) {
+      return <Navigate to="/" replace />;
+    }
+    return children;
+  };
+
   const handleLogout = () => {
     try {
       localStorage.removeItem("currentUser");
@@ -540,7 +553,7 @@ const Dashboard = () => {
       </div>
 
       {/* Main content: minimal padding and no white bg */}
-      <div className="main-content bg-gray-100 p-2">
+      <div className="main-content bg-gradient-to-b from-blue-100 to-white p-2">
         <Routes>
           <Route
             path="/"
@@ -565,34 +578,99 @@ const Dashboard = () => {
             element={<ProjectBudgetStatus />}
           />
           <Route path="/new-business" element={<NewBusiness />} />
-          <Route path="/pool-rate" element={<PoolRate />} />
+          {/* Protect for only admin */}
+          {/* <Route element={<ProtectedRoute allowedRoles={["admin" ]} />}> */}
+          {/* <Route path="/pool-rate" element={<PoolRate />} /> */}
+          <Route
+            path="/pool-rate"
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <PoolRate />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/pool-configuration"
-            element={<PoolConfigurationTable />}
+            // element={<PoolConfigurationTable />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <PoolConfigurationTable />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/template-pool-mapping"
-            element={<TemplatePoolMapping />}
+            // element={<TemplatePoolMapping />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <TemplatePoolMapping />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/template" element={<Template />} />
+          <Route
+            path="/template"
+            // element={<Template />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <Template />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/ceiling-configuration"
-            element={<CeilingConfiguration />}
+            // element={<CeilingConfiguration />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <CeilingConfiguration />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/global-configuration"
-            element={<GlobalConfiguration />}
+            // element={<GlobalConfiguration />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <GlobalConfiguration />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/prospective-id-setup"
-            element={<ProspectiveIdSetup />}
+            // element={<ProspectiveIdSetup />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <ProspectiveIdSetup />
+              </ProtectedRoute>
+            }
           />
-          <Route path="/display-settings" element={<DisplaySettings />} />
-          <Route path="/annual-holidays" element={<AnnualHolidays />} />
+          <Route
+            path="/display-settings"
+            // element={<DisplaySettings />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <DisplaySettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/annual-holidays"
+            // element={<AnnualHolidays />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <AnnualHolidays />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/maintain-fiscal-year-periods"
-            element={<MaintainFiscalYearPeriods />}
+            // element={<MaintainFiscalYearPeriods />}
+            element={
+              <ProtectedRoute allowedRoles={["admin"]}>
+                <MaintainFiscalYearPeriods />
+              </ProtectedRoute>
+            }
           />
+          {/* </Route> */}
         </Routes>
         {/* {currentUserRole === "admin" && <ChatBot />} */}
       </div>
