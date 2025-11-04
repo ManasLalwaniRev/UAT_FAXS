@@ -2356,11 +2356,11 @@ const PLCComponent = ({ selectedProjectId, selectedPlan, showPLC }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto overflow-y-auto max-h-64 border-b border-gray-300">
-          <table className="w-full text-xs border-collapse">
-            <thead className="sticky top-0 z-10 bg-gray-100">
+        <div className="overflow-x-auto overflow-y-auto max-h-64 rounded-xl shadow-lg border border-gray-200">
+          <table className="w-full table">
+            <thead className="sticky top-0 z-10 thead">
               <tr className="bg-gray-100">
-                <th className="border p-2 font-normal text-center">
+                <th className="th-thead">
                   <input
                     type="checkbox"
                     checked={
