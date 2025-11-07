@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import Warning from "./Warning";
 import { toast } from "react-toastify";
@@ -58,9 +58,17 @@ const ProjectHoursDetails = ({
   fiscalYear,
   onSaveSuccess,
 }) => {
-   // ADD THIS RIGHT HERE - Normalize fiscal year
-  const normalizedFiscalYear = fiscalYear === "All" || !fiscalYear ? "All" : String(fiscalYear).trim();
-  console.log("FISCAL YEAR DEBUG:", fiscalYear, "Normalized:", normalizedFiscalYear);
+  // ADD THIS RIGHT HERE - Normalize fiscal year
+  const normalizedFiscalYear =
+    fiscalYear === "All" || !fiscalYear ? "All" : String(fiscalYear).trim();
+  // ADD THIS BLOCK AFTER normalizedFiscalYear definition:
+
+  console.log(
+    "FISCAL YEAR DEBUG:",
+    fiscalYear,
+    "Normalized:",
+    normalizedFiscalYear
+  );
   const [durations, setDurations] = useState([]);
   const [isDurationLoading, setIsDurationLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -141,8 +149,20 @@ const ProjectHoursDetails = ({
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
   // ADD THIS NEW STATE at the top with other useState declarations
- const [cachedProjectData, setCachedProjectData] = useState(null);
- const [cachedOrgData, setCachedOrgData] = useState(null);
+  const [cachedProjectData, setCachedProjectData] = useState(null);
+  const [cachedOrgData, setCachedOrgData] = useState(null);
+
+  const sortedDurations = useMemo(() => {
+    return [...durations]
+      .filter((d) => {
+        if (normalizedFiscalYear === "All") return true;
+        return d.year === parseInt(normalizedFiscalYear);
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.monthNo - b.monthNo;
+      });
+  }, [durations, normalizedFiscalYear]);
 
   const firstTableRef = useRef(null);
   const secondTableRef = useRef(null);
@@ -154,6 +174,32 @@ const ProjectHoursDetails = ({
   const [editingPerHourRateIdx, setEditingPerHourRateIdx] =
     React.useState(null);
   const [isEditingNewEntry, setIsEditingNewEntry] = React.useState(false);
+
+  const shouldShowCTD = () => {
+    if (normalizedFiscalYear === "All") return false;
+
+    const selectedYear = parseInt(normalizedFiscalYear);
+    const startYear = parseInt(startDate.split("-")[0]);
+
+    // Don't show CTD if selected year is the Start Date year
+    if (selectedYear === startYear) return false;
+
+    // Show CTD only if selected year is at least 2 years after start year
+    return selectedYear >= startYear + 2;
+  };
+
+  const shouldShowPriorYear = () => {
+    if (normalizedFiscalYear === "All") return false;
+
+    const selectedYear = parseInt(normalizedFiscalYear);
+    const startYear = parseInt(startDate.split("-")[0]);
+
+    // CRITICAL FIX: Don't show Prior Year if selected year is the Start Date year
+    if (selectedYear === startYear) return false;
+
+    // CRITICAL FIX: Show Prior Year for ANY year after start year (including current year like 2025)
+    return selectedYear > startYear;
+  };
 
   const syncScroll = (sourceRef, targetRef) => {
     if (!sourceRef.current || !targetRef.current) return;
@@ -1551,10 +1597,10 @@ const ProjectHoursDetails = ({
       return;
     }
 
-    const sortedDurations = durations.sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      return a.monthNo - b.monthNo;
-    });
+    // const sortedDurations = durations.sort((a, b) => {
+    //   if (a.year !== b.year) return a.year - b.year;
+    //   return a.monthNo - b.monthNo;
+    // });
 
     const headers = [
       "ID Type",
@@ -1796,326 +1842,332 @@ const ProjectHoursDetails = ({
   // };
 
   // ADD this useEffect to clear cache when projectId or planType changes
-  
+
   // **NEW OPTIMIZED FUNCTION** - Fetches all data with minimal API calls
-const fetchAllSuggestionsOptimized = async (processedEntries) => {
-  
-  // if (planType === "NBBUD" || processedEntries.length === 0) return;
+  const fetchAllSuggestionsOptimized = async (processedEntries) => {
+    // if (planType === "NBBUD" || processedEntries.length === 0) return;
 
-  const encodedProjectId = encodeURIComponent(projectId);
+    const encodedProjectId = encodeURIComponent(projectId);
 
-  try {
-    // **STEP 1: Fetch common project-level data ONCE**
-    let projectData = cachedProjectData;
-    let orgOptions = cachedOrgData;
+    try {
+      // **STEP 1: Fetch common project-level data ONCE**
+      let projectData = cachedProjectData;
+      let orgOptions = cachedOrgData;
 
-    // Fetch project data if not cached
-    if (!projectData) {
-      const projectResponse = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
-      );
-      projectData = Array.isArray(projectResponse.data)
-        ? projectResponse.data[0]
-        : projectResponse.data;
-      setCachedProjectData(projectData);
-    }
-
-    // Fetch org data if not cached
-    if (!orgOptions) {
-      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
-      orgOptions = Array.isArray(orgResponse.data)
-        ? orgResponse.data.map((org) => ({
-            value: org.orgId,
-            label: `${org.orgId}`,
-          }))
-        : [];
-      setCachedOrgData(orgOptions);
-    }
-
-    // **STEP 2: Group entries by idType to minimize API calls**
-    const employeeEntries = [];
-    const vendorEntries = [];
-    const otherEntries = [];
-
-    processedEntries.forEach((entry, index) => {
-      if (entry.idType === "Employee") {
-        employeeEntries.push({ entry, index });
-      } else if (entry.idType === "Vendor") {
-        vendorEntries.push({ entry, index });
-      } else if (entry.idType !== "PLC") {
-        otherEntries.push({ entry, index });
-      }
-    });
-
-    // **STEP 3: Fetch employee suggestions ONCE per type**
-    let employeeSuggestions = [];
-    let vendorSuggestions = [];
-
-    // Fetch Employee suggestions only if there are Employee entries
-    if (employeeEntries.length > 0) {
-      try {
-        const response = await axios.get(
-          `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+      // Fetch project data if not cached
+      if (!projectData) {
+        const projectResponse = await axios.get(
+          `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
         );
-        employeeSuggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => {
-              const [lastName, firstName] = emp.employeeName
-                .split(",")
-                .map((str) => str.trim());
-              return {
-                emplId: emp.empId,
-                firstName: firstName || "",
-                lastName: lastName || "",
+        projectData = Array.isArray(projectResponse.data)
+          ? projectResponse.data[0]
+          : projectResponse.data;
+        setCachedProjectData(projectData);
+      }
+
+      // Fetch org data if not cached
+      if (!orgOptions) {
+        const orgResponse = await axios.get(
+          `${backendUrl}/Orgnization/GetAllOrgs`
+        );
+        orgOptions = Array.isArray(orgResponse.data)
+          ? orgResponse.data.map((org) => ({
+              value: org.orgId,
+              label: `${org.orgId}`,
+            }))
+          : [];
+        setCachedOrgData(orgOptions);
+      }
+
+      // **STEP 2: Group entries by idType to minimize API calls**
+      const employeeEntries = [];
+      const vendorEntries = [];
+      const otherEntries = [];
+
+      processedEntries.forEach((entry, index) => {
+        if (entry.idType === "Employee") {
+          employeeEntries.push({ entry, index });
+        } else if (entry.idType === "Vendor") {
+          vendorEntries.push({ entry, index });
+        } else if (entry.idType !== "PLC") {
+          otherEntries.push({ entry, index });
+        }
+      });
+
+      // **STEP 3: Fetch employee suggestions ONCE per type**
+      let employeeSuggestions = [];
+      let vendorSuggestions = [];
+
+      // Fetch Employee suggestions only if there are Employee entries
+      if (employeeEntries.length > 0) {
+        try {
+          const response = await axios.get(
+            `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+          );
+          employeeSuggestions = Array.isArray(response.data)
+            ? response.data.map((emp) => {
+                const [lastName, firstName] = emp.employeeName
+                  .split(",")
+                  .map((str) => str.trim());
+                return {
+                  emplId: emp.empId,
+                  firstName: firstName || "",
+                  lastName: lastName || "",
+                  perHourRate: emp.perHourRate || emp.hrRate || "",
+                  plc: emp.plc || "",
+                  orgId: emp.orgId || "",
+                };
+              })
+            : [];
+        } catch (err) {
+          console.error("Failed to fetch employee suggestions:", err);
+        }
+      }
+
+      // Fetch Vendor suggestions only if there are Vendor entries
+      if (vendorEntries.length > 0) {
+        try {
+          const response = await axios.get(
+            `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+          );
+          vendorSuggestions = Array.isArray(response.data)
+            ? response.data.map((emp) => ({
+                emplId: emp.vendId,
+                firstName: "",
+                lastName: emp.employeeName,
                 perHourRate: emp.perHourRate || emp.hrRate || "",
                 plc: emp.plc || "",
                 orgId: emp.orgId || "",
-              };
-            })
-          : [];
-      } catch (err) {
-        console.error("Failed to fetch employee suggestions:", err);
+              }))
+            : [];
+        } catch (err) {
+          console.error("Failed to fetch vendor suggestions:", err);
+        }
       }
+
+      // **STEP 4: Apply cached data to all entries**
+      processedEntries.forEach((entry, entryIndex) => {
+        // Set employee/vendor suggestions based on type
+        if (entry.idType === "Employee") {
+          setPastedEntrySuggestions((prev) => ({
+            ...prev,
+            [entryIndex]: employeeSuggestions,
+          }));
+        } else if (entry.idType === "Vendor") {
+          setPastedEntrySuggestions((prev) => ({
+            ...prev,
+            [entryIndex]: vendorSuggestions,
+          }));
+        }
+
+        // Set account options based on idType
+        let accountsWithNames = [];
+        if (entry.idType === "PLC") {
+          const employeeAccounts = Array.isArray(
+            projectData.employeeLaborAccounts
+          )
+            ? projectData.employeeLaborAccounts.map((account) => ({
+                id: account.accountId,
+                name: account.acctName,
+              }))
+            : [];
+          const vendorAccounts = Array.isArray(
+            projectData.sunContractorLaborAccounts
+          )
+            ? projectData.sunContractorLaborAccounts.map((account) => ({
+                id: account.accountId,
+                name: account.acctName,
+              }))
+            : [];
+          accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+        } else if (entry.idType === "Employee") {
+          accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
+            ? projectData.employeeLaborAccounts.map((account) => ({
+                id: account.accountId,
+                name: account.acctName,
+              }))
+            : [];
+        } else if (entry.idType === "Vendor") {
+          accountsWithNames = Array.isArray(
+            projectData.sunContractorLaborAccounts
+          )
+            ? projectData.sunContractorLaborAccounts.map((account) => ({
+                id: account.accountId,
+                name: account.acctName,
+              }))
+            : [];
+        } else if (entry.idType === "Other") {
+          accountsWithNames = Array.isArray(
+            projectData.otherDirectCostLaborAccounts
+          )
+            ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+                id: account.accountId,
+                name: account.acctName,
+              }))
+            : [];
+        }
+
+        setPastedEntryAccounts((prev) => ({
+          ...prev,
+          [entryIndex]: accountsWithNames,
+        }));
+
+        // Set org options (same for all)
+        setPastedEntryOrgs((prev) => ({
+          ...prev,
+          [entryIndex]: orgOptions,
+        }));
+
+        // Set PLC options (same for all)
+        if (projectData.plc && Array.isArray(projectData.plc)) {
+          const plcOptions = projectData.plc.map((plc) => ({
+            value: plc.laborCategoryCode,
+            label: `${plc.laborCategoryCode} - ${plc.description}`,
+          }));
+
+          setPastedEntryPlcs((prev) => ({
+            ...prev,
+            [entryIndex]: plcOptions,
+          }));
+        }
+      });
+    } catch (err) {
+      console.error("Failed to fetch suggestions for pasted entries:", err);
     }
-
-    // Fetch Vendor suggestions only if there are Vendor entries
-    if (vendorEntries.length > 0) {
-      try {
-        const response = await axios.get(
-          `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
-        );
-        vendorSuggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => ({
-              emplId: emp.vendId,
-              firstName: "",
-              lastName: emp.employeeName,
-              perHourRate: emp.perHourRate || emp.hrRate || "",
-              plc: emp.plc || "",
-              orgId: emp.orgId || "",
-            }))
-          : [];
-      } catch (err) {
-        console.error("Failed to fetch vendor suggestions:", err);
-      }
-    }
-
-    // **STEP 4: Apply cached data to all entries**
-    processedEntries.forEach((entry, entryIndex) => {
-      // Set employee/vendor suggestions based on type
-      if (entry.idType === "Employee") {
-        setPastedEntrySuggestions((prev) => ({
-          ...prev,
-          [entryIndex]: employeeSuggestions,
-        }));
-      } else if (entry.idType === "Vendor") {
-        setPastedEntrySuggestions((prev) => ({
-          ...prev,
-          [entryIndex]: vendorSuggestions,
-        }));
-      }
-
-      // Set account options based on idType
-      let accountsWithNames = [];
-      if (entry.idType === "PLC") {
-        const employeeAccounts = Array.isArray(projectData.employeeLaborAccounts)
-          ? projectData.employeeLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-        const vendorAccounts = Array.isArray(projectData.sunContractorLaborAccounts)
-          ? projectData.sunContractorLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-        accountsWithNames = [...employeeAccounts, ...vendorAccounts];
-      } else if (entry.idType === "Employee") {
-        accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
-          ? projectData.employeeLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-      } else if (entry.idType === "Vendor") {
-        accountsWithNames = Array.isArray(projectData.sunContractorLaborAccounts)
-          ? projectData.sunContractorLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-      } else if (entry.idType === "Other") {
-        accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
-          ? projectData.otherDirectCostLaborAccounts.map((account) => ({
-              id: account.accountId,
-              name: account.acctName,
-            }))
-          : [];
-      }
-
-      setPastedEntryAccounts((prev) => ({
-        ...prev,
-        [entryIndex]: accountsWithNames,
-      }));
-
-      // Set org options (same for all)
-      setPastedEntryOrgs((prev) => ({
-        ...prev,
-        [entryIndex]: orgOptions,
-      }));
-
-      // Set PLC options (same for all)
-      if (projectData.plc && Array.isArray(projectData.plc)) {
-        const plcOptions = projectData.plc.map((plc) => ({
-          value: plc.laborCategoryCode,
-          label: `${plc.laborCategoryCode} - ${plc.description}`,
-        }));
-
-        setPastedEntryPlcs((prev) => ({
-          ...prev,
-          [entryIndex]: plcOptions,
-        }));
-      }
-    });
-  } catch (err) {
-    console.error("Failed to fetch suggestions for pasted entries:", err);
-  }
-};
+  };
 
   const handlePasteMultipleRows = async () => {
-  if (copiedRowsData.length === 0) {
-    toast.error("No copied data available to paste", { autoClose: 2000 });
-    return;
-  }
-
-  // Close single new form if open
-  if (showNewForm) {
-    setShowNewForm(false);
-  }
-
-  // Filter durations by selected fiscal year
-  const sortedDurations = [...durations]
-    .filter((d) => {
-      if (fiscalYear === "All") return true;
-      return d.year === parseInt(fiscalYear);
-    })
-    .sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      return a.monthNo - b.monthNo;
-    });
-
-  const processedEntries = [];
-  const processedHoursArray = [];
-
-  copiedRowsData.forEach((rowData, rowIndex) => {
-    // Extract employee data (first 11 columns + skip Total column at position 11)
-    const [
-      idTypeLabel,
-      id,
-      name,
-      acctId,
-      acctName,
-      orgId,
-      plcGlcCode,
-      isRev,
-      isBrd,
-      status,
-      perHourRate,
-      total, // Position 11 - capture but don't use
-      ...monthValues // Position 12+ - actual month values
-    ] = rowData;
-
-    // Map ID Type
-    const idType =
-      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-      idTypeLabel;
-
-    // Parse name based on ID type
-    let firstName = "";
-    let lastName = "";
-
-    if (idType === "PLC") {
-      firstName = name;
-    } else if (idType === "Vendor") {
-      if (name.includes(", ")) {
-        const nameParts = name.split(", ");
-        lastName = nameParts[0];
-        firstName = nameParts[1];
-      } else {
-        lastName = name;
-      }
-    } else if (idType === "Employee") {
-      const nameParts = name.split(" ");
-      firstName = nameParts[0];
-      lastName = nameParts.slice(1).join(" ");
-    } else {
-      firstName = name;
+    if (copiedRowsData.length === 0) {
+      toast.error("No copied data available to paste", { autoClose: 2000 });
+      return;
     }
 
-    const entry = {
-      id: id,
-      firstName: firstName,
-      lastName: lastName,
-      idType: idType,
-      acctId: acctId,
-      orgId: orgId,
-      plcGlcCode: plcGlcCode,
-      perHourRate: perHourRate,
-      status: status || "ACT",
-      isRev: isRev === "✓",
-      isBrd: isBrd === "✓",
-    };
+    // Close single new form if open
+    if (showNewForm) {
+      setShowNewForm(false);
+    }
 
-    // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
-    const periodHours = {};
+    // Filter durations by selected fiscal year
+    // const sortedDurations = [...durations]
+    //   .filter((d) => {
+    //     if (fiscalYear === "All") return true;
+    //     return d.year === parseInt(fiscalYear);
+    //   })
+    //   .sort((a, b) => {
+    //     if (a.year !== b.year) return a.year - b.year;
+    //     return a.monthNo - b.monthNo;
+    //   });
 
-    // Build a lookup map from copiedMonthMetadata to monthValues
-    const copiedHoursMap = {};
-    copiedMonthMetadata.forEach((meta, index) => {
-      const key = `${meta.monthNo}_${meta.year}`;
-      copiedHoursMap[key] = monthValues[index];
-    });
+    const processedEntries = [];
+    const processedHoursArray = [];
 
-    // Now map to current fiscal year durations
-    sortedDurations.forEach((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      const value = copiedHoursMap[uniqueKey];
+    copiedRowsData.forEach((rowData, rowIndex) => {
+      // Extract employee data (first 11 columns + skip Total column at position 11)
+      const [
+        idTypeLabel,
+        id,
+        name,
+        acctId,
+        acctName,
+        orgId,
+        plcGlcCode,
+        isRev,
+        isBrd,
+        status,
+        perHourRate,
+        total, // Position 11 - capture but don't use
+        ...monthValues // Position 12+ - actual month values
+      ] = rowData;
 
-      // Only add non-zero values that exist in copied data
-      if (value && value !== "0.00" && value !== "0" && value !== "") {
-        periodHours[uniqueKey] = value;
+      // Map ID Type
+      const idType =
+        ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+        idTypeLabel;
+
+      // Parse name based on ID type
+      let firstName = "";
+      let lastName = "";
+
+      if (idType === "PLC") {
+        firstName = name;
+      } else if (idType === "Vendor") {
+        if (name.includes(", ")) {
+          const nameParts = name.split(", ");
+          lastName = nameParts[0];
+          firstName = nameParts[1];
+        } else {
+          lastName = name;
+        }
+      } else if (idType === "Employee") {
+        const nameParts = name.split(" ");
+        firstName = nameParts[0];
+        lastName = nameParts.slice(1).join(" ");
+      } else {
+        firstName = name;
       }
+
+      const entry = {
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        idType: idType,
+        acctId: acctId,
+        orgId: orgId,
+        plcGlcCode: plcGlcCode,
+        perHourRate: perHourRate,
+        status: status || "ACT",
+        isRev: isRev === "✓",
+        isBrd: isBrd === "✓",
+      };
+
+      // CRITICAL FIX: Match hours by month/year from copiedMonthMetadata
+      const periodHours = {};
+
+      // Build a lookup map from copiedMonthMetadata to monthValues
+      const copiedHoursMap = {};
+      copiedMonthMetadata.forEach((meta, index) => {
+        const key = `${meta.monthNo}_${meta.year}`;
+        copiedHoursMap[key] = monthValues[index];
+      });
+
+      // Now map to current fiscal year durations
+      sortedDurations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const value = copiedHoursMap[uniqueKey];
+
+        // Only add non-zero values that exist in copied data
+        if (value && value !== "0.00" && value !== "0" && value !== "") {
+          periodHours[uniqueKey] = value;
+        }
+      });
+
+      processedEntries.push(entry);
+      processedHoursArray.push(periodHours);
     });
 
-    processedEntries.push(entry);
-    processedHoursArray.push(periodHours);
-  });
+    // Set state with all processed data
+    setNewEntries(processedEntries);
+    setNewEntryPeriodHoursArray(processedHoursArray);
 
-  // Set state with all processed data
-  setNewEntries(processedEntries);
-  setNewEntryPeriodHoursArray(processedHoursArray);
+    // **OPTIMIZED** - Fetch common data ONCE, then process all entries
+    await fetchAllSuggestionsOptimized(processedEntries);
 
-  // **OPTIMIZED** - Fetch common data ONCE, then process all entries
-  await fetchAllSuggestionsOptimized(processedEntries);
+    // Disable paste button
+    setHasClipboardData(false);
+    setCopiedRowsData([]);
+    setCopiedMonthMetadata([]);
 
-  // Disable paste button
-  setHasClipboardData(false);
-  setCopiedRowsData([]);
-  setCopiedMonthMetadata([]);
-
-  toast.success(
-    `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
-    { autoClose: 3000 }
-  );
-};
-
-
+    toast.success(
+      `Pasted ${processedEntries.length} entries for fiscal year ${fiscalYear}!`,
+      { autoClose: 3000 }
+    );
+  };
 
   useEffect(() => {
-  // Clear cached data when project changes
-  setCachedProjectData(null);
-  setCachedOrgData(null);
-}, [projectId, planType]);
-
+    // Clear cached data when project changes
+    setCachedProjectData(null);
+    setCachedOrgData(null);
+  }, [projectId, planType]);
 
   // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
   //   // if (planType === "NBBUD") return;
@@ -2261,7 +2313,7 @@ const fetchAllSuggestionsOptimized = async (processedEntries) => {
   //     );
   //   }
   // };
-  
+
   // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
   //   // CRITICAL FIX: URL encode project ID
   //   const encodedProjectId = encodeURIComponent(projectId);
@@ -2405,161 +2457,170 @@ const fetchAllSuggestionsOptimized = async (processedEntries) => {
   //     );
   //   }
   // };
-  
+
   // REPLACE the entire fetchSuggestionsForPastedEntry function with this optimized version
-const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-  // if (planType === "NBBUD") return;
+  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+    // if (planType === "NBBUD") return;
 
-  // CRITICAL FIX: URL encode project ID
-  const encodedProjectId = encodeURIComponent(projectId);
+    // CRITICAL FIX: URL encode project ID
+    const encodedProjectId = encodeURIComponent(projectId);
 
-  // Fetch employee suggestions based on ID type (this is entry-specific, must be called per entry)
-  if (entry.idType && entry.idType !== "") {
+    // Fetch employee suggestions based on ID type (this is entry-specific, must be called per entry)
+    if (entry.idType && entry.idType !== "") {
+      try {
+        const endpoint =
+          entry.idType === "Vendor"
+            ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+            : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+
+        const response = await axios.get(endpoint);
+        const suggestions = Array.isArray(response.data)
+          ? response.data.map((emp) => {
+              if (entry.idType === "Vendor") {
+                return {
+                  emplId: emp.vendId,
+                  firstName: "",
+                  lastName: emp.employeeName,
+                  perHourRate: emp.perHourRate || emp.hrRate || "",
+                  plc: emp.plc || "",
+                  orgId: emp.orgId || "",
+                };
+              } else {
+                const [lastName, firstName] = emp.employeeName
+                  .split(",")
+                  .map((str) => str.trim());
+                return {
+                  emplId: emp.empId,
+                  firstName: firstName || "",
+                  lastName: lastName || "",
+                  perHourRate: emp.perHourRate || emp.hrRate || "",
+                  plc: emp.plc || "",
+                  orgId: emp.orgId || "",
+                };
+              }
+            })
+          : [];
+
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: suggestions,
+        }));
+      } catch (err) {
+        console.error(
+          `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+          err
+        );
+      }
+    }
+
+    // OPTIMIZATION: Fetch project and org data only once, then cache it
     try {
-      const endpoint =
-        entry.idType === "Vendor"
-          ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
-          : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+      let projectData = cachedProjectData;
+      let orgOptions = cachedOrgData;
 
-      const response = await axios.get(endpoint);
-      const suggestions = Array.isArray(response.data)
-        ? response.data.map((emp) => {
-            if (entry.idType === "Vendor") {
-              return {
-                emplId: emp.vendId,
-                firstName: "",
-                lastName: emp.employeeName,
-                perHourRate: emp.perHourRate || emp.hrRate || "",
-                plc: emp.plc || "",
-                orgId: emp.orgId || "",
-              };
-            } else {
-              const [lastName, firstName] = emp.employeeName
-                .split(",")
-                .map((str) => str.trim());
-              return {
-                emplId: emp.empId,
-                firstName: firstName || "",
-                lastName: lastName || "",
-                perHourRate: emp.perHourRate || emp.hrRate || "",
-                plc: emp.plc || "",
-                orgId: emp.orgId || "",
-              };
-            }
-          })
-        : [];
+      // Only fetch project data if not already cached
+      if (!projectData) {
+        const response = await axios.get(
+          `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+        );
+        projectData = Array.isArray(response.data)
+          ? response.data[0]
+          : response.data;
+        setCachedProjectData(projectData);
+      }
 
-      setPastedEntrySuggestions((prev) => ({
+      // Only fetch org data if not already cached
+      if (!orgOptions) {
+        const orgResponse = await axios.get(
+          `${backendUrl}/Orgnization/GetAllOrgs`
+        );
+        orgOptions = Array.isArray(orgResponse.data)
+          ? orgResponse.data.map((org) => ({
+              value: org.orgId,
+              label: `${org.orgId}`,
+            }))
+          : [];
+        setCachedOrgData(orgOptions);
+      }
+
+      // Now use the cached data to populate entry-specific options
+      // Fetch accounts
+      let accountsWithNames = [];
+      if (entry.idType === "PLC") {
+        const employeeAccounts = Array.isArray(
+          projectData.employeeLaborAccounts
+        )
+          ? projectData.employeeLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+        const vendorAccounts = Array.isArray(
+          projectData.sunContractorLaborAccounts
+        )
+          ? projectData.sunContractorLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+        accountsWithNames = [...employeeAccounts, ...vendorAccounts];
+      } else if (entry.idType === "Employee") {
+        accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
+          ? projectData.employeeLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+      } else if (entry.idType === "Vendor") {
+        accountsWithNames = Array.isArray(
+          projectData.sunContractorLaborAccounts
+        )
+          ? projectData.sunContractorLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+      } else if (entry.idType === "Other") {
+        accountsWithNames = Array.isArray(
+          projectData.otherDirectCostLaborAccounts
+        )
+          ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+              id: account.accountId,
+              name: account.acctName,
+            }))
+          : [];
+      }
+
+      setPastedEntryAccounts((prev) => ({
         ...prev,
-        [entryIndex]: suggestions,
+        [entryIndex]: accountsWithNames,
       }));
+
+      // Use cached organizations
+      setPastedEntryOrgs((prev) => ({
+        ...prev,
+        [entryIndex]: orgOptions,
+      }));
+
+      // Fetch PLC options
+      if (projectData.plc && Array.isArray(projectData.plc)) {
+        const plcOptions = projectData.plc.map((plc) => ({
+          value: plc.laborCategoryCode,
+          label: `${plc.laborCategoryCode} - ${plc.description}`,
+        }));
+
+        setPastedEntryPlcs((prev) => ({
+          ...prev,
+          [entryIndex]: plcOptions,
+        }));
+      }
     } catch (err) {
       console.error(
-        `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+        `Failed to fetch pasted entry options for index ${entryIndex}:`,
         err
       );
     }
-  }
-
-  // OPTIMIZATION: Fetch project and org data only once, then cache it
-  try {
-    let projectData = cachedProjectData;
-    let orgOptions = cachedOrgData;
-
-    // Only fetch project data if not already cached
-    if (!projectData) {
-      const response = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
-      );
-      projectData = Array.isArray(response.data)
-        ? response.data[0]
-        : response.data;
-      setCachedProjectData(projectData);
-    }
-
-    // Only fetch org data if not already cached
-    if (!orgOptions) {
-      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
-      orgOptions = Array.isArray(orgResponse.data)
-        ? orgResponse.data.map((org) => ({
-            value: org.orgId,
-            label: `${org.orgId}`,
-          }))
-        : [];
-      setCachedOrgData(orgOptions);
-    }
-
-    // Now use the cached data to populate entry-specific options
-    // Fetch accounts
-    let accountsWithNames = [];
-    if (entry.idType === "PLC") {
-      const employeeAccounts = Array.isArray(projectData.employeeLaborAccounts)
-        ? projectData.employeeLaborAccounts.map((account) => ({
-            id: account.accountId,
-            name: account.acctName,
-          }))
-        : [];
-      const vendorAccounts = Array.isArray(projectData.sunContractorLaborAccounts)
-        ? projectData.sunContractorLaborAccounts.map((account) => ({
-            id: account.accountId,
-            name: account.acctName,
-          }))
-        : [];
-      accountsWithNames = [...employeeAccounts, ...vendorAccounts];
-    } else if (entry.idType === "Employee") {
-      accountsWithNames = Array.isArray(projectData.employeeLaborAccounts)
-        ? projectData.employeeLaborAccounts.map((account) => ({
-            id: account.accountId,
-            name: account.acctName,
-          }))
-        : [];
-    } else if (entry.idType === "Vendor") {
-      accountsWithNames = Array.isArray(projectData.sunContractorLaborAccounts)
-        ? projectData.sunContractorLaborAccounts.map((account) => ({
-            id: account.accountId,
-            name: account.acctName,
-          }))
-        : [];
-    } else if (entry.idType === "Other") {
-      accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
-        ? projectData.otherDirectCostLaborAccounts.map((account) => ({
-            id: account.accountId,
-            name: account.acctName,
-          }))
-        : [];
-    }
-
-    setPastedEntryAccounts((prev) => ({
-      ...prev,
-      [entryIndex]: accountsWithNames,
-    }));
-
-    // Use cached organizations
-    setPastedEntryOrgs((prev) => ({
-      ...prev,
-      [entryIndex]: orgOptions,
-    }));
-
-    // Fetch PLC options
-    if (projectData.plc && Array.isArray(projectData.plc)) {
-      const plcOptions = projectData.plc.map((plc) => ({
-        value: plc.laborCategoryCode,
-        label: `${plc.laborCategoryCode} - ${plc.description}`,
-      }));
-
-      setPastedEntryPlcs((prev) => ({
-        ...prev,
-        [entryIndex]: plcOptions,
-      }));
-    }
-  } catch (err) {
-    console.error(
-      `Failed to fetch pasted entry options for index ${entryIndex}:`,
-      err
-    );
-  }
-};
-
+  };
 
   const handlePasteToNewEntry = async () => {
     try {
@@ -2953,222 +3014,352 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
   // };
 
   // Calculate column totals for each month
-// const calculateColumnTotals = () => {
-//   const columnTotals = {};
-  
-//   // Initialize CTD and Prior Year totals
-//   let ctdTotal = 0;
-//   let priorYearTotal = 0;
-  
-//   const currentFiscalYear = fiscalYear !== "All" ? parseInt(fiscalYear) : null;
-  
-//   sortedDurations.forEach((duration) => {
-//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-//     let total = 0;
+  // const calculateColumnTotals = () => {
+  //   const columnTotals = {};
 
-//     // Sum hours from existing employees
-//     localEmployees.forEach((emp, idx) => {
-//       if (hiddenRows[idx]) return; // Skip hidden rows
-//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
-//       const monthHours = getMonthHours(emp);
-//       const forecastValue = monthHours[uniqueKey]?.value;
-//       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-//       total += value && !isNaN(value) ? Number(value) : 0;
-//     });
+  //   // Initialize CTD and Prior Year totals
+  //   let ctdTotal = 0;
+  //   let priorYearTotal = 0;
 
-//     // Add hours from new entry form if visible
-//     if (showNewForm) {
-//       const newEntryValue = newEntryPeriodHours[uniqueKey];
-//       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
-//     }
+  //   const currentFiscalYear = fiscalYear !== "All" ? parseInt(fiscalYear) : null;
 
-//     columnTotals[uniqueKey] = total;
-    
-//     // Calculate CTD and Prior Year based on fiscal year selection
-//     if (currentFiscalYear) {
-//       const startYear = parseInt(startDate.split('-')[0]); // Extract start year from startDate
-      
-//       // Prior Year: sum of (selected fiscal year - 1)
-//       if (duration.year === currentFiscalYear - 1) {
-//         priorYearTotal += total;
-//       }
-      
-//       // CTD: sum from start year to (selected fiscal year - 2)
-//       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
-//         ctdTotal += total;
-//       }
-//     }
-//   });
-  
-//   // Add CTD and Prior Year to columnTotals
-//   columnTotals['ctd'] = ctdTotal;
-//   columnTotals['priorYear'] = priorYearTotal;
-  
-//   return columnTotals;
-// };
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
 
-// const calculateColumnTotals = () => {
-//   const columnTotals = {};
-  
-//   let ctdTotal = 0;
-//   let priorYearTotal = 0;
-  
-//   // const currentFiscalYear = normalizedFiscalYear !== "All"  ? parseInt(fiscalYear) : null;
-//    const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
-//   const startYear = parseInt(startDate.split('-')[0]);
-  
-//   // ✅ First, calculate CTD and Prior Year from ALL durations
-//   if (currentFiscalYear) {
-//     durations.forEach((duration) => {
-//       let total = 0;
-//       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     // Sum hours from existing employees
+  //     localEmployees.forEach((emp, idx) => {
+  //       if (hiddenRows[idx]) return; // Skip hidden rows
+  //       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //       const monthHours = getMonthHours(emp);
+  //       const forecastValue = monthHours[uniqueKey]?.value;
+  //       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //       total += value && !isNaN(value) ? Number(value) : 0;
+  //     });
 
-//       // Sum hours from existing employees
-//       localEmployees.forEach((emp, idx) => {
-//         if (hiddenRows[idx]) return;
-//         const inputValue = inputValues[`${idx}_${uniqueKey}`];
-//         const monthHours = getMonthHours(emp);
-//         const forecastValue = monthHours[uniqueKey]?.value;
-//         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-//         total += value && !isNaN(value) ? Number(value) : 0;
-//       });
+  //     // Add hours from new entry form if visible
+  //     if (showNewForm) {
+  //       const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     }
 
-//       // Add hours from new entry form if visible
-//       if (showNewForm) {
-//         const newEntryValue = newEntryPeriodHours[uniqueKey];
-//         total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
-//       }
+  //     columnTotals[uniqueKey] = total;
 
-//       // Prior Year: sum of (selected fiscal year - 1)
-//       if (duration.year === currentFiscalYear - 1) {
-//         priorYearTotal += total;
-//       }
-      
-//       // CTD: sum from start year to (selected fiscal year - 2)
-//       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
-//         ctdTotal += total;
-//       }
-//     });
-//   }
-  
-//   // Now calculate monthly totals for visible columns (filtered by fiscal year)
-//   sortedDurations.forEach((duration) => {
-//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-//     let total = 0;
+  //     // Calculate CTD and Prior Year based on fiscal year selection
+  //     if (currentFiscalYear) {
+  //       const startYear = parseInt(startDate.split('-')[0]); // Extract start year from startDate
 
-//     // Sum hours from existing employees
-//     localEmployees.forEach((emp, idx) => {
-//       if (hiddenRows[idx]) return;
-//       const inputValue = inputValues[`${idx}_${uniqueKey}`];
-//       const monthHours = getMonthHours(emp);
-//       const forecastValue = monthHours[uniqueKey]?.value;
-//       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-//       total += value && !isNaN(value) ? Number(value) : 0;
-//     });
+  //       // Prior Year: sum of (selected fiscal year - 1)
+  //       if (duration.year === currentFiscalYear - 1) {
+  //         priorYearTotal += total;
+  //       }
 
-//     // Add hours from new entry form if visible
-//     if (showNewForm) {
-//       const newEntryValue = newEntryPeriodHours[uniqueKey];
-//       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
-//     }
+  //       // CTD: sum from start year to (selected fiscal year - 2)
+  //       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+  //         ctdTotal += total;
+  //       }
+  //     }
+  //   });
 
-//     columnTotals[uniqueKey] = total;
-//   });
-  
-//   // Add CTD and Prior Year to columnTotals
-//   // columnTotals['ctd'] = ctdTotal;
-//   // columnTotals['priorYear'] = priorYearTotal;
-//   if (currentFiscalYear) {
-//   columnTotals['ctd'] = ctdTotal;
-//   columnTotals['priorYear'] = priorYearTotal;
-// }
-  
-//   return columnTotals;
-// };
+  //   // Add CTD and Prior Year to columnTotals
+  //   columnTotals['ctd'] = ctdTotal;
+  //   columnTotals['priorYear'] = priorYearTotal;
 
-const calculateColumnTotals = () => {
-  const columnTotals = {};
-  
-  let ctdTotal = 0;
-  let priorYearTotal = 0;
-  
-  const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
-  
-  // ✅ Only calculate CTD and Prior Year when a specific fiscal year is selected
-  if (currentFiscalYear !== null) {
-    const startYear = parseInt(startDate.split('-')[0]);
-    
-    // Calculate CTD and Prior Year from ALL durations
-    durations.forEach((duration) => {
-      let total = 0;
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //   return columnTotals;
+  // };
 
-      // Sum hours from existing employees
-      localEmployees.forEach((emp, idx) => {
-        if (hiddenRows[idx]) return;
-        const inputValue = inputValues[`${idx}_${uniqueKey}`];
-        const monthHours = getMonthHours(emp);
-        const forecastValue = monthHours[uniqueKey]?.value;
-        const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-        total += value && !isNaN(value) ? Number(value) : 0;
+  // const calculateColumnTotals = () => {
+  //   const columnTotals = {};
+
+  //   let ctdTotal = 0;
+  //   let priorYearTotal = 0;
+
+  //   // const currentFiscalYear = normalizedFiscalYear !== "All"  ? parseInt(fiscalYear) : null;
+  //    const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+  //   const startYear = parseInt(startDate.split('-')[0]);
+
+  //   // ✅ First, calculate CTD and Prior Year from ALL durations
+  //   if (currentFiscalYear) {
+  //     durations.forEach((duration) => {
+  //       let total = 0;
+  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+  //       // Sum hours from existing employees
+  //       localEmployees.forEach((emp, idx) => {
+  //         if (hiddenRows[idx]) return;
+  //         const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //         const monthHours = getMonthHours(emp);
+  //         const forecastValue = monthHours[uniqueKey]?.value;
+  //         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //         total += value && !isNaN(value) ? Number(value) : 0;
+  //       });
+
+  //       // Add hours from new entry form if visible
+  //       if (showNewForm) {
+  //         const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //         total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //       }
+
+  //       // Prior Year: sum of (selected fiscal year - 1)
+  //       if (duration.year === currentFiscalYear - 1) {
+  //         priorYearTotal += total;
+  //       }
+
+  //       // CTD: sum from start year to (selected fiscal year - 2)
+  //       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+  //         ctdTotal += total;
+  //       }
+  //     });
+  //   }
+
+  //   // Now calculate monthly totals for visible columns (filtered by fiscal year)
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
+
+  //     // Sum hours from existing employees
+  //     localEmployees.forEach((emp, idx) => {
+  //       if (hiddenRows[idx]) return;
+  //       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //       const monthHours = getMonthHours(emp);
+  //       const forecastValue = monthHours[uniqueKey]?.value;
+  //       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //       total += value && !isNaN(value) ? Number(value) : 0;
+  //     });
+
+  //     // Add hours from new entry form if visible
+  //     if (showNewForm) {
+  //       const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     }
+
+  //     columnTotals[uniqueKey] = total;
+  //   });
+
+  //   // Add CTD and Prior Year to columnTotals
+  //   // columnTotals['ctd'] = ctdTotal;
+  //   // columnTotals['priorYear'] = priorYearTotal;
+  //   if (currentFiscalYear) {
+  //   columnTotals['ctd'] = ctdTotal;
+  //   columnTotals['priorYear'] = priorYearTotal;
+  // }
+
+  //   return columnTotals;
+  // };
+
+  // const calculateColumnTotals = () => {
+  //   const columnTotals = {};
+
+  //   let ctdTotal = 0;
+  //   let priorYearTotal = 0;
+
+  //   const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+
+  //   // ✅ Only calculate CTD and Prior Year when a specific fiscal year is selected
+  //   if (currentFiscalYear !== null) {
+  //     const startYear = parseInt(startDate.split('-')[0]);
+
+  //     // Calculate CTD and Prior Year from ALL durations
+  //     durations.forEach((duration) => {
+  //       let total = 0;
+  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+  //       // Sum hours from existing employees
+  //       localEmployees.forEach((emp, idx) => {
+  //         if (hiddenRows[idx]) return;
+  //         const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //         const monthHours = getMonthHours(emp);
+  //         const forecastValue = monthHours[uniqueKey]?.value;
+  //         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //         total += value && !isNaN(value) ? Number(value) : 0;
+  //       });
+
+  //       // Add hours from new entry form if visible
+  //       if (showNewForm) {
+  //         const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //         total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //       }
+
+  //       // Prior Year: sum of (selected fiscal year - 1)
+  //       if (duration.year === currentFiscalYear - 1) {
+  //         priorYearTotal += total;
+  //       }
+
+  //       // CTD: sum from start year to (selected fiscal year - 2)
+  //       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+  //         ctdTotal += total;
+  //       }
+  //     });
+
+  //     // Add CTD and Prior Year to columnTotals only when fiscal year is selected
+  //     columnTotals['ctd'] = ctdTotal;
+  //     columnTotals['priorYear'] = priorYearTotal;
+  //   }
+
+  //   // Now calculate monthly totals for visible columns (filtered by fiscal year)
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
+
+  //     // Sum hours from existing employees
+  //     localEmployees.forEach((emp, idx) => {
+  //       if (hiddenRows[idx]) return;
+  //       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //       const monthHours = getMonthHours(emp);
+  //       const forecastValue = monthHours[uniqueKey]?.value;
+  //       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //       total += value && !isNaN(value) ? Number(value) : 0;
+  //     });
+
+  //     // Add hours from new entry form if visible
+  //     if (showNewForm) {
+  //       const newEntryValue = newEntryPeriodHours[uniqueKey];
+  //       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     }
+
+  //     columnTotals[uniqueKey] = total;
+  //   });
+
+  //   return columnTotals;
+  // };
+
+  // REPLACE THE ENTIRE FUNCTION WITH THIS:
+  const columnTotals = useMemo(() => {
+    const totals = {};
+    const currentFiscalYear =
+      normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+
+    if (currentFiscalYear === null) {
+      // Only calculate monthly totals
+      sortedDurations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        let total = 0;
+
+        localEmployees.forEach((emp, idx) => {
+          if (hiddenRows[idx]) return;
+          const monthHours = getMonthHours(emp);
+          const inputValue = inputValues[`${idx}_${uniqueKey}`];
+          const forecastValue = monthHours[uniqueKey]?.value;
+          const value =
+            inputValue !== undefined && inputValue !== ""
+              ? inputValue
+              : forecastValue;
+          total += value && !isNaN(value) ? Number(value) : 0;
+        });
+
+        totals[uniqueKey] = total;
       });
-
-      // Add hours from new entry form if visible
-      if (showNewForm) {
-        const newEntryValue = newEntryPeriodHours[uniqueKey];
-        total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
-      }
-
-      // Prior Year: sum of (selected fiscal year - 1)
-      if (duration.year === currentFiscalYear - 1) {
-        priorYearTotal += total;
-      }
-      
-      // CTD: sum from start year to (selected fiscal year - 2)
-      if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
-        ctdTotal += total;
-      }
-    });
-    
-    // Add CTD and Prior Year to columnTotals only when fiscal year is selected
-    columnTotals['ctd'] = ctdTotal;
-    columnTotals['priorYear'] = priorYearTotal;
-  }
-  
-  // Now calculate monthly totals for visible columns (filtered by fiscal year)
-  sortedDurations.forEach((duration) => {
-    const uniqueKey = `${duration.monthNo}_${duration.year}`;
-    let total = 0;
-
-    // Sum hours from existing employees
-    localEmployees.forEach((emp, idx) => {
-      if (hiddenRows[idx]) return;
-      const inputValue = inputValues[`${idx}_${uniqueKey}`];
-      const monthHours = getMonthHours(emp);
-      const forecastValue = monthHours[uniqueKey]?.value;
-      const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-      total += value && !isNaN(value) ? Number(value) : 0;
-    });
-
-    // Add hours from new entry form if visible
-    if (showNewForm) {
-      const newEntryValue = newEntryPeriodHours[uniqueKey];
-      total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+      return totals;
     }
 
-    columnTotals[uniqueKey] = total;
-  });
-  
-  return columnTotals;
-};
+    // Calculate CTD, Prior Year, and Monthly totals
+    let ctdTotal = 0;
+    let priorYearTotal = 0;
+    const startYear = parseInt(startDate.split("-")[0]);
 
+    durations.forEach((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      let monthlyTotal = 0;
 
+      localEmployees.forEach((emp, idx) => {
+        if (hiddenRows[idx]) return;
+        const monthHours = getMonthHours(emp);
+        const inputValue = inputValues[`${idx}_${uniqueKey}`];
+        const forecastValue = monthHours[uniqueKey]?.value;
+        const value =
+          inputValue !== undefined && inputValue !== ""
+            ? inputValue
+            : forecastValue;
+        const numValue = value && !isNaN(value) ? Number(value) : 0;
+        monthlyTotal += numValue;
+      });
 
+      // Only add CTD if it's a display column
+      if (sortedDurations.some((d) => `${d.monthNo}_${d.year}` === uniqueKey)) {
+        totals[uniqueKey] = monthlyTotal;
+      }
+
+      // Calculate CTD and Prior Year
+      if (duration.year === currentFiscalYear - 1) {
+        priorYearTotal += monthlyTotal;
+      }
+
+      if (
+        duration.year >= startYear &&
+        duration.year <= currentFiscalYear - 2
+      ) {
+        ctdTotal += monthlyTotal;
+      }
+    });
+
+    totals["ctd"] = ctdTotal;
+    totals["priorYear"] = priorYearTotal;
+
+    return totals;
+  }, [
+    durations,
+    localEmployees,
+    hiddenRows,
+    inputValues,
+    sortedDurations,
+    normalizedFiscalYear,
+    startDate,
+  ]);
+
+  // ADD THIS NEW MEMOIZED VALUE:
+  const employeeYearTotals = useMemo(() => {
+    const totals = {};
+    const currentFiscalYear =
+      normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+
+    if (currentFiscalYear === null) return totals;
+
+    const startYear = parseInt(startDate.split("-")[0]);
+
+    localEmployees.forEach((emp, idx) => {
+      if (hiddenRows[idx]) return;
+
+      const monthHours = getMonthHours(emp);
+      let empCtd = 0;
+      let empPriorYear = 0;
+
+      durations.forEach((duration) => {
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+        const inputValue = inputValues[`${idx}_${uniqueKey}`];
+        const forecastValue = monthHours[uniqueKey]?.value;
+        const value =
+          inputValue !== undefined && inputValue !== ""
+            ? inputValue
+            : forecastValue;
+        const numValue = value && !isNaN(value) ? Number(value) : 0;
+
+        if (duration.year === currentFiscalYear - 1) {
+          empPriorYear += numValue;
+        }
+
+        if (
+          duration.year >= startYear &&
+          duration.year <= currentFiscalYear - 2
+        ) {
+          empCtd += numValue;
+        }
+      });
+
+      totals[idx] = { ctd: empCtd, priorYear: empPriorYear };
+    });
+
+    return totals;
+  }, [
+    localEmployees,
+    hiddenRows,
+    inputValues,
+    durations,
+    normalizedFiscalYear,
+    startDate,
+  ]);
 
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
     if (!isEditable) return;
-
-    
 
     // Allow only numbers and dots
     if (!/^[0-9.]*$/.test(newValue)) return;
@@ -4806,12 +4997,12 @@ const calculateColumnTotals = () => {
   const hasHiddenRows = Object.values(hiddenRows).some(Boolean);
   const showHiddenRows = () => setHiddenRows({});
 
-  const sortedDurations = [...durations]
-    .filter((d) => fiscalYear === "All" || d.year === parseInt(fiscalYear))
-    .sort(
-      (a, b) =>
-        new Date(a.year, a.monthNo - 1, 1) - new Date(b.year, b.monthNo - 1, 1)
-    );
+  // const sortedDurations = [...durations]
+  //   .filter((d) => fiscalYear === "All" || d.year === parseInt(fiscalYear))
+  //   .sort(
+  //     (a, b) =>
+  //       new Date(a.year, a.monthNo - 1, 1) - new Date(b.year, b.monthNo - 1, 1)
+  //   );
 
   const handleWarningClick = (e, emplId) => {
     e.stopPropagation(); // Prevent row click event
@@ -5841,63 +6032,63 @@ const calculateColumnTotals = () => {
                               }
                             /> */}
                             <input
-  type="text"
-  name="id"
-  value={entry.id}
-  onChange={(e) => {
-    const trimmedValue = e.target.value.trim();
-    setNewEntries((prev) =>
-      prev.map((ent, idx) =>
-        idx === entryIndex
-          ? { ...ent, id: trimmedValue }
-          : ent
-      )
-    );
+                              type="text"
+                              name="id"
+                              value={entry.id}
+                              onChange={(e) => {
+                                const trimmedValue = e.target.value.trim();
+                                setNewEntries((prev) =>
+                                  prev.map((ent, idx) =>
+                                    idx === entryIndex
+                                      ? { ...ent, id: trimmedValue }
+                                      : ent
+                                  )
+                                );
 
-    // Auto-populate fields if employee found
-    const suggestions =
-      pastedEntrySuggestions[entryIndex] || [];
-    const selectedEmployee = suggestions.find(
-      (emp) => emp.emplId === trimmedValue
-    );
-    if (selectedEmployee) {
-      setNewEntries((prev) =>
-        prev.map((ent, idx) =>
-          idx === entryIndex
-            ? {
-                ...ent,
-                id: trimmedValue,
-                firstName:
-                  selectedEmployee.firstName || "",
-                lastName:
-                  selectedEmployee.lastName || "",
-                perHourRate:
-                  selectedEmployee.perHourRate ||
-                  "",
-                orgId:
-                  selectedEmployee.orgId ||
-                  ent.orgId,
-                plcGlcCode:
-                  selectedEmployee.plc || "",
-              }
-            : ent
-        )
-      );
-    }
-  }}
-  disabled={entry.idType === "PLC"}
-  className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
-    entry.idType === "PLC"
-      ? "bg-gray-100 cursor-not-allowed"
-      : ""
-  }`}
-  list={`employee-id-list-${entryIndex}`}
-  placeholder={
-    entry.idType === "PLC"
-      ? "Not required for PLC"
-      : "Enter ID"
-  }
-/>
+                                // Auto-populate fields if employee found
+                                const suggestions =
+                                  pastedEntrySuggestions[entryIndex] || [];
+                                const selectedEmployee = suggestions.find(
+                                  (emp) => emp.emplId === trimmedValue
+                                );
+                                if (selectedEmployee) {
+                                  setNewEntries((prev) =>
+                                    prev.map((ent, idx) =>
+                                      idx === entryIndex
+                                        ? {
+                                            ...ent,
+                                            id: trimmedValue,
+                                            firstName:
+                                              selectedEmployee.firstName || "",
+                                            lastName:
+                                              selectedEmployee.lastName || "",
+                                            perHourRate:
+                                              selectedEmployee.perHourRate ||
+                                              "",
+                                            orgId:
+                                              selectedEmployee.orgId ||
+                                              ent.orgId,
+                                            plcGlcCode:
+                                              selectedEmployee.plc || "",
+                                          }
+                                        : ent
+                                    )
+                                  );
+                                }
+                              }}
+                              disabled={entry.idType === "PLC"}
+                              className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+                                entry.idType === "PLC"
+                                  ? "bg-gray-100 cursor-not-allowed"
+                                  : ""
+                              }`}
+                              list={`employee-id-list-${entryIndex}`}
+                              placeholder={
+                                entry.idType === "PLC"
+                                  ? "Not required for PLC"
+                                  : "Enter ID"
+                              }
+                            />
 
                             <datalist id={`employee-id-list-${entryIndex}`}>
                               {(pastedEntrySuggestions[entryIndex] || [])
@@ -6548,9 +6739,8 @@ const calculateColumnTotals = () => {
                       lineHeight: "normal",
                     }}
                   >
-
-                     {/* CTD Header */}
-    {/* <th
+                    {/* CTD Header */}
+                    {/* <th
       key="ctd-header"
       className="th-thead min-w-[80px]"
       style={{ cursor: "default" }}
@@ -6568,7 +6758,7 @@ const calculateColumnTotals = () => {
       </div>
     </th> */}
 
-    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+                    {/* {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
   <th
     key="ctd-header"
     className="th-thead min-w-[80px]"
@@ -6586,9 +6776,59 @@ const calculateColumnTotals = () => {
     </div>
   </th>
 )}
-    
-    {/* Prior Year Header */}
-    {/* <th
+     */}
+                    {/* {normalizedFiscalYear !== "All" && normalizedFiscalYear !== "" && (
+  <th key="ctd-header" className="th-thead min-w-[80px]">
+    <div>
+      <span className="th-thead">CTD</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {(() => {
+          const startYear = parseInt(startDate.split('-')[0]);
+          const selectedYear = parseInt(normalizedFiscalYear);
+          return `${startYear}-${selectedYear - 2}`;
+        })()}
+      </span>
+    </div>
+  </th>
+)} */}
+
+                    {/* {normalizedFiscalYear !== "All" && (
+  <th key="ctd-header" className="th-thead min-w-80px">
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="whitespace-nowrap th-thead">CTD</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {(() => {
+          const startYear = parseInt(startDate.split("-")[0]);
+          const selectedYear = parseInt(normalizedFiscalYear);
+          return `${startYear}-${selectedYear - 2}`;
+        })()}
+      </span>
+    </div>
+  </th>
+)} */}
+
+                    {shouldShowCTD() && (
+                      <th key="ctd-header" className="th-thead min-w-80px">
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <span className="whitespace-nowrap th-thead">
+                            CTD
+                          </span>
+                          <span className="text-xs text-gray-600 font-normal normal-case whitespace-nowrap">
+                            {(() => {
+                              const startYear = parseInt(
+                                startDate.split("-")[0]
+                              );
+                              const selectedYear =
+                                parseInt(normalizedFiscalYear);
+                              return `${startYear}-${selectedYear - 2}`;
+                            })()}
+                          </span>
+                        </div>
+                      </th>
+                    )}
+
+                    {/* Prior Year Header */}
+                    {/* <th
       key="prior-year-header"
       className="th-thead min-w-[80px]"
       style={{ cursor: "default" }}
@@ -6600,7 +6840,7 @@ const calculateColumnTotals = () => {
         </span>
       </div>
     </th> */}
-    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+                    {/* {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
   <th
     key="prior-year-header"
     className="th-thead min-w-[80px]"
@@ -6613,7 +6853,32 @@ const calculateColumnTotals = () => {
       </span>
     </div>
   </th>
-)}
+)} */}
+                    {/* {normalizedFiscalYear !== "All" && (
+  <th key="prior-year-header" className="th-thead min-w-80px">
+    <div className="flex flex-col items-center justify-center h-full">
+      <span className="whitespace-nowrap th-thead">Prior Year</span>
+      <span className="text-xs text-gray-600 font-normal normal-case">
+        {parseInt(normalizedFiscalYear) - 1}
+      </span>
+    </div>
+  </th>
+)} */}
+                    {shouldShowPriorYear() && (
+                      <th
+                        key="prior-year-header"
+                        className="th-thead min-w-80px"
+                      >
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <span className="whitespace-nowrap th-thead">
+                            Prior Year
+                          </span>
+                          <span className="text-xs text-gray-600 font-normal normal-case">
+                            {parseInt(normalizedFiscalYear) - 1}
+                          </span>
+                        </div>
+                      </th>
+                    )}
                     {sortedDurations.map((duration) => {
                       const uniqueKey = `${duration.monthNo}_${duration.year}`;
                       return (
@@ -6651,26 +6916,37 @@ const calculateColumnTotals = () => {
                         lineHeight: "normal",
                       }}
                     >
+                      {/* CTD Cell - read-only for new entry */}
+                      {/* <td className="tbody-td text-center text-xs bg-gray-100">
+      0.00
+    </td> */}
+                      {/* {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+  <td className="tbody-td text-center text-xs bg-gray-100">
+    0.00
+  </td>
+)}
+*/}
 
-                        {/* CTD Cell - read-only for new entry */}
-    {/* <td className="tbody-td text-center text-xs bg-gray-100">
+                      {shouldShowCTD() && (
+                        <td className="tbody-td text-center text-xs bg-gray-100">
+                          0.00
+                        </td>
+                      )}
+
+                      {/* Prior Year Cell - read-only for new entry */}
+                      {/* <td className="tbody-td text-center text-xs bg-gray-100">
       0.00
     </td> */}
-    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
+                      {/* {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
   <td className="tbody-td text-center text-xs bg-gray-100">
     0.00
   </td>
-)}
-    
-    {/* Prior Year Cell - read-only for new entry */}
-    {/* <td className="tbody-td text-center text-xs bg-gray-100">
-      0.00
-    </td> */}
-    {normalizedFiscalYear !== "All" && normalizedFiscalYear !== ""  && (
-  <td className="tbody-td text-center text-xs bg-gray-100">
-    0.00
-  </td>
-)}
+)} */}
+                      {shouldShowPriorYear() && (
+                        <td className="tbody-td text-center text-xs bg-gray-100">
+                          0.00
+                        </td>
+                      )}
                       {sortedDurations.map((duration) => {
                         const uniqueKey = `${duration.monthNo}_${duration.year}`;
                         const value = newEntryPeriodHours[uniqueKey] || 0; // ← Use newEntryPeriodHours for new form
@@ -6757,8 +7033,6 @@ const calculateColumnTotals = () => {
                       })}
                     </tr>
                   )}
-
-                
 
                   {/* PASTED ENTRIES - ADD THIS SECTION */}
                   {newEntries.length > 0 &&
@@ -6887,68 +7161,74 @@ const calculateColumnTotals = () => {
                       );
                       const monthHours = getMonthHours(emp);
 
+                      // Calculate CTD and Prior Year for this employee
+                      // Calculate CTD and Prior Year for this employee
+                      // let empCtd = 0;
+                      // let empPriorYear = 0;
+
+                      // if (fiscalYear !== "All") {
+                      //   const currentFiscalYear = parseInt(fiscalYear);
+                      //   const startYear = parseInt(startDate.split('-')[0]);
+
+                      //   // ✅ CORRECT - Use ALL durations, not filtered sortedDurations
+                      //   durations.forEach((duration) => {
+                      //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                      //     const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
+                      //     const forecastValue = monthHours[uniqueKey]?.value;
+                      //     const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+                      //     const hours = value && !isNaN(value) ? Number(value) : 0;
+
+                      //     // Prior Year: sum of (selected fiscal year - 1)
+                      //     if (duration.year === currentFiscalYear - 1) {
+                      //       empPriorYear += hours;
+                      //     }
+
+                      //     // CTD: sum from start year to (selected fiscal year - 2)
+                      //     if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+                      //       empCtd += hours;
+                      //     }
+                      //   });
+                      // }
 
                       // Calculate CTD and Prior Year for this employee
-    // Calculate CTD and Prior Year for this employee
-// let empCtd = 0;
-// let empPriorYear = 0;
+                      let empCtd = 0;
+                      let empPriorYear = 0;
 
-// if (fiscalYear !== "All") {
-//   const currentFiscalYear = parseInt(fiscalYear);
-//   const startYear = parseInt(startDate.split('-')[0]);
-  
-//   // ✅ CORRECT - Use ALL durations, not filtered sortedDurations
-//   durations.forEach((duration) => {
-//     const uniqueKey = `${duration.monthNo}_${duration.year}`;
-//     const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
-//     const forecastValue = monthHours[uniqueKey]?.value;
-//     const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-//     const hours = value && !isNaN(value) ? Number(value) : 0;
-    
-//     // Prior Year: sum of (selected fiscal year - 1)
-//     if (duration.year === currentFiscalYear - 1) {
-//       empPriorYear += hours;
-//     }
-    
-//     // CTD: sum from start year to (selected fiscal year - 2)
-//     if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
-//       empCtd += hours;
-//     }
-//   });
-// }
+                      if (normalizedFiscalYear !== "All") {
+                        // const currentFiscalYear = parseInt(fiscalYear);
+                        const currentFiscalYear =
+                          parseInt(normalizedFiscalYear);
+                        const startYear = parseInt(startDate.split("-")[0]);
 
-// Calculate CTD and Prior Year for this employee
-    let empCtd = 0;
-    let empPriorYear = 0;
+                        // ✅ CRITICAL: Use ALL durations, not sortedDurations
+                        durations.forEach((duration) => {
+                          const uniqueKey = `${duration.monthNo}_${duration.year}`;
 
-    if (normalizedFiscalYear !== "All" ) {
-      // const currentFiscalYear = parseInt(fiscalYear);
-       const currentFiscalYear = parseInt(normalizedFiscalYear);
-      const startYear = parseInt(startDate.split('-')[0]);
-      
-      // ✅ CRITICAL: Use ALL durations, not sortedDurations
-      durations.forEach((duration) => {
-        const uniqueKey = `${duration.monthNo}_${duration.year}`;
-        
-        // ✅ CRITICAL FIX: Use actualEmpIdx (not idx) consistently
-        const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
-        const forecastValue = monthHours[uniqueKey]?.value;
-        const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
-        const hours = value && !isNaN(value) ? Number(value) : 0;
-        
-        // Prior Year: sum of (selected fiscal year - 1)
-        if (duration.year === currentFiscalYear - 1) {
-          empPriorYear += hours;
-        }
-        
-        // CTD: sum from start year to (selected fiscal year - 2)
-        if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
-          empCtd += hours;
-        }
-      });
-    }
+                          // ✅ CRITICAL FIX: Use actualEmpIdx (not idx) consistently
+                          const inputValue =
+                            inputValues[`${actualEmpIdx}_${uniqueKey}`];
+                          const forecastValue = monthHours[uniqueKey]?.value;
+                          const value =
+                            inputValue !== undefined && inputValue !== ""
+                              ? inputValue
+                              : forecastValue;
+                          const hours =
+                            value && !isNaN(value) ? Number(value) : 0;
 
+                          // Prior Year: sum of (selected fiscal year - 1)
+                          if (duration.year === currentFiscalYear - 1) {
+                            empPriorYear += hours;
+                          }
 
+                          // CTD: sum from start year to (selected fiscal year - 2)
+                          if (
+                            duration.year >= startYear &&
+                            duration.year <= currentFiscalYear - 2
+                          ) {
+                            empCtd += hours;
+                          }
+                        });
+                      }
 
                       return (
                         <tr
@@ -6959,27 +7239,51 @@ const calculateColumnTotals = () => {
                             lineHeight: "normal",
                           }}
                         >
-
-                           {/* CTD Cell */}
-        {/* <td className="tbody-td text-center text-xs">
+                          {/* CTD Cell */}
+                          {/* <td className="tbody-td text-center text-xs">
           {empCtd.toFixed(2)}
         </td> */}
-        {normalizedFiscalYear !== "All"  && (
+                          {/* {normalizedFiscalYear !== "All"  && (
   <td className="tbody-td text-center text-xs">
     {empCtd.toFixed(2)}
   </td>
+)} */}
+                          {/* {normalizedFiscalYear !== "All" && (
+  <td className="tbody-td text-center text-xs">
+    {employeeYearTotals[actualEmpIdx]?.ctd?.toFixed(2) || '0.00'}
+  </td>
 )}
-        
-        {/* Prior Year Cell */}
-        {/* <td className="tbody-td text-center text-xs">
+         */}
+
+                          {shouldShowCTD() && (
+                            <td className="tbody-td text-center text-xs">
+                              {employeeYearTotals[actualEmpIdx]?.ctd?.toFixed(
+                                2
+                              ) || "0.00"}
+                            </td>
+                          )}
+                          {/* Prior Year Cell */}
+                          {/* <td className="tbody-td text-center text-xs">
           {empPriorYear.toFixed(2)}
         </td>
          */}
-        {normalizedFiscalYear !== "All"  && (
+                          {/* {normalizedFiscalYear !== "All"  && (
   <td className="tbody-td text-center text-xs">
     {empPriorYear.toFixed(2)}
   </td>
-)}
+)} */}
+                          {/* {normalizedFiscalYear !== "All" && (
+  <td className="tbody-td text-center text-xs">
+    {employeeYearTotals[actualEmpIdx]?.priorYear?.toFixed(2) || '0.00'}
+  </td>
+)} */}
+                          {shouldShowPriorYear() && (
+                            <td className="tbody-td text-center text-xs">
+                              {employeeYearTotals[
+                                actualEmpIdx
+                              ]?.priorYear?.toFixed(2) || "0.00"}
+                            </td>
+                          )}
                           {sortedDurations.map((duration) => {
                             // const actualEmpIdx = 0;
                             const uniqueKey = `${duration.monthNo}_${duration.year}`;
@@ -7079,32 +7383,43 @@ const calculateColumnTotals = () => {
                   </tr>
                 </tfoot> */}
                 <tfoot>
-  <tr
-    className="bg-gray-200 font-bold text-center"
-    style={{
-      position: "sticky",
-      bottom: 0,
-      zIndex: 20,
-      height: `${ROW_HEIGHT_DEFAULT}px`,
-      lineHeight: "normal",
-      borderTop: "2px solid #d1d5db",
-    }}
-  >
-    {/* CTD Column */}
-  {normalizedFiscalYear !== "All"  && (
-  <td
-    key="total-ctd"
-    className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
-  >
-    {(() => {
-      const columnTotals = calculateColumnTotals();
-      return columnTotals['ctd']?.toFixed(2) || '0.00';
-    })()}
-  </td>
-)}
-    
-    {/* Prior Year Column */}
-    {/* <td
+                  <tr
+                    className="bg-gray-200 font-bold text-center"
+                    style={{
+                      position: "sticky",
+                      bottom: 0,
+                      zIndex: 20,
+                      height: `${ROW_HEIGHT_DEFAULT}px`,
+                      lineHeight: "normal",
+                      borderTop: "2px solid #d1d5db",
+                    }}
+                  >
+                    {/* CTD Column */}
+                    {/* {normalizedFiscalYear !== "All"  && (
+  // <td
+  //   key="total-ctd"
+  //   className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+  // >
+  //   {(() => {
+  //     const columnTotals = calculateColumnTotals();
+  //     return columnTotals['ctd']?.toFixed(2) || '0.00';
+  //   })()}
+  // </td>
+  <td key="total-ctd" className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200">
+  {columnTotals['ctd']?.toFixed(2) || '0.00'}
+</td>
+)} */}
+                    {shouldShowCTD() && (
+                      <td
+                        key="total-ctd"
+                        className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                      >
+                        {columnTotals.ctd?.toFixed(2) || "0.00"}
+                      </td>
+                    )}
+
+                    {/* Prior Year Column */}
+                    {/* <td
       key="total-prior-year"
       className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
     >
@@ -7113,20 +7428,31 @@ const calculateColumnTotals = () => {
         return columnTotals['priorYear']?.toFixed(2) || '0.00';
       })()}
     </td> */}
-    {normalizedFiscalYear !== "All"  && (
-  <td
-    key="total-prior-year"
-    className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
-  >
-    {(() => {
-      const columnTotals = calculateColumnTotals();
-      return columnTotals['priorYear']?.toFixed(2) || '0.00';
-    })()}
-  </td>
-)}
-    
-    {/* Existing month columns */}
-    {sortedDurations.map((duration) => {
+                    {/* {normalizedFiscalYear !== "All"  && (
+  // <td
+  //   key="total-prior-year"
+  //   className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+  // >
+  //   {(() => {
+  //     const columnTotals = calculateColumnTotals();
+  //     return columnTotals['priorYear']?.toFixed(2) || '0.00';
+  //   })()}
+  // </td>
+  <td key="total-prior-year" className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200">
+  {columnTotals['priorYear']?.toFixed(2) || '0.00'}
+</td>
+)} */}
+                    {shouldShowPriorYear() && (
+                      <td
+                        key="total-prior-year"
+                        className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                      >
+                        {columnTotals.priorYear?.toFixed(2) || "0.00"}
+                      </td>
+                    )}
+
+                    {/* Existing month columns */}
+                    {/* {sortedDurations.map((duration) => {
       const uniqueKey = `${duration.monthNo}_${duration.year}`;
       const columnTotals = calculateColumnTotals();
       const total = columnTotals[uniqueKey] || 0;
@@ -7138,10 +7464,20 @@ const calculateColumnTotals = () => {
           {total.toFixed(2)}
         </td>
       );
-    })}
-  </tr>
-</tfoot>
-
+    })} */}
+                    {sortedDurations.map((duration) => {
+                      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                      return (
+                        <td
+                          key={`total-${uniqueKey}`}
+                          className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                        >
+                          {columnTotals[uniqueKey]?.toFixed(2) || "0.00"}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                </tfoot>
               </table>
             </div>
           </div>
@@ -7464,6 +7800,7 @@ const calculateColumnTotals = () => {
               planId={planId}
               projectId={projectId}
               planType={planType}
+              emplId={selectedEmployeeIdForWarning}
             />
 
             <div className="mt-4 flex justify-end">
