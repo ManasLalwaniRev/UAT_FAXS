@@ -3,36 +3,62 @@ import axios from "axios";
 import { backendUrl } from "./config";
 import EmployeeSchedule from "./EmployeeSchedule";
 
-const Warning = ({ planId, projectId, templateId, planType }) => {
+const Warning = ({ planId, projectId, templateId, planType, emplId }) => {
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEmployeeSchedule, setShowEmployeeSchedule] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
-  const fetchWarnings = async () => {
-    if (!planId) {
-      setWarnings([]);
-      setLoading(false);
-      return;
-    }
+  // const fetchWarnings = async () => {
+  //   if (!planId) {
+  //     setWarnings([]);
+  //     setLoading(false);
+  //     return;
+  //   }
 
-    try {
+  //   try {
+  //     setLoading(true);
+  //     const response = await axios.get(
+  //       `${backendUrl}/Project/GetWarningsByPlId/${planId}`
+  //     );
+
+  //     setWarnings(response.data || []);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError("Failed to fetch warnings");
+  //     // console.error("Error fetching warnings:", err);
+  //     setWarnings([]);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  useEffect(() => {
+    const fetchWarnings = async () => {
       setLoading(true);
-      const response = await axios.get(
-        `${backendUrl}/Project/GetWarningsByPlId/${planId}`
-      );
+      try {
+        let url;
+        if (emplId) {
+          url = `${backendUrl}/Project/GetWarningsByEMployee/${planId}/${emplId}`;
+        } else {
+          url = `${backendUrl}/Project/GetWarningsByPlId/${planId}`; // example fallback endpoint
+        }
+        const response = await axios.get(url);
+        setWarnings(response.data);
+        setError(null);
+      } catch (err) {
+        setError("Failed to fetch warnings");
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      setWarnings(response.data || []);
-      setError(null);
-    } catch (err) {
-      setError("Failed to fetch warnings");
-      // console.error("Error fetching warnings:", err);
-      setWarnings([]);
-    } finally {
-      setLoading(false);
+    if (planId) {
+      fetchWarnings();
     }
-  };
+  }, [planId, emplId]);
 
   const handleEmployeeRowClick = (employeeId) => {
     setSelectedEmployeeId(employeeId);
@@ -44,9 +70,9 @@ const Warning = ({ planId, projectId, templateId, planType }) => {
     setSelectedEmployeeId(null);
   };
 
-  useEffect(() => {
-    fetchWarnings();
-  }, [planId]);
+  // useEffect(() => {
+  //   fetchWarnings();
+  // }, [planId,emplId]);
 
   if (loading) {
     return (

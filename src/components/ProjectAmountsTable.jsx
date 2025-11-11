@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -52,6 +52,12 @@ const ProjectAmountsTable = ({
   onSaveSuccess,
   refreshKey,
 }) => {
+  // Normalize fiscal year - add after component definition
+  const normalizedFiscalYear =
+    propFiscalYear === "All" || !propFiscalYear
+      ? "All"
+      : String(propFiscalYear).trim();
+
   const [employees, setEmployees] = useState([]);
   const [durations, setDurations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,9 +126,8 @@ const ProjectAmountsTable = ({
   const [showFindOnly, setShowFindOnly] = useState(false);
 
   // Add these after pastedEntryOrgs state
- const [cachedProjectData, setCachedProjectData] = useState(null);
- const [cachedOrgData, setCachedOrgData] = useState(null);
-
+  const [cachedProjectData, setCachedProjectData] = useState(null);
+  const [cachedOrgData, setCachedOrgData] = useState(null);
 
   const isEditable = initialData.status === "In Progress";
   const planId = initialData.plId;
@@ -149,6 +154,159 @@ const ProjectAmountsTable = ({
   const scrollingLock = useRef(false);
 
   const [maxKbdSuffix, setMaxKbdSuffix] = useState(0);
+
+  // Add after line 143, after normalizedFiscalYear declaration
+  const shouldShowCTD = () => {
+    if (normalizedFiscalYear === "All") return false;
+
+    const selectedYear = parseInt(normalizedFiscalYear);
+    const startYear = parseInt(startDate.split("-")[0]);
+
+    // Don't show CTD if selected year is the Start Date year
+    if (selectedYear === startYear) return false;
+
+    // Show CTD only if selected year is at least 2 years after start year
+    return selectedYear >= startYear + 2;
+  };
+
+  const shouldShowPriorYear = () => {
+    if (normalizedFiscalYear === "All") return false;
+
+    const selectedYear = parseInt(normalizedFiscalYear);
+    const startYear = parseInt(startDate.split("-")[0]);
+
+    // Don't show Prior Year if selected year is the Start Date year
+    if (selectedYear === startYear) return false;
+
+    // Show Prior Year for ANY year after start year
+    return selectedYear > startYear;
+  };
+
+  const sortedDurations = useMemo(() => {
+    return [...durations]
+      .filter((d) => {
+        if (normalizedFiscalYear === "All") return true;
+        return d.year === parseInt(normalizedFiscalYear);
+      })
+      .sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.monthNo - b.monthNo;
+      });
+  }, [durations, normalizedFiscalYear]);
+
+  const getMonthAmounts = (emp) => {
+    const monthAmounts = {};
+    if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
+      emp.emple.plForecasts.forEach((forecast) => {
+        const uniqueKey = `${forecast.month}_${forecast.year}`;
+        // Use actualhours for EAC, forecastedhours otherwise
+        const value =
+          planType === "EAC" && forecast.actualamt !== undefined
+            ? forecast.actualamt
+            : forecast.forecastedamt ?? 0;
+        monthAmounts[uniqueKey] = { value, ...forecast };
+      });
+    }
+    return monthAmounts;
+  };
+
+  const columnTotals = useMemo(() => {
+    const totals = {};
+
+    let ctdTotal = 0;
+    let priorYearTotal = 0;
+
+    const currentFiscalYear =
+      normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+    const startYear = startDate ? parseInt(startDate.split("-")[0]) : null;
+
+    // Calculate CTD and Prior Year from ALL durations (use all, not filtered)
+    if (currentFiscalYear && startYear) {
+      durations.forEach((duration) => {
+        let total = 0;
+        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+        // Sum amounts from existing employees
+        employees.forEach((emp, idx) => {
+          if (hiddenRows[idx]) return;
+          const inputValue = inputValues[`${idx}_${uniqueKey}`];
+          const monthAmounts = getMonthAmounts(emp);
+          const forecastValue = monthAmounts[uniqueKey]?.value;
+          const value =
+            inputValue !== undefined && inputValue !== ""
+              ? inputValue
+              : forecastValue;
+          total += value && !isNaN(value) ? Number(value) : 0;
+        });
+
+        // Add amounts from new entry forms
+        newEntries.forEach((entry, entryIndex) => {
+          const newEntryValue =
+            newEntryPeriodAmountsArray[entryIndex]?.[uniqueKey];
+          total +=
+            newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+        });
+
+        // Prior Year: sum of (selected fiscal year - 1)
+        if (duration.year === currentFiscalYear - 1) {
+          priorYearTotal += total;
+        }
+
+        // CTD: sum from start year to (selected fiscal year - 2)
+        if (
+          duration.year >= startYear &&
+          duration.year <= currentFiscalYear - 2
+        ) {
+          ctdTotal += total;
+        }
+      });
+    }
+
+    // Calculate monthly totals for visible columns (filtered by fiscal year)
+    sortedDurations.forEach((duration) => {
+      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+      let total = 0;
+
+      // Sum amounts from existing employees
+      employees.forEach((emp, idx) => {
+        if (hiddenRows[idx]) return;
+        const inputValue = inputValues[`${idx}_${uniqueKey}`];
+        const monthAmounts = getMonthAmounts(emp);
+        const forecastValue = monthAmounts[uniqueKey]?.value;
+        const value =
+          inputValue !== undefined && inputValue !== ""
+            ? inputValue
+            : forecastValue;
+        total += value && !isNaN(value) ? Number(value) : 0;
+      });
+
+      // Add amounts from new entry forms
+      newEntries.forEach((entry, entryIndex) => {
+        const newEntryValue =
+          newEntryPeriodAmountsArray[entryIndex]?.[uniqueKey];
+        total +=
+          newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+      });
+
+      totals[uniqueKey] = total;
+    });
+
+    totals["ctd"] = ctdTotal;
+    totals["priorYear"] = priorYearTotal;
+
+    return totals;
+  }, [
+    durations,
+    employees,
+    inputValues,
+    hiddenRows,
+    newEntries,
+    newEntryPeriodAmountsArray,
+    sortedDurations,
+    normalizedFiscalYear,
+    startDate,
+  ]);
+
   useEffect(() => {
     const existingKbdIds =
       employees
@@ -185,9 +343,9 @@ const ProjectAmountsTable = ({
   // Reset form state when project or plan changes
 
   useEffect(() => {
-  setCachedProjectData(null);
-  setCachedOrgData(null);
-}, [projectId, planType]);
+    setCachedProjectData(null);
+    setCachedOrgData(null);
+  }, [projectId, planType]);
 
   useEffect(() => {
     if (newEntry.idType === "Other") {
@@ -910,21 +1068,21 @@ const ProjectAmountsTable = ({
     };
   };
 
-  const getMonthAmounts = (emp) => {
-    const monthAmounts = {};
-    if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
-      emp.emple.plForecasts.forEach((forecast) => {
-        const uniqueKey = `${forecast.month}_${forecast.year}`;
-        // Use actualhours for EAC, forecastedhours otherwise
-        const value =
-          planType === "EAC" && forecast.actualamt !== undefined
-            ? forecast.actualamt
-            : forecast.forecastedamt ?? 0;
-        monthAmounts[uniqueKey] = { value, ...forecast };
-      });
-    }
-    return monthAmounts;
-  };
+  // const getMonthAmounts = (emp) => {
+  //   const monthAmounts = {};
+  //   if (emp.emple && Array.isArray(emp.emple.plForecasts)) {
+  //     emp.emple.plForecasts.forEach((forecast) => {
+  //       const uniqueKey = `${forecast.month}_${forecast.year}`;
+  //       // Use actualhours for EAC, forecastedhours otherwise
+  //       const value =
+  //         planType === "EAC" && forecast.actualamt !== undefined
+  //           ? forecast.actualamt
+  //           : forecast.forecastedamt ?? 0;
+  //       monthAmounts[uniqueKey] = { value, ...forecast };
+  //     });
+  //   }
+  //   return monthAmounts;
+  // };
 
   const handleInputChange = (empIdx, uniqueKey, newValue) => {
     if (!isEditable) return;
@@ -2308,20 +2466,20 @@ const ProjectAmountsTable = ({
 
   const showHiddenRows = () => setHiddenRows({});
 
-  const sortedDurations =
-    propFiscalYear && propFiscalYear !== "All"
-      ? durations
-          .filter((d) => d.year === parseInt(propFiscalYear))
-          .sort(
-            (a, b) =>
-              new Date(a.year, a.monthNo - 1, 1) -
-              new Date(b.year, b.monthNo - 1, 1)
-          )
-      : durations.sort(
-          (a, b) =>
-            new Date(a.year, a.monthNo - 1, 1) -
-            new Date(b.year, b.monthNo - 1, 1)
-        );
+  // const sortedDurations =
+  //   propFiscalYear && propFiscalYear !== "All"
+  //     ? durations
+  //         .filter((d) => d.year === parseInt(propFiscalYear))
+  //         .sort(
+  //           (a, b) =>
+  //             new Date(a.year, a.monthNo - 1, 1) -
+  //             new Date(b.year, b.monthNo - 1, 1)
+  //         )
+  //     : durations.sort(
+  //         (a, b) =>
+  //           new Date(a.year, a.monthNo - 1, 1) -
+  //           new Date(b.year, b.monthNo - 1, 1)
+  //       );
 
   if (isLoading) {
     return (
@@ -2352,41 +2510,117 @@ const ProjectAmountsTable = ({
   );
 
   // Calculate column totals for each month
-  const calculateColumnTotals = () => {
-    const columnTotals = {};
+  // const calculateColumnTotals = () => {
+  //   const columnTotals = {};
 
-    sortedDurations.forEach((duration) => {
-      const uniqueKey = `${duration.monthNo}_${duration.year}`;
-      let total = 0;
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
 
-      // Sum amounts from existing employees
-      employees
-        .filter((_, idx) => !hiddenRows[idx])
-        .forEach((emp, idx) => {
-          const actualEmpIdx = employees.findIndex((e) => e === emp);
-          const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
-          const monthAmounts = getMonthAmounts(emp);
-          const forecastValue = monthAmounts[uniqueKey]?.value;
-          const value =
-            inputValue !== undefined && inputValue !== ""
-              ? inputValue
-              : forecastValue;
+  //     // Sum amounts from existing employees
+  //     employees
+  //       .filter((_, idx) => !hiddenRows[idx])
+  //       .forEach((emp, idx) => {
+  //         const actualEmpIdx = employees.findIndex((e) => e === emp);
+  //         const inputValue = inputValues[`${actualEmpIdx}_${uniqueKey}`];
+  //         const monthAmounts = getMonthAmounts(emp);
+  //         const forecastValue = monthAmounts[uniqueKey]?.value;
+  //         const value =
+  //           inputValue !== undefined && inputValue !== ""
+  //             ? inputValue
+  //             : forecastValue;
 
-          total += value && !isNaN(value) ? Number(value) : 0;
-        });
+  //         total += value && !isNaN(value) ? Number(value) : 0;
+  //       });
 
-      // Add amounts from new entry form if visible
-      if (showNewForm) {
-        const newEntryValue = newEntryPeriodAmounts[uniqueKey];
-        total +=
-          newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
-      }
+  //     // Add amounts from new entry form if visible
+  //     if (showNewForm) {
+  //       const newEntryValue = newEntryPeriodAmounts[uniqueKey];
+  //       total +=
+  //         newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     }
 
-      columnTotals[uniqueKey] = total;
-    });
+  //     columnTotals[uniqueKey] = total;
+  //   });
 
-    return columnTotals;
-  };
+  //   return columnTotals;
+  // };
+
+  //   const calculateColumnTotals = () => {
+  //   const columnTotals = {};
+
+  //   let ctdTotal = 0;
+  //   let priorYearTotal = 0;
+
+  //   const currentFiscalYear = normalizedFiscalYear !== "All" ? parseInt(normalizedFiscalYear) : null;
+  //   const startYear = startDate ? parseInt(startDate.split('-')[0]) : null;
+
+  //   // Calculate CTD and Prior Year from ALL durations
+  //   if (currentFiscalYear && startYear) {
+  //     durations.forEach((duration) => {
+  //       let total = 0;
+  //       const uniqueKey = `${duration.monthNo}_${duration.year}`;
+
+  //       // Sum amounts from existing employees
+  //       employees.forEach((emp, idx) => {
+  //         if (hiddenRows[idx]) return;
+  //         const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //         const monthAmounts = getMonthAmounts(emp);
+  //         const forecastValue = monthAmounts[uniqueKey]?.value;
+  //         const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //         total += value && !isNaN(value) ? Number(value) : 0;
+  //       });
+
+  //       // Add amounts from new entry forms
+  //       newEntries.forEach((entry, entryIndex) => {
+  //         const newEntryValue = newEntryPeriodAmountsArray[entryIndex]?.[uniqueKey];
+  //         total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //       });
+
+  //       // Prior Year: sum of (selected fiscal year - 1)
+  //       if (duration.year === currentFiscalYear - 1) {
+  //         priorYearTotal += total;
+  //       }
+
+  //       // CTD: sum from start year to (selected fiscal year - 2)
+  //       if (duration.year >= startYear && duration.year <= currentFiscalYear - 2) {
+  //         ctdTotal += total;
+  //       }
+  //     });
+  //   }
+
+  //   // Calculate monthly totals for visible columns (filtered by fiscal year)
+  //   sortedDurations.forEach((duration) => {
+  //     const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //     let total = 0;
+
+  //     // Sum amounts from existing employees
+  //     employees.forEach((emp, idx) => {
+  //       if (hiddenRows[idx]) return;
+  //       const inputValue = inputValues[`${idx}_${uniqueKey}`];
+  //       const monthAmounts = getMonthAmounts(emp);
+  //       const forecastValue = monthAmounts[uniqueKey]?.value;
+  //       const value = inputValue !== undefined && inputValue !== "" ? inputValue : forecastValue;
+  //       total += value && !isNaN(value) ? Number(value) : 0;
+  //     });
+
+  //     // Add amounts from new entry forms
+  //     newEntries.forEach((entry, entryIndex) => {
+  //       const newEntryValue = newEntryPeriodAmountsArray[entryIndex]?.[uniqueKey];
+  //       total += newEntryValue && !isNaN(newEntryValue) ? Number(newEntryValue) : 0;
+  //     });
+
+  //     columnTotals[uniqueKey] = total;
+  //   });
+
+  //   // Add CTD and Prior Year to columnTotals
+  //   columnTotals['ctd'] = ctdTotal;
+  //   columnTotals['priorYear'] = priorYearTotal;
+
+  //   return columnTotals;
+  // };
+
+  // Replace the regular function with useMemo - ADD THIS RIGHT AFTER sortedDurations
 
   // Function to handle row selection
   const handleRowSelection = (rowIndex, isSelected) => {
@@ -2623,10 +2857,10 @@ const ProjectAmountsTable = ({
     }
 
     // COPY ALL DURATIONS (not filtered by fiscal year) - use spread to avoid mutation
-    const sortedDurations = [...durations].sort((a, b) => {
-      if (a.year !== b.year) return a.year - b.year;
-      return a.monthNo - b.monthNo;
-    });
+    // const sortedDurations = [...durations].sort((a, b) => {
+    //   if (a.year !== b.year) return a.year - b.year;
+    //   return a.monthNo - b.monthNo;
+    // });
 
     const headers = [
       "ID Type",
@@ -2857,254 +3091,264 @@ const ProjectAmountsTable = ({
   // };
 
   // **NEW OPTIMIZED FUNCTION** - Fetches all data with minimal API calls
-const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
-  if (processedEntries.length === 0) return;
+  const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
+    if (processedEntries.length === 0) return;
 
-  const encodedProjectId = encodeURIComponent(projectId);
+    const encodedProjectId = encodeURIComponent(projectId);
 
-  try {
-    // **STEP 1: Fetch common project-level data ONCE**
-    let projectData = cachedProjectData;
-    let orgOptions = cachedOrgData;
+    try {
+      // **STEP 1: Fetch common project-level data ONCE**
+      let projectData = cachedProjectData;
+      let orgOptions = cachedOrgData;
 
-    // Fetch project data if not cached
-    if (!projectData) {
-      const projectResponse = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
-      );
-      projectData = Array.isArray(projectResponse.data)
-        ? projectResponse.data[0]
-        : projectResponse.data;
-      setCachedProjectData(projectData);
-    }
-
-    // Fetch org data if not cached
-    if (!orgOptions) {
-      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
-      orgOptions = Array.isArray(orgResponse.data)
-        ? orgResponse.data.map((org) => ({
-            value: org.orgId,
-            label: org.orgId,
-          }))
-        : [];
-      setCachedOrgData(orgOptions);
-    }
-
-    // **STEP 2: Group entries by idType to minimize API calls**
-    const employeeEntries = [];
-    const vendorEntries = [];
-
-    processedEntries.forEach((entry, index) => {
-      if (entry.idType === "Employee") {
-        employeeEntries.push({ entry, index });
-      } else if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
-        vendorEntries.push({ entry, index });
-      }
-    });
-
-    // **STEP 3: Fetch employee suggestions ONCE per type**
-    let employeeSuggestions = [];
-    let vendorSuggestions = [];
-
-    // Fetch Employee suggestions only if there are Employee entries
-    if (employeeEntries.length > 0) {
-      try {
-        const response = await axios.get(
-          `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+      // Fetch project data if not cached
+      if (!projectData) {
+        const projectResponse = await axios.get(
+          `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
         );
-        employeeSuggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => {
-              const [lastName, firstName] = (emp.employeeName || "")
-                .split(", ")
-                .map((str) => str.trim());
-              return {
-                emplId: emp.empId,
-                firstName: firstName || "",
-                lastName: lastName || "",
+        projectData = Array.isArray(projectResponse.data)
+          ? projectResponse.data[0]
+          : projectResponse.data;
+        setCachedProjectData(projectData);
+      }
+
+      // Fetch org data if not cached
+      if (!orgOptions) {
+        const orgResponse = await axios.get(
+          `${backendUrl}/Orgnization/GetAllOrgs`
+        );
+        orgOptions = Array.isArray(orgResponse.data)
+          ? orgResponse.data.map((org) => ({
+              value: org.orgId,
+              label: org.orgId,
+            }))
+          : [];
+        setCachedOrgData(orgOptions);
+      }
+
+      // **STEP 2: Group entries by idType to minimize API calls**
+      const employeeEntries = [];
+      const vendorEntries = [];
+
+      processedEntries.forEach((entry, index) => {
+        if (entry.idType === "Employee") {
+          employeeEntries.push({ entry, index });
+        } else if (
+          entry.idType === "Vendor" ||
+          entry.idType === "Vendor Employee"
+        ) {
+          vendorEntries.push({ entry, index });
+        }
+      });
+
+      // **STEP 3: Fetch employee suggestions ONCE per type**
+      let employeeSuggestions = [];
+      let vendorSuggestions = [];
+
+      // Fetch Employee suggestions only if there are Employee entries
+      if (employeeEntries.length > 0) {
+        try {
+          const response = await axios.get(
+            `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+          );
+          employeeSuggestions = Array.isArray(response.data)
+            ? response.data.map((emp) => {
+                const [lastName, firstName] = (emp.employeeName || "")
+                  .split(", ")
+                  .map((str) => str.trim());
+                return {
+                  emplId: emp.empId,
+                  firstName: firstName || "",
+                  lastName: lastName || "",
+                  orgId: emp.orgId || "",
+                  acctId: emp.acctId || "",
+                };
+              })
+            : [];
+        } catch (err) {
+          console.error("Failed to fetch employee suggestions:", err);
+        }
+      }
+
+      // Fetch Vendor suggestions only if there are Vendor entries
+      if (vendorEntries.length > 0) {
+        try {
+          const response = await axios.get(
+            `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+          );
+          vendorSuggestions = Array.isArray(response.data)
+            ? response.data.map((emp) => ({
+                emplId: emp.vendId || emp.empId,
+                firstName: "",
+                lastName: emp.employeeName,
                 orgId: emp.orgId || "",
                 acctId: emp.acctId || "",
-              };
-            })
-          : [];
-      } catch (err) {
-        console.error("Failed to fetch employee suggestions:", err);
+              }))
+            : [];
+        } catch (err) {
+          console.error("Failed to fetch vendor suggestions:", err);
+        }
       }
-    }
 
-    // Fetch Vendor suggestions only if there are Vendor entries
-    if (vendorEntries.length > 0) {
-      try {
-        const response = await axios.get(
-          `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
-        );
-        vendorSuggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => ({
-              emplId: emp.vendId || emp.empId,
-              firstName: "",
-              lastName: emp.employeeName,
-              orgId: emp.orgId || "",
-              acctId: emp.acctId || "",
-            }))
-          : [];
-      } catch (err) {
-        console.error("Failed to fetch vendor suggestions:", err);
-      }
-    }
+      // **STEP 4: Apply cached data to all entries**
+      processedEntries.forEach((entry, entryIndex) => {
+        // Set employee/vendor suggestions based on type
+        if (entry.idType === "Employee") {
+          setPastedEntrySuggestions((prev) => ({
+            ...prev,
+            [entryIndex]: employeeSuggestions,
+          }));
+        } else if (
+          entry.idType === "Vendor" ||
+          entry.idType === "Vendor Employee"
+        ) {
+          setPastedEntrySuggestions((prev) => ({
+            ...prev,
+            [entryIndex]: vendorSuggestions,
+          }));
+        }
 
-    // **STEP 4: Apply cached data to all entries**
-    processedEntries.forEach((entry, entryIndex) => {
-      // Set employee/vendor suggestions based on type
-      if (entry.idType === "Employee") {
-        setPastedEntrySuggestions((prev) => ({
+        // Set account options based on idType
+        let accountsWithNames = [];
+        if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
+          accountsWithNames = Array.isArray(
+            projectData.subContractorNonLaborAccounts
+          )
+            ? projectData.subContractorNonLaborAccounts.map((account) => ({
+                id: account.accountId || account,
+                name: account.acctName || account.accountId || String(account),
+              }))
+            : [];
+        } else if (entry.idType === "Employee") {
+          accountsWithNames = Array.isArray(
+            projectData.employeeNonLaborAccounts
+          )
+            ? projectData.employeeNonLaborAccounts.map((account) => ({
+                id: account.accountId || account,
+                name: account.acctName || account.accountId || String(account),
+              }))
+            : [];
+        } else if (entry.idType === "Other") {
+          accountsWithNames = Array.isArray(
+            projectData.otherDirectCostLaborAccounts
+          )
+            ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+                id: account.accountId || account,
+                name: account.acctName || account.accountId || String(account),
+              }))
+            : [];
+        }
+
+        setPastedEntryAccounts((prev) => ({
           ...prev,
-          [entryIndex]: employeeSuggestions,
+          [entryIndex]: accountsWithNames,
         }));
-      } else if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
-        setPastedEntrySuggestions((prev) => ({
+
+        // Set org options (same for all)
+        setPastedEntryOrgs((prev) => ({
           ...prev,
-          [entryIndex]: vendorSuggestions,
+          [entryIndex]: orgOptions,
         }));
-      }
-
-      // Set account options based on idType
-      let accountsWithNames = [];
-      if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
-        accountsWithNames = Array.isArray(projectData.subContractorNonLaborAccounts)
-          ? projectData.subContractorNonLaborAccounts.map((account) => ({
-              id: account.accountId || account,
-              name: account.acctName || account.accountId || String(account),
-            }))
-          : [];
-      } else if (entry.idType === "Employee") {
-        accountsWithNames = Array.isArray(projectData.employeeNonLaborAccounts)
-          ? projectData.employeeNonLaborAccounts.map((account) => ({
-              id: account.accountId || account,
-              name: account.acctName || account.accountId || String(account),
-            }))
-          : [];
-      } else if (entry.idType === "Other") {
-        accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
-          ? projectData.otherDirectCostLaborAccounts.map((account) => ({
-              id: account.accountId || account,
-              name: account.acctName || account.accountId || String(account),
-            }))
-          : [];
-      }
-
-      setPastedEntryAccounts((prev) => ({
-        ...prev,
-        [entryIndex]: accountsWithNames,
-      }));
-
-      // Set org options (same for all)
-      setPastedEntryOrgs((prev) => ({
-        ...prev,
-        [entryIndex]: orgOptions,
-      }));
-    });
-  } catch (err) {
-    console.error("Failed to fetch suggestions for pasted entries:", err);
-  }
-};
-
-
+      });
+    } catch (err) {
+      console.error("Failed to fetch suggestions for pasted entries:", err);
+    }
+  };
 
   const handlePasteMultipleRows = async () => {
-  if (copiedRowsData.length === 0) {
-    toast.error("No copied data available to paste", { autoClose: 2000 });
-    return;
-  }
-
-  if (showNewForm) {
-    setShowNewForm(false);
-  }
-
-  // USE ALL DURATIONS (not filtered) - same as what was copied
-  const allDurations = [...durations].sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year;
-    return a.monthNo - b.monthNo;
-  });
-
-  const processedEntries = [];
-  const processedAmountsArray = [];
-
-  copiedRowsData.forEach((rowData) => {
-    const [
-      idTypeLabel,
-      id,
-      name,
-      acctId,
-      acctName,
-      orgId,
-      isRev,
-      isBrd,
-      status,
-      total,
-      ...monthValues
-    ] = rowData;
-
-    const idType =
-      ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
-      idTypeLabel;
-
-    let firstName = "";
-    let lastName = "";
-
-    if (idType === "Vendor" || idType === "Vendor Employee") {
-      lastName = name;
-    } else if (idType === "Employee") {
-      const nameParts = name.split(" ");
-      firstName = nameParts[0];
-      lastName = nameParts.slice(1).join(" ");
-    } else {
-      firstName = name;
+    if (copiedRowsData.length === 0) {
+      toast.error("No copied data available to paste", { autoClose: 2000 });
+      return;
     }
 
-    const entry = {
-      id: id,
-      firstName: firstName,
-      lastName: lastName,
-      idType: idType,
-      acctId: acctId,
-      orgId: orgId,
-      perHourRate: "",
-      status: status || "ACT",
-      isRev: isRev === "✓",
-      isBrd: isBrd === "✓",
-    };
+    if (showNewForm) {
+      setShowNewForm(false);
+    }
 
-    const periodAmounts = {};
-
-    copiedMonthMetadata.forEach((meta, index) => {
-      const uniqueKey = `${meta.monthNo}_${meta.year}`;
-      const value = monthValues[index];
-
-      if (value && value !== "0.00" && value !== "0" && value !== "") {
-        periodAmounts[uniqueKey] = value;
-      }
+    // USE ALL DURATIONS (not filtered) - same as what was copied
+    const allDurations = [...durations].sort((a, b) => {
+      if (a.year !== b.year) return a.year - b.year;
+      return a.monthNo - b.monthNo;
     });
 
-    processedEntries.push(entry);
-    processedAmountsArray.push(periodAmounts);
-  });
+    const processedEntries = [];
+    const processedAmountsArray = [];
 
-  setNewEntries(processedEntries);
-  setNewEntryPeriodAmountsArray(processedAmountsArray);
+    copiedRowsData.forEach((rowData) => {
+      const [
+        idTypeLabel,
+        id,
+        name,
+        acctId,
+        acctName,
+        orgId,
+        isRev,
+        isBrd,
+        status,
+        total,
+        ...monthValues
+      ] = rowData;
 
-  // **OPTIMIZED: Fetch common data ONCE, then populate all entries**
-  await fetchAllSuggestionsOptimizedForAmounts(processedEntries);
+      const idType =
+        ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+        idTypeLabel;
 
-  setHasClipboardData(false);
-  setCopiedRowsData([]);
-  setCopiedMonthMetadata([]);
+      let firstName = "";
+      let lastName = "";
 
-  toast.success(
-    `Pasted ${processedEntries.length} entries with all fiscal year data!`,
-    { autoClose: 3000 }
-  );
-};
+      if (idType === "Vendor" || idType === "Vendor Employee") {
+        lastName = name;
+      } else if (idType === "Employee") {
+        const nameParts = name.split(" ");
+        firstName = nameParts[0];
+        lastName = nameParts.slice(1).join(" ");
+      } else {
+        firstName = name;
+      }
 
+      const entry = {
+        id: id,
+        firstName: firstName,
+        lastName: lastName,
+        idType: idType,
+        acctId: acctId,
+        orgId: orgId,
+        perHourRate: "",
+        status: status || "ACT",
+        isRev: isRev === "✓",
+        isBrd: isBrd === "✓",
+      };
 
+      const periodAmounts = {};
+
+      copiedMonthMetadata.forEach((meta, index) => {
+        const uniqueKey = `${meta.monthNo}_${meta.year}`;
+        const value = monthValues[index];
+
+        if (value && value !== "0.00" && value !== "0" && value !== "") {
+          periodAmounts[uniqueKey] = value;
+        }
+      });
+
+      processedEntries.push(entry);
+      processedAmountsArray.push(periodAmounts);
+    });
+
+    setNewEntries(processedEntries);
+    setNewEntryPeriodAmountsArray(processedAmountsArray);
+
+    // **OPTIMIZED: Fetch common data ONCE, then populate all entries**
+    await fetchAllSuggestionsOptimizedForAmounts(processedEntries);
+
+    setHasClipboardData(false);
+    setCopiedRowsData([]);
+    setCopiedMonthMetadata([]);
+
+    toast.success(
+      `Pasted ${processedEntries.length} entries with all fiscal year data!`,
+      { autoClose: 3000 }
+    );
+  };
 
   // const handlePasteMultipleRows = () => {
   //   if (copiedRowsData.length === 0) {
@@ -3310,7 +3554,7 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
   // };
 
   // Add keyboard listener for paste
-  
+
   // const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
   //   const encodedProjectId = encodeURIComponent(projectId);
   //   const apiPlanType = planType === "NBBUD" ? "BUD" : planType;
@@ -3425,277 +3669,283 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
   //     );
   //   }
   // };
-  
+
   // Clear cache when project or plan type changes
-// useEffect(() => {
-//   setCachedProjectData(null);
-//   setCachedOrgData(null);
-// }, [projectId, planType]);
+  // useEffect(() => {
+  //   setCachedProjectData(null);
+  //   setCachedOrgData(null);
+  // }, [projectId, planType]);
 
-//   const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-//   const encodedProjectId = encodeURIComponent(projectId);
+  //   const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+  //   const encodedProjectId = encodeURIComponent(projectId);
 
-//   // Fetch employee suggestions based on ID type (entry-specific, must be called per entry)
-//   if (entry.idType && entry.idType !== "") {
-//     try {
-//       const endpoint =
-//         entry.idType === "Vendor" || entry.idType === "Vendor Employee"
-//           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
-//           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
+  //   // Fetch employee suggestions based on ID type (entry-specific, must be called per entry)
+  //   if (entry.idType && entry.idType !== "") {
+  //     try {
+  //       const endpoint =
+  //         entry.idType === "Vendor" || entry.idType === "Vendor Employee"
+  //           ? `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+  //           : `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`;
 
-//       const response = await axios.get(endpoint);
-//       const suggestions = Array.isArray(response.data)
-//         ? response.data.map((emp) => {
-//             if (
-//               entry.idType === "Vendor" ||
-//               entry.idType === "Vendor Employee"
-//             ) {
-//               return {
-//                 emplId: emp.vendId || emp.empId,
-//                 firstName: "",
-//                 lastName: emp.employeeName,
-//                 orgId: emp.orgId || "",
-//                 acctId: emp.acctId || "",
-//               };
-//             } else {
-//               const [lastName, firstName] = (emp.employeeName || "")
-//                 .split(", ")
-//                 .map((str) => str.trim());
-//               return {
-//                 emplId: emp.empId,
-//                 firstName: firstName || "",
-//                 lastName: lastName || "",
-//                 orgId: emp.orgId || "",
-//                 acctId: emp.acctId || "",
-//               };
-//             }
-//           })
-//         : [];
+  //       const response = await axios.get(endpoint);
+  //       const suggestions = Array.isArray(response.data)
+  //         ? response.data.map((emp) => {
+  //             if (
+  //               entry.idType === "Vendor" ||
+  //               entry.idType === "Vendor Employee"
+  //             ) {
+  //               return {
+  //                 emplId: emp.vendId || emp.empId,
+  //                 firstName: "",
+  //                 lastName: emp.employeeName,
+  //                 orgId: emp.orgId || "",
+  //                 acctId: emp.acctId || "",
+  //               };
+  //             } else {
+  //               const [lastName, firstName] = (emp.employeeName || "")
+  //                 .split(", ")
+  //                 .map((str) => str.trim());
+  //               return {
+  //                 emplId: emp.empId,
+  //                 firstName: firstName || "",
+  //                 lastName: lastName || "",
+  //                 orgId: emp.orgId || "",
+  //                 acctId: emp.acctId || "",
+  //               };
+  //             }
+  //           })
+  //         : [];
 
-//       setPastedEntrySuggestions((prev) => ({
-//         ...prev,
-//         [entryIndex]: suggestions,
-//       }));
-//     } catch (err) {
-//       console.error(
-//         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
-//         err
-//       );
-//     }
-//   }
+  //       setPastedEntrySuggestions((prev) => ({
+  //         ...prev,
+  //         [entryIndex]: suggestions,
+  //       }));
+  //     } catch (err) {
+  //       console.error(
+  //         `Failed to fetch pasted entry suggestions for index ${entryIndex}:`,
+  //         err
+  //       );
+  //     }
+  //   }
 
-//   // **OPTIMIZED** - Use cached project and org data instead of fetching for each entry
-//   try {
-//     let projectData = cachedProjectData;
-//     let orgOptions = cachedOrgData;
+  //   // **OPTIMIZED** - Use cached project and org data instead of fetching for each entry
+  //   try {
+  //     let projectData = cachedProjectData;
+  //     let orgOptions = cachedOrgData;
 
-//     // Only fetch project data if not already cached
-//     if (!projectData) {
-//       const response = await axios.get(
-//         `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
-//       );
-//       projectData = Array.isArray(response.data)
-//         ? response.data[0]
-//         : response.data;
-//       setCachedProjectData(projectData);
-//     }
+  //     // Only fetch project data if not already cached
+  //     if (!projectData) {
+  //       const response = await axios.get(
+  //         `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
+  //       );
+  //       projectData = Array.isArray(response.data)
+  //         ? response.data[0]
+  //         : response.data;
+  //       setCachedProjectData(projectData);
+  //     }
 
-//     // Only fetch org data if not already cached
-//     if (!orgOptions) {
-//       const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
-//       orgOptions = Array.isArray(orgResponse.data)
-//         ? orgResponse.data.map((org) => ({
-//             value: org.orgId,
-//             label: org.orgId,
-//           }))
-//         : [];
-//       setCachedOrgData(orgOptions);
-//     }
+  //     // Only fetch org data if not already cached
+  //     if (!orgOptions) {
+  //       const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
+  //       orgOptions = Array.isArray(orgResponse.data)
+  //         ? orgResponse.data.map((org) => ({
+  //             value: org.orgId,
+  //             label: org.orgId,
+  //           }))
+  //         : [];
+  //       setCachedOrgData(orgOptions);
+  //     }
 
-//     // Now use the cached data to populate entry-specific options
-//     let accountsWithNames = [];
-//     if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
-//       accountsWithNames = Array.isArray(projectData.subContractorNonLaborAccounts)
-//         ? projectData.subContractorNonLaborAccounts.map((account) => ({
-//             id: account.accountId || account,
-//             name: account.acctName || account.accountId || String(account),
-//           }))
-//         : [];
-//     } else if (entry.idType === "Employee") {
-//       accountsWithNames = Array.isArray(projectData.employeeNonLaborAccounts)
-//         ? projectData.employeeNonLaborAccounts.map((account) => ({
-//             id: account.accountId || account,
-//             name: account.acctName || account.accountId || String(account),
-//           }))
-//         : [];
-//     } else if (entry.idType === "Other") {
-//       accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
-//         ? projectData.otherDirectCostLaborAccounts.map((account) => ({
-//             id: account.accountId || account,
-//             name: account.acctName || account.accountId || String(account),
-//           }))
-//         : [];
-//     }
+  //     // Now use the cached data to populate entry-specific options
+  //     let accountsWithNames = [];
+  //     if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
+  //       accountsWithNames = Array.isArray(projectData.subContractorNonLaborAccounts)
+  //         ? projectData.subContractorNonLaborAccounts.map((account) => ({
+  //             id: account.accountId || account,
+  //             name: account.acctName || account.accountId || String(account),
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Employee") {
+  //       accountsWithNames = Array.isArray(projectData.employeeNonLaborAccounts)
+  //         ? projectData.employeeNonLaborAccounts.map((account) => ({
+  //             id: account.accountId || account,
+  //             name: account.acctName || account.accountId || String(account),
+  //           }))
+  //         : [];
+  //     } else if (entry.idType === "Other") {
+  //       accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
+  //         ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+  //             id: account.accountId || account,
+  //             name: account.acctName || account.accountId || String(account),
+  //           }))
+  //         : [];
+  //     }
 
-//     setPastedEntryAccounts((prev) => ({
-//       ...prev,
-//       [entryIndex]: accountsWithNames,
-//     }));
+  //     setPastedEntryAccounts((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: accountsWithNames,
+  //     }));
 
-//     setPastedEntryOrgs((prev) => ({
-//       ...prev,
-//       [entryIndex]: orgOptions,
-//     }));
-//   } catch (err) {
-//     console.error(
-//       `Failed to fetch pasted entry options for index ${entryIndex}:`,
-//       err
-//     );
-//   }
-// };
+  //     setPastedEntryOrgs((prev) => ({
+  //       ...prev,
+  //       [entryIndex]: orgOptions,
+  //     }));
+  //   } catch (err) {
+  //     console.error(
+  //       `Failed to fetch pasted entry options for index ${entryIndex}:`,
+  //       err
+  //     );
+  //   }
+  // };
 
-// Clear cache when project or plan type changes
-// Clear cache when project or plan type changes
+  // Clear cache when project or plan type changes
+  // Clear cache when project or plan type changes
 
+  const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
+    const encodedProjectId = encodeURIComponent(projectId);
 
+    // **OPTIMIZATION: Use cached data instead of fetching for each entry**
+    try {
+      let projectData = cachedProjectData;
+      let orgOptions = cachedOrgData;
+      let employeeSuggestions = [];
+      let vendorSuggestions = [];
 
-
-const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
-  const encodedProjectId = encodeURIComponent(projectId);
-
-  // **OPTIMIZATION: Use cached data instead of fetching for each entry**
-  try {
-    let projectData = cachedProjectData;
-    let orgOptions = cachedOrgData;
-    let employeeSuggestions = [];
-    let vendorSuggestions = [];
-
-    // Only fetch project data if not already cached
-    if (!projectData) {
-      const response = await axios.get(
-        `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
-      );
-      projectData = Array.isArray(response.data)
-        ? response.data[0]
-        : response.data;
-      setCachedProjectData(projectData);
-    }
-
-    // Only fetch org data if not already cached
-    if (!orgOptions) {
-      const orgResponse = await axios.get(`${backendUrl}/Orgnization/GetAllOrgs`);
-      orgOptions = Array.isArray(orgResponse.data)
-        ? orgResponse.data.map((org) => ({
-            value: org.orgId,
-            label: org.orgId,
-          }))
-        : [];
-      setCachedOrgData(orgOptions);
-    }
-
-    // **NEW: Fetch employee suggestions ONCE and cache**
-    if (entry.idType === "Employee") {
-      // Check if already fetched
-      const cacheKey = `employee_${projectId}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      
-      if (cached) {
-        employeeSuggestions = JSON.parse(cached);
-      } else {
+      // Only fetch project data if not already cached
+      if (!projectData) {
         const response = await axios.get(
-          `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+          `${backendUrl}/Project/GetAllProjectByProjId/${encodedProjectId}/${planType}`
         );
-        employeeSuggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => {
-              const [lastName, firstName] = (emp.employeeName || "")
-                .split(", ")
-                .map((str) => str.trim());
-              return {
-                emplId: emp.empId,
-                firstName: firstName || "",
-                lastName: lastName || "",
-                orgId: emp.orgId || "",
-                acctId: emp.acctId || "",
-              };
-            })
-          : [];
-        sessionStorage.setItem(cacheKey, JSON.stringify(employeeSuggestions));
+        projectData = Array.isArray(response.data)
+          ? response.data[0]
+          : response.data;
+        setCachedProjectData(projectData);
       }
 
-      setPastedEntrySuggestions((prev) => ({
-        ...prev,
-        [entryIndex]: employeeSuggestions,
-      }));
-    } else if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
-      // Check if already fetched
-      const cacheKey = `vendor_${projectId}`;
-      const cached = sessionStorage.getItem(cacheKey);
-      
-      if (cached) {
-        vendorSuggestions = JSON.parse(cached);
-      } else {
-        const response = await axios.get(
-          `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+      // Only fetch org data if not already cached
+      if (!orgOptions) {
+        const orgResponse = await axios.get(
+          `${backendUrl}/Orgnization/GetAllOrgs`
         );
-        vendorSuggestions = Array.isArray(response.data)
-          ? response.data.map((emp) => ({
-              emplId: emp.vendId || emp.empId,
-              firstName: "",
-              lastName: emp.employeeName,
-              orgId: emp.orgId || "",
-              acctId: emp.acctId || "",
+        orgOptions = Array.isArray(orgResponse.data)
+          ? orgResponse.data.map((org) => ({
+              value: org.orgId,
+              label: org.orgId,
             }))
           : [];
-        sessionStorage.setItem(cacheKey, JSON.stringify(vendorSuggestions));
+        setCachedOrgData(orgOptions);
       }
 
-      setPastedEntrySuggestions((prev) => ({
+      // **NEW: Fetch employee suggestions ONCE and cache**
+      if (entry.idType === "Employee") {
+        // Check if already fetched
+        const cacheKey = `employee_${projectId}`;
+        const cached = sessionStorage.getItem(cacheKey);
+
+        if (cached) {
+          employeeSuggestions = JSON.parse(cached);
+        } else {
+          const response = await axios.get(
+            `${backendUrl}/Project/GetEmployeesByProject/${encodedProjectId}`
+          );
+          employeeSuggestions = Array.isArray(response.data)
+            ? response.data.map((emp) => {
+                const [lastName, firstName] = (emp.employeeName || "")
+                  .split(", ")
+                  .map((str) => str.trim());
+                return {
+                  emplId: emp.empId,
+                  firstName: firstName || "",
+                  lastName: lastName || "",
+                  orgId: emp.orgId || "",
+                  acctId: emp.acctId || "",
+                };
+              })
+            : [];
+          sessionStorage.setItem(cacheKey, JSON.stringify(employeeSuggestions));
+        }
+
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: employeeSuggestions,
+        }));
+      } else if (
+        entry.idType === "Vendor" ||
+        entry.idType === "Vendor Employee"
+      ) {
+        // Check if already fetched
+        const cacheKey = `vendor_${projectId}`;
+        const cached = sessionStorage.getItem(cacheKey);
+
+        if (cached) {
+          vendorSuggestions = JSON.parse(cached);
+        } else {
+          const response = await axios.get(
+            `${backendUrl}/Project/GetVenderEmployeesByProject/${encodedProjectId}`
+          );
+          vendorSuggestions = Array.isArray(response.data)
+            ? response.data.map((emp) => ({
+                emplId: emp.vendId || emp.empId,
+                firstName: "",
+                lastName: emp.employeeName,
+                orgId: emp.orgId || "",
+                acctId: emp.acctId || "",
+              }))
+            : [];
+          sessionStorage.setItem(cacheKey, JSON.stringify(vendorSuggestions));
+        }
+
+        setPastedEntrySuggestions((prev) => ({
+          ...prev,
+          [entryIndex]: vendorSuggestions,
+        }));
+      }
+
+      // Now use the cached data to populate entry-specific options
+      let accountsWithNames = [];
+      if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
+        accountsWithNames = Array.isArray(
+          projectData.subContractorNonLaborAccounts
+        )
+          ? projectData.subContractorNonLaborAccounts.map((account) => ({
+              id: account.accountId || account,
+              name: account.acctName || account.accountId || String(account),
+            }))
+          : [];
+      } else if (entry.idType === "Employee") {
+        accountsWithNames = Array.isArray(projectData.employeeNonLaborAccounts)
+          ? projectData.employeeNonLaborAccounts.map((account) => ({
+              id: account.accountId || account,
+              name: account.acctName || account.accountId || String(account),
+            }))
+          : [];
+      } else if (entry.idType === "Other") {
+        accountsWithNames = Array.isArray(
+          projectData.otherDirectCostLaborAccounts
+        )
+          ? projectData.otherDirectCostLaborAccounts.map((account) => ({
+              id: account.accountId || account,
+              name: account.acctName || account.accountId || String(account),
+            }))
+          : [];
+      }
+
+      setPastedEntryAccounts((prev) => ({
         ...prev,
-        [entryIndex]: vendorSuggestions,
+        [entryIndex]: accountsWithNames,
       }));
+
+      setPastedEntryOrgs((prev) => ({
+        ...prev,
+        [entryIndex]: orgOptions,
+      }));
+    } catch (err) {
+      console.error(
+        `Failed to fetch pasted entry options for index ${entryIndex}:`,
+        err
+      );
     }
-
-    // Now use the cached data to populate entry-specific options
-    let accountsWithNames = [];
-    if (entry.idType === "Vendor" || entry.idType === "Vendor Employee") {
-      accountsWithNames = Array.isArray(projectData.subContractorNonLaborAccounts)
-        ? projectData.subContractorNonLaborAccounts.map((account) => ({
-            id: account.accountId || account,
-            name: account.acctName || account.accountId || String(account),
-          }))
-        : [];
-    } else if (entry.idType === "Employee") {
-      accountsWithNames = Array.isArray(projectData.employeeNonLaborAccounts)
-        ? projectData.employeeNonLaborAccounts.map((account) => ({
-            id: account.accountId || account,
-            name: account.acctName || account.accountId || String(account),
-          }))
-        : [];
-    } else if (entry.idType === "Other") {
-      accountsWithNames = Array.isArray(projectData.otherDirectCostLaborAccounts)
-        ? projectData.otherDirectCostLaborAccounts.map((account) => ({
-            id: account.accountId || account,
-            name: account.acctName || account.accountId || String(account),
-          }))
-        : [];
-    }
-
-    setPastedEntryAccounts((prev) => ({
-      ...prev,
-      [entryIndex]: accountsWithNames,
-    }));
-
-    setPastedEntryOrgs((prev) => ({
-      ...prev,
-      [entryIndex]: orgOptions,
-    }));
-  } catch (err) {
-    console.error(
-      `Failed to fetch pasted entry options for index ${entryIndex}:`,
-      err
-    );
-  }
-};
+  };
 
   const addNewEntryForm = () => {
     const newEntry = {
@@ -5108,6 +5358,56 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                       lineHeight: "normal",
                     }}
                   >
+                    {/* CTD and Prior Year headers - only show when fiscal year is NOT "All" */}
+                    {normalizedFiscalYear !== "All" && (
+                      <>
+                        {/* <th className="th-thead min-w-80px">
+      <div className="flex flex-col items-center justify-center h-full">
+        <span className="whitespace-nowrap th-thead">CTD</span>
+        <span className="text-xs text-gray-600 font-normal normal-case">
+          {(() => {
+            const startYear = parseInt(startDate.split('-')[0]);
+            const selectedYear = parseInt(normalizedFiscalYear);
+            return `${startYear}-${selectedYear - 2}`;
+          })()}
+        </span>
+      </div>
+    </th> */}
+                        {shouldShowCTD() && (
+                          <th className="th-thead min-w-100px">
+                            <div className="flex flex-col items-center justify-center h-full">
+                              <span className="whitespace-nowrap th-thead font-bold">
+                                CTD
+                              </span>
+                              <span className="whitespace-nowrap text-xs text-gray-600 font-normal normal-case">
+                                {(() => {
+                                  const startYear = parseInt(
+                                    startDate.split("-")[0]
+                                  );
+                                  const selectedYear =
+                                    parseInt(normalizedFiscalYear);
+                                  return `${startYear}-${selectedYear - 2}`;
+                                })()}
+                              </span>
+                            </div>
+                          </th>
+                        )}
+
+                        {shouldShowPriorYear() && (
+                          <th className="th-thead min-w-100px">
+                            <div className="flex flex-col items-center justify-center h-full">
+                              <span className="whitespace-nowrap th-thead font-bold">
+                                Prior Year
+                              </span>
+                              <span className="whitespace-nowrap text-xs text-gray-600 font-normal normal-case">
+                                {parseInt(normalizedFiscalYear) - 1}
+                              </span>
+                            </div>
+                          </th>
+                        )}
+                      </>
+                    )}
+
                     {sortedDurations.map((duration) => {
                       const uniqueKey = `${duration.monthNo}_${duration.year}`;
                       return (
@@ -5277,6 +5577,89 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                           }}
                           onClick={() => handleRowClick(actualEmpIdx)}
                         >
+                          {/* CTD and Prior Year cells */}
+                          {normalizedFiscalYear !== "All" && (
+                            <>
+                              {shouldShowCTD() && (
+                                <td className="tbody-td text-center">
+                                  {(() => {
+                                    let empCtd = 0;
+                                    const currentFiscalYear =
+                                      parseInt(normalizedFiscalYear);
+                                    const startYear = parseInt(
+                                      startDate.split("-")[0]
+                                    );
+
+                                    durations.forEach((duration) => {
+                                      if (
+                                        duration.year >= startYear &&
+                                        duration.year <= currentFiscalYear - 2
+                                      ) {
+                                        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                                        const inputValue =
+                                          inputValues[
+                                            `${actualEmpIdx}_${uniqueKey}`
+                                          ];
+                                        const monthAmounts =
+                                          getMonthAmounts(emp);
+                                        const forecastValue =
+                                          monthAmounts[uniqueKey]?.value;
+                                        const value =
+                                          inputValue !== undefined &&
+                                          inputValue !== ""
+                                            ? inputValue
+                                            : forecastValue;
+                                        empCtd +=
+                                          value && !isNaN(value)
+                                            ? Number(value)
+                                            : 0;
+                                      }
+                                    });
+
+                                    return empCtd.toFixed(2);
+                                  })()}
+                                </td>
+                              )}
+
+                              {shouldShowPriorYear() && (
+                                <td className="tbody-td text-center">
+                                  {(() => {
+                                    let empPriorYear = 0;
+                                    const currentFiscalYear =
+                                      parseInt(normalizedFiscalYear);
+
+                                    durations.forEach((duration) => {
+                                      if (
+                                        duration.year ===
+                                        currentFiscalYear - 1
+                                      ) {
+                                        const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                                        const inputValue =
+                                          inputValues[
+                                            `${actualEmpIdx}_${uniqueKey}`
+                                          ];
+                                        const monthAmounts =
+                                          getMonthAmounts(emp);
+                                        const forecastValue =
+                                          monthAmounts[uniqueKey]?.value;
+                                        const value =
+                                          inputValue !== undefined &&
+                                          inputValue !== ""
+                                            ? inputValue
+                                            : forecastValue;
+                                        empPriorYear +=
+                                          value && !isNaN(value)
+                                            ? Number(value)
+                                            : 0;
+                                      }
+                                    });
+
+                                    return empPriorYear.toFixed(2);
+                                  })()}
+                                </td>
+                              )}
+                            </>
+                          )}
                           {sortedDurations.map((duration) => {
                             const uniqueKey = `${duration.monthNo}_${duration.year}`;
                             const forecast = monthAmounts[uniqueKey];
@@ -5358,11 +5741,54 @@ const fetchSuggestionsForPastedEntry = async (entryIndex, entry) => {
                       borderTop: "2px solid #d1d5db", // tailwind gray-300
                     }}
                   >
-                    {sortedDurations.map((duration) => {
+                    {/* CTD and Prior Year footer totals */}
+                    {normalizedFiscalYear !== "All" && (
+                      <>
+                        {/* <td className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200">
+      {(() => {
+        const columnTotals = calculateColumnTotals();
+        return (columnTotals['ctd'] || 0).toFixed(2);
+      })()}
+    </td> */}
+                        {shouldShowCTD() && (
+                          <td className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200">
+                            {(columnTotals["ctd"] || 0).toFixed(2)}
+                          </td>
+                        )}
+
+                        {/* <td className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200">
+      {(() => {
+        const columnTotals = calculateColumnTotals();
+        return (columnTotals['priorYear'] || 0).toFixed(2);
+      })()}
+    </td> */}
+                        {shouldShowPriorYear() && (
+                          <td className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200">
+                            {(columnTotals["priorYear"] || 0).toFixed(2)}
+                          </td>
+                        )}
+                      </>
+                    )}
+                    {/* {sortedDurations.map((duration) => {
                       const uniqueKey = `${duration.monthNo}_${duration.year}`;
                       const columnTotals = calculateColumnTotals();
                       const total = columnTotals[uniqueKey] || 0;
 
+                      return (
+                        <td
+                          key={`total-${uniqueKey}`}
+                          className="tbody-td text-center sticky bottom-0 text-xs font-bold bg-gray-200"
+                        >
+                          {total.toFixed(2)}
+                        </td>
+                      );
+                    })} */}
+                    {sortedDurations.map((duration) => {
+                      const uniqueKey = `${duration.monthNo}_${duration.year}`;
+                      const total = columnTotals[uniqueKey] || 0;
+                      {
+                        /* ✅ Use memoized columnTotals directly */
+                      }
                       return (
                         <td
                           key={`total-${uniqueKey}`}
