@@ -165,13 +165,48 @@ import axios from "axios";
 import { backendUrl } from "./config";
 import EmployeeSchedule from "./EmployeeSchedule";
 
-const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, endDate, fiscalYear }) => {
+const Warning = ({
+  planId,
+  projectId,
+  templateId,
+  planType,
+  emplId,
+  startDate,
+  endDate,
+  fiscalYear,
+}) => {
   const [warnings, setWarnings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showEmployeeSchedule, setShowEmployeeSchedule] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
+
+  // useEffect(() => {
+  //   const fetchWarnings = async () => {
+  //     setLoading(true);
+  //     try {
+  //       let url;
+  //       if (emplId) {
+  //         url = `${backendUrl}/Project/GetWarningsByEMployee/${planId}/${emplId}`;
+  //       } else {
+  //         url = `${backendUrl}/Project/GetWarningsByPlId/${planId}`;
+  //       }
+  //       const response = await axios.get(url);
+  //       setWarnings(response.data);
+  //       setError(null);
+  //     } catch (err) {
+  //       setError("Failed to fetch warnings");
+  //       console.error(err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   if (planId) {
+  //     fetchWarnings();
+  //   }
+  // }, [planId, emplId]);
 
   useEffect(() => {
     const fetchWarnings = async () => {
@@ -183,11 +218,15 @@ const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, e
         } else {
           url = `${backendUrl}/Project/GetWarningsByPlId/${planId}`;
         }
+
         const response = await axios.get(url);
         setWarnings(response.data);
         setError(null);
       } catch (err) {
-        setError("Failed to fetch warnings");
+        // Try to use API message, fallback to generic
+        const apiMessage =
+          err?.response?.data?.message || "Failed to fetch warnings";
+        setError(apiMessage);
         console.error(err);
       } finally {
         setLoading(false);
@@ -203,18 +242,18 @@ const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, e
   //   setSelectedEmployeeId(employeeId);
   //   setSelectedRowIndex(index);
   // };
-  
+
   const handleEmployeeRowClick = (employeeId, index) => {
-  // If the same row is clicked again, unselect it
-  if (selectedRowIndex === index) {
-    setSelectedEmployeeId(null);
-    setSelectedRowIndex(null);
-  } else {
-    // Otherwise, select the new row
-    setSelectedEmployeeId(employeeId);
-    setSelectedRowIndex(index);
-  }
-};
+    // If the same row is clicked again, unselect it
+    if (selectedRowIndex === index) {
+      setSelectedEmployeeId(null);
+      setSelectedRowIndex(null);
+    } else {
+      // Otherwise, select the new row
+      setSelectedEmployeeId(employeeId);
+      setSelectedRowIndex(index);
+    }
+  };
 
   const handleShowEmployeeSchedule = () => {
     if (!selectedEmployeeId) {
@@ -250,7 +289,9 @@ const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, e
       <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-7xl max-h-[90vh] overflow-auto">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Employee Schedule - {selectedEmployeeId}</h3>
+            <h3 className="text-lg font-semibold">
+              Employee Schedule - {selectedEmployeeId}
+            </h3>
             <button
               onClick={handleCloseEmployeeSchedule}
               className="text-gray-500 hover:text-gray-700 text-xl font-bold"
@@ -258,7 +299,7 @@ const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, e
               ×
             </button>
           </div>
-          
+
           <EmployeeSchedule
             planId={planId}
             projectId={projectId}
@@ -269,7 +310,7 @@ const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, e
             fiscalYear={fiscalYear}
             emplId={selectedEmployeeId}
           />
-          
+
           <div className="mt-4 flex justify-end">
             <button
               onClick={handleCloseEmployeeSchedule}
@@ -295,7 +336,11 @@ const Warning = ({ planId, projectId, templateId, planType, emplId, startDate, e
               ? "bg-indigo-600 text-white hover:bg-indigo-700"
               : "bg-gray-300 text-gray-500 cursor-not-allowed"
           }`}
-          title={!selectedEmployeeId ? "Please select a row first by clicking on it" : "View employee schedule"}
+          title={
+            !selectedEmployeeId
+              ? "Please select a row first by clicking on it"
+              : "View employee schedule"
+          }
         >
           Employee Schedule
         </button>
