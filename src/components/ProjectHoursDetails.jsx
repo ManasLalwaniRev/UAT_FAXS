@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from "react";
 import axios from "axios";
 import Warning from "./Warning";
+import EmployeeSchedule from "./EmployeeSchedule";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { backendUrl } from "./config";
@@ -11,7 +12,7 @@ const EMPLOYEE_COLUMNS = [
   { key: "warning", label: "Warning" },
   { key: "name", label: "Name" },
   { key: "acctId", label: "Account" },
-  { key: "acctName", label: "Account Name" }, // ADD THIS LINE
+  { key: "acctName", label: "Account Name" },
   { key: "orgId", label: "Organization" },
   { key: "glcPlc", label: "Plc" },
   { key: "isRev", label: "Rev" },
@@ -63,12 +64,7 @@ const ProjectHoursDetails = ({
     fiscalYear === "All" || !fiscalYear ? "All" : String(fiscalYear).trim();
   // ADD THIS BLOCK AFTER normalizedFiscalYear definition:
 
-  console.log(
-    "FISCAL YEAR DEBUG:",
-    fiscalYear,
-    "Normalized:",
-    normalizedFiscalYear
-  );
+  // console.log("FISCAL YEAR DEBUG:", fiscalYear, "Normalized:", normalizedFiscalYear);
   const [durations, setDurations] = useState([]);
   const [isDurationLoading, setIsDurationLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -114,6 +110,8 @@ const ProjectHoursDetails = ({
   const [organizationOptions, setOrganizationOptions] = useState([]);
   const [orgSearch, setOrgSearch] = useState("");
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+  const [selectedEmployeeScheduleId, setSelectedEmployeeScheduleId] =
+    useState(null);
   const [filteredPlcOptions, setFilteredPlcOptions] = useState([]);
   const [accountOptionsWithNames, setAccountOptionsWithNames] = useState([]);
   const [modifiedHours, setModifiedHours] = useState({});
@@ -148,9 +146,10 @@ const ProjectHoursDetails = ({
   const [findMatches, setFindMatches] = useState([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
-  // ADD THIS NEW STATE at the top with other useState declarations
   const [cachedProjectData, setCachedProjectData] = useState(null);
   const [cachedOrgData, setCachedOrgData] = useState(null);
+
+  const [showEmployeeSchedule, setShowEmployeeSchedule] = useState(false);
 
   const sortedDurations = useMemo(() => {
     return [...durations]
@@ -3720,6 +3719,18 @@ const ProjectHoursDetails = ({
         }
       }
 
+      try {
+        await axios.post(
+          `https://test-api-3tmq.onrender.com/Forecast/ValidateForecast?planid=${planId}`
+        );
+        // console.log("Forecast validation completed successfully");
+      } catch (validationErr) {
+        console.error("Forecast validation failed:", validationErr);
+        toast.warning("Hours saved but validation encountered an issue.", {
+          autoClose: 4000,
+        });
+      }
+
       // Clear all modified data and reset flags
       setModifiedHours({});
       setHasUnsavedHoursChanges(false);
@@ -4956,15 +4967,57 @@ const ProjectHoursDetails = ({
     }
   };
 
+  // const handleRowClick = (actualEmpIdx) => {
+  //   if (!isEditable) return;
+  //   setSelectedRowIndex(
+  //     actualEmpIdx === selectedRowIndex ? null : actualEmpIdx
+  //   );
+  //   setSelectedEmployeeId(localEmployees[actualEmpIdx]?.emple_Id);
+  //   setSelectedEmployeeScheduleId(localEmployees[actualEmpIdx]?.emple?.emplId);
+  //   setSelectedColumnKey(null);
+  //   setReplaceScope(actualEmpIdx === selectedRowIndex ? "all" : "row");
+  //   if (showNewForm) setSourceRowIndex(actualEmpIdx);
+  // };
+
+  //   const handleRowClick = (actualEmpIdx) => {
+  //   // Allow row selection regardless of isEditable for Employee Schedule
+  //   const isSameRow = actualEmpIdx === selectedRowIndex;
+
+  //   setSelectedRowIndex(isSameRow ? null : actualEmpIdx);
+  //   setSelectedEmployeeId(isSameRow ? null : localEmployees[actualEmpIdx]?.empleId);
+  //   setSelectedEmployeeScheduleId(isSameRow ? null : localEmployees[actualEmpIdx]?.emple?.emplId);
+  //   setSelectedColumnKey(null);
+
+  //   if (isEditable) {
+  //     setReplaceScope(isSameRow ? "all" : "row");
+  //   }
+
+  //   if (showNewForm && !isSameRow) {
+  //     setSourceRowIndex(actualEmpIdx);
+  //   }
+  // };
+
   const handleRowClick = (actualEmpIdx) => {
-    if (!isEditable) return;
-    setSelectedRowIndex(
-      actualEmpIdx === selectedRowIndex ? null : actualEmpIdx
-    );
-    setSelectedEmployeeId(localEmployees[actualEmpIdx]?.emple_Id);
+    // Allow row selection regardless of isEditable for Employee Schedule
+    const isSameRow = actualEmpIdx === selectedRowIndex;
+
+    const employee = localEmployees[actualEmpIdx];
+    const emplId = employee?.emple?.emplId;
+
+    console.log("Row clicked:", { actualEmpIdx, isSameRow, employee, emplId }); // Debug log
+
+    setSelectedRowIndex(isSameRow ? null : actualEmpIdx);
+    setSelectedEmployeeId(isSameRow ? null : employee?.empleId);
+    setSelectedEmployeeScheduleId(isSameRow ? null : emplId);
     setSelectedColumnKey(null);
-    setReplaceScope(actualEmpIdx === selectedRowIndex ? "all" : "row");
-    if (showNewForm) setSourceRowIndex(actualEmpIdx);
+
+    if (isEditable) {
+      setReplaceScope(isSameRow ? "all" : "row");
+    }
+
+    if (showNewForm && !isSameRow) {
+      setSourceRowIndex(actualEmpIdx);
+    }
   };
 
   const handleDeleteEmployee = async (emple_Id) => {
@@ -5071,6 +5124,95 @@ const ProjectHoursDetails = ({
       (showNewForm ? 1 : 0),
     2
   );
+
+  // const firstEmplId = localEmployees.length > 0 && localEmployees[0]?.emple?.emplId
+  // ? localEmployees[0].emple.emplId
+  // : null;
+
+  //   if (showEmployeeSchedule) {
+  //   return (
+  //     <div className="p-4 font-inter">
+  //       {/* Back button */}
+  //       <div className="mb-4">
+  //         <button
+  //           onClick={() => setShowEmployeeSchedule(false)}
+  //           className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs font-medium cursor-pointer"
+  //         >
+  //            Back to Hours
+  //         </button>
+  //       </div>
+
+  //       {/* Employee Schedule Component */}
+  //       <EmployeeSchedule
+  //         planId={planId}
+  //         projectId={projectId}
+  //         status={status}
+  //         planType={planType}
+  //         startDate={startDate}
+  //         endDate={endDate}
+  //         fiscalYear={fiscalYear}
+  //         emplId={firstEmplId}
+  //       />
+  //     </div>
+  //   );
+  // }
+
+  // if (showEmployeeSchedule) {
+  //   return (
+  //     <div className="p-4 font-inter">
+  //       {/* Back button */}
+  //       <div className="mb-4">
+  //         <button
+  //           onClick={() => setShowEmployeeSchedule(false)}
+  //           className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs font-medium cursor-pointer"
+  //         >
+  //           Back to Hours
+  //         </button>
+  //       </div>
+
+  //       {/* Employee Schedule Component */}
+  //       <EmployeeSchedule
+  //         planId={planId}
+  //         projectId={projectId}
+  //         status={status}
+  //         planType={planType}
+  //         startDate={startDate}
+  //         endDate={endDate}
+  //         fiscalYear={fiscalYear}
+  //         emplId={selectedEmployeeId}
+  //       />
+  //     </div>
+  //   );
+  // }
+
+  if (showEmployeeSchedule) {
+    return (
+      <div className="p-4 font-inter">
+        {/* Back button */}
+        <div className="mb-4">
+          <button
+            onClick={() => setShowEmployeeSchedule(false)}
+            className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs font-medium cursor-pointer"
+          >
+            Back to Hours
+          </button>
+        </div>
+
+        {/* Employee Schedule Component */}
+        <EmployeeSchedule
+          planId={planId}
+          projectId={projectId}
+          status={status}
+          planType={planType}
+          startDate={startDate}
+          endDate={endDate}
+          fiscalYear={fiscalYear}
+          emplId={selectedEmployeeScheduleId}
+          // selectedPlan={selectedPlan}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="relative p-4 font-inter w-full synchronized-tables-outer">
@@ -5363,8 +5505,64 @@ const ProjectHoursDetails = ({
                   Fill Values
                 </button>
               )}
+
+              {/* <button
+  onClick={() => setShowEmployeeSchedule(prev => !prev)}
+  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-medium"
+>
+  {showEmployeeSchedule ? 'Hide Employee Schedule' : 'Employee Schedule'}
+</button> */}
+              {/* <button
+  onClick={() => setShowEmployeeSchedule(true)}
+  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-medium"
+>
+  Employee Schedule
+</button> */}
+              {/* <button 
+  onClick={() => {
+    if (!selectedEmployeeId) {
+      toast.error("Please select a row first by clicking on it", { autoClose: 2000 });
+      return;
+    }
+    setShowEmployeeSchedule(true);
+  }}
+  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-medium"
+>
+  Employee Schedule
+</button> */}
             </>
           )}
+          {/* <button 
+  onClick={() => {
+    if (!selectedEmployeeScheduleId) {
+      toast.error("Please select a row first by clicking on it", { autoClose: 2000 });
+      return;
+    }
+    setShowEmployeeSchedule(true);
+  }}
+  className="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 text-xs font-medium"
+>
+  Employee Schedule
+</button> */}
+          <button
+            onClick={() => {
+              if (!selectedEmployeeScheduleId) {
+                toast.error("Please select a row first by clicking on it", {
+                  autoClose: 2000,
+                });
+                return;
+              }
+              setShowEmployeeSchedule(true);
+            }}
+            disabled={!selectedEmployeeScheduleId}
+            className={`px-4 py-2 rounded text-xs font-medium transition cursor-pointer ${
+              selectedEmployeeScheduleId
+                ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            Employee Schedule
+          </button>
         </div>
       </div>
 
@@ -6392,6 +6590,7 @@ const ProjectHoursDetails = ({
                             );
                             handleRowClick(actualEmpIdx); // Keep existing row click functionality
                           }}
+                          // onClick={() => handleRowClick(actualEmpIdx)}
                         >
                           <td className="tbody-td min-w-[70px]">
                             {row.idType}
@@ -7812,6 +8011,32 @@ const ProjectHoursDetails = ({
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Employee Schedule Section */}
+      {showEmployeeSchedule && (
+        <div className="mt-6 border-t-2 border-gray-300 pt-4">
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-lg font-semibold text-gray-800">
+              Employee Schedule
+            </h2>
+            <button
+              onClick={() => setShowEmployeeSchedule(false)}
+              className="text-gray-500 hover:text-gray-700 text-sm"
+            >
+              ✕ Close
+            </button>
+          </div>
+          <EmployeeSchedule
+            planId={planId}
+            projectId={projectId}
+            status={status}
+            planType={planType}
+            startDate={startDate}
+            endDate={endDate}
+            fiscalYear={fiscalYear}
+          />
         </div>
       )}
     </div>
