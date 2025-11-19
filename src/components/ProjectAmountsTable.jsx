@@ -4335,8 +4335,6 @@ const ProjectAmountsTable = ({
                   </tr>
                 </thead>
                 <tbody className="tbody">
-
-                  
                   {showNewForm && (
                     <tr
                       key="new-entry"
@@ -4346,7 +4344,6 @@ const ProjectAmountsTable = ({
                         lineHeight: "normal",
                       }}
                     >
-                  
                       <td className="tbody-td">
                         {" "}
                         {/* Changed px-2 to px-1.5 */}
@@ -5450,7 +5447,6 @@ const ProjectAmountsTable = ({
                           lineHeight: "normal",
                         }}
                       >
-                  
                         {sortedDurations.map((duration) => {
                           const uniqueKey = `${duration.monthNo}_${duration.year}`;
                           const isInputEditable =
@@ -5509,18 +5505,17 @@ const ProjectAmountsTable = ({
                         lineHeight: "normal",
                       }}
                     >
-                                {shouldShowCTD && (
-      <td className="tbody-td text-center text-xs bg-gray-100">
-        0.00
-      </td>
-    )}
+                      {shouldShowCTD() && (
+                        <td className="tbody-td text-center text-xs bg-gray-100">
+                          0.00
+                        </td>
+                      )}
 
-    {/* Prior Year Column */}
-    {shouldShowPriorYear && (
-      <td className="tbody-td text-center text-xs bg-gray-100">
-        0.00
-      </td>
-    )}
+                      {shouldShowPriorYear() && (
+                        <td className="tbody-td text-center text-xs bg-gray-100">
+                          0.00
+                        </td>
+                      )}
                       {sortedDurations.map((duration) => {
                         const uniqueKey = `${duration.monthNo}_${duration.year}`;
                         const isInputEditable =
