@@ -182,6 +182,32 @@ const Warning = ({
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState(null);
 
+  // useEffect(() => {
+  //   const fetchWarnings = async () => {
+  //     setLoading(true);
+  //     try {
+  //       let url;
+  //       if (emplId) {
+  //         url = `${backendUrl}/Project/GetWarningsByEMployee/${planId}/${emplId}`;
+  //       } else {
+  //         url = `${backendUrl}/Project/GetWarningsByPlId/${planId}`;
+  //       }
+  //       const response = await axios.get(url);
+  //       setWarnings(response.data);
+  //       setError(null);
+  //     } catch (err) {
+  //       setError("Failed to fetch warnings");
+  //       console.error(err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   if (planId) {
+  //     fetchWarnings();
+  //   }
+  // }, [planId, emplId]);
+
   useEffect(() => {
     const fetchWarnings = async () => {
       setLoading(true);
@@ -192,11 +218,15 @@ const Warning = ({
         } else {
           url = `${backendUrl}/Project/GetWarningsByPlId/${planId}`;
         }
+
         const response = await axios.get(url);
         setWarnings(response.data);
         setError(null);
       } catch (err) {
-        setError("Failed to fetch warnings");
+        // Try to use API message, fallback to generic
+        const apiMessage =
+          err?.response?.data?.message || "Failed to fetch warnings";
+        setError(apiMessage);
         console.error(err);
       } finally {
         setLoading(false);
