@@ -1001,21 +1001,28 @@ const ProjectAmountsTable = ({
   //   // console.log("Selected employee orgId:", selectedEmployee?.orgId);
   // };
   
+
   const handleIdChange = (value) => {
-    // 1. Keep raw value for the UI (allows typing spaces)
-    const rawValue = value;
+    // 1. Remove Emojis immediately from the input
+    const rawValue = value.replace(
+      /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+      ""
+    );
+
     // 2. Create a trimmed version for lookups/validation
-    const trimmedValue = value.trim();
+    const trimmedValue = rawValue.trim();
 
     // --- FIX: Bypass validation if ID Type is "Other" ---
     if (newEntry.idType === "Other") {
       setNewEntry((prev) => ({
         ...prev,
-        id: rawValue, // Allow spaces
+        id: rawValue, // Use the sanitized rawValue (spaces allowed, emojis removed)
         firstName: "", // Reset names or keep logic to parse them later
         lastName: "",
         // Keep existing account if selected, otherwise default
-        acctId: prev.acctId || (nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : ""),
+        acctId:
+          prev.acctId ||
+          (nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : ""),
         orgId: "",
       }));
       return; // Stop here, do not run duplicate/employee checks
@@ -1025,12 +1032,12 @@ const ProjectAmountsTable = ({
 
     // 1. Check for duplicate ID
     const isDuplicateId = employees.some((emp) => {
-      const empl = emp.emple;
-      if (!empl) return false;
+      const emple = emp.emple;
+      if (!emple) return false;
       return (
-        empl.emplId === trimmedValue && // Use trimmed for comparison
-        empl.accId === newEntry.acctId &&
-        empl.plcGlcCode === newEntry.plcGlcCode
+        emple.emplId === trimmedValue && // Use trimmed for comparison
+        emple.accId === newEntry.acctId &&
+        emple.plcGlcCode === newEntry.plcGlcCode
       );
     });
 
@@ -1042,16 +1049,16 @@ const ProjectAmountsTable = ({
           autoClose: 3000,
         }
       );
-      // Update input to show what user typed, but don't proceed with selection
+      // Update input to show what user typed (sanitized), but don't proceed with selection
       setNewEntry((prev) => ({
         ...prev,
-        id: rawValue, 
+        id: rawValue,
         firstName: "",
         lastName: "",
         acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
         orgId: "",
       }));
-      return; 
+      return;
     }
 
     // 2. Check against Suggestions (Validation)
@@ -1066,16 +1073,16 @@ const ProjectAmountsTable = ({
           toastId: "invalid-employee-id",
           autoClose: 3000,
         });
-        
+
         setNewEntry((prev) => ({
           ...prev,
-          id: rawValue, // Allow typing to continue
+          id: rawValue, // Allow typing to continue (sanitized)
           firstName: "",
           lastName: "",
           acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
           orgId: "",
         }));
-        return; 
+        return;
       }
     }
 
@@ -1093,6 +1100,100 @@ const ProjectAmountsTable = ({
       orgId: selectedEmployee?.orgId ? String(selectedEmployee.orgId) : "",
     }));
   };
+
+
+  // const handleIdChange = (value) => {
+  //   // 1. Keep raw value for the UI (allows typing spaces)
+  //   const rawValue = value;
+  //   // 2. Create a trimmed version for lookups/validation
+  //   const trimmedValue = value.trim();
+
+  //   // --- FIX: Bypass validation if ID Type is "Other" ---
+  //   if (newEntry.idType === "Other") {
+  //     setNewEntry((prev) => ({
+  //       ...prev,
+  //       id: rawValue, // Allow spaces
+  //       firstName: "", // Reset names or keep logic to parse them later
+  //       lastName: "",
+  //       // Keep existing account if selected, otherwise default
+  //       acctId: prev.acctId || (nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : ""),
+  //       orgId: "",
+  //     }));
+  //     return; // Stop here, do not run duplicate/employee checks
+  //   }
+
+  //   // --- EXISTING LOGIC FOR EMPLOYEE / VENDOR ---
+
+  //   // 1. Check for duplicate ID
+  //   const isDuplicateId = employees.some((emp) => {
+  //     const empl = emp.emple;
+  //     if (!empl) return false;
+  //     return (
+  //       empl.emplId === trimmedValue && // Use trimmed for comparison
+  //       empl.accId === newEntry.acctId &&
+  //       empl.plcGlcCode === newEntry.plcGlcCode
+  //     );
+  //   });
+
+  //   if (isDuplicateId) {
+  //     toast.error(
+  //       "ID with the same Account and PLC is already present, so can't save.",
+  //       {
+  //         toastId: "duplicate-id-error",
+  //         autoClose: 3000,
+  //       }
+  //     );
+  //     // Update input to show what user typed, but don't proceed with selection
+  //     setNewEntry((prev) => ({
+  //       ...prev,
+  //       id: rawValue, 
+  //       firstName: "",
+  //       lastName: "",
+  //       acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
+  //       orgId: "",
+  //     }));
+  //     return; 
+  //   }
+
+  //   // 2. Check against Suggestions (Validation)
+  //   // Only run this check if the user has typed something
+  //   if (trimmedValue.length > 0) {
+  //     const partialMatch = employeeSuggestions.some((emp) =>
+  //       emp.emplId.startsWith(trimmedValue)
+  //     );
+
+  //     if (!partialMatch) {
+  //       toast.error("Invalid Employee ID, please select a valid one!", {
+  //         toastId: "invalid-employee-id",
+  //         autoClose: 3000,
+  //       });
+        
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         id: rawValue, // Allow typing to continue
+  //         firstName: "",
+  //         lastName: "",
+  //         acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
+  //         orgId: "",
+  //       }));
+  //       return; 
+  //     }
+  //   }
+
+  //   // 3. Valid Input - Try to find exact match
+  //   const selectedEmployee = employeeSuggestions.find(
+  //     (emp) => emp.emplId === trimmedValue
+  //   );
+
+  //   setNewEntry((prev) => ({
+  //     ...prev,
+  //     id: rawValue, // Keep spaces in the input field
+  //     firstName: selectedEmployee ? selectedEmployee.firstName || "" : "",
+  //     lastName: selectedEmployee ? selectedEmployee.lastName || "" : "",
+  //     acctId: nonLaborAccounts.length > 0 ? nonLaborAccounts[0].id : "",
+  //     orgId: selectedEmployee?.orgId ? String(selectedEmployee.orgId) : "",
+  //   }));
+  // };
 
   const handleRowFieldChange = (rowIdx, field, value) => {
     if (!isFieldEditable || !isEditable) return;
@@ -3808,6 +3909,101 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
 };
 
 
+  // const handlePasteMultipleRows = async () => {
+  //   if (copiedRowsData.length === 0) {
+  //     toast.error("No copied data available to paste", { autoClose: 2000 });
+  //     return;
+  //   }
+
+  //   if (showNewForm) {
+  //     setShowNewForm(false);
+  //   }
+
+  //   // USE ALL DURATIONS (not filtered) - same as what was copied
+  //   const allDurations = [...durations].sort((a, b) => {
+  //     if (a.year !== b.year) return a.year - b.year;
+  //     return a.monthNo - b.monthNo;
+  //   });
+
+  //   const processedEntries = [];
+  //   const processedAmountsArray = [];
+
+  //   copiedRowsData.forEach((rowData) => {
+  //     const [
+  //       idTypeLabel,
+  //       id,
+  //       name,
+  //       acctId,
+  //       acctName,
+  //       orgId,
+  //       isRev,
+  //       isBrd,
+  //       status,
+  //       total,
+  //       ...monthValues
+  //     ] = rowData;
+
+  //     const idType =
+  //       ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
+  //       idTypeLabel;
+
+  //     let firstName = "";
+  //     let lastName = "";
+
+  //     if (idType === "Vendor" || idType === "Vendor Employee") {
+  //       lastName = name;
+  //     } else if (idType === "Employee") {
+  //       const nameParts = name.split(" ");
+  //       firstName = nameParts[0];
+  //       lastName = nameParts.slice(1).join(" ");
+  //     } else {
+  //       firstName = name;
+  //     }
+
+  //     const entry = {
+  //       id: id,
+  //       firstName: firstName,
+  //       lastName: lastName,
+  //       idType: idType,
+  //       acctId: acctId,
+  //       orgId: orgId,
+  //       perHourRate: "",
+  //       status: status || "ACT",
+  //       isRev: isRev === "✓",
+  //       isBrd: isBrd === "✓",
+  //     };
+
+  //     const periodAmounts = {};
+
+  //     copiedMonthMetadata.forEach((meta, index) => {
+  //       const uniqueKey = `${meta.monthNo}_${meta.year}`;
+  //       const value = monthValues[index];
+
+  //       if (value && value !== "0.00" && value !== "0" && value !== "") {
+  //         periodAmounts[uniqueKey] = value;
+  //       }
+  //     });
+
+  //     processedEntries.push(entry);
+  //     processedAmountsArray.push(periodAmounts);
+  //   });
+
+  //   setNewEntries(processedEntries);
+  //   setNewEntryPeriodAmountsArray(processedAmountsArray);
+
+  //   // **OPTIMIZED: Fetch common data ONCE, then populate all entries**
+  //   await fetchAllSuggestionsOptimizedForAmounts(processedEntries);
+
+  //   setHasClipboardData(false);
+  //   setCopiedRowsData([]);
+  //   setCopiedMonthMetadata([]);
+
+  //   toast.success(
+  //     `Pasted ${processedEntries.length} entries with all fiscal year data!`,
+  //     { autoClose: 3000 }
+  //   );
+  // };
+
   const handlePasteMultipleRows = async () => {
     if (copiedRowsData.length === 0) {
       toast.error("No copied data available to paste", { autoClose: 2000 });
@@ -3830,7 +4026,7 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
     copiedRowsData.forEach((rowData) => {
       const [
         idTypeLabel,
-        id,
+        rawId, // Rename to rawId to process it
         name,
         acctId,
         acctName,
@@ -3846,6 +4042,13 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
         ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value ||
         idTypeLabel;
 
+      // --- FIX: SANITIZE ID IMMEDIATELY ---
+      const id = (rawId || "").replace(
+        /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+        ""
+      );
+      // ------------------------------------
+
       let firstName = "";
       let lastName = "";
 
@@ -3860,7 +4063,7 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
       }
 
       const entry = {
-        id: id,
+        id: id, // Use the sanitized id
         firstName: firstName,
         lastName: lastName,
         idType: idType,
@@ -5414,14 +5617,40 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
           <input
             type="text"
             value={entry.id}
+            // onChange={(e) => {
+            //   const value = e.target.value;
+            //   updateNewEntry(entryIndex, { id: value });
+
+            //   // Auto-fill name if employee is selected from suggestions
+            //   const selectedEmployee = (
+            //     pastedEntrySuggestions[entryIndex] || []
+            //   ).find((emp) => emp.emplId === value);
+            //   if (selectedEmployee) {
+            //     updateNewEntry(entryIndex, {
+            //       id: value,
+            //       firstName: selectedEmployee.firstName || "",
+            //       lastName: selectedEmployee.lastName || "",
+            //       orgId: selectedEmployee.orgId || entry.orgId,
+            //       acctId: selectedEmployee.acctId || entry.acctId,
+            //     });
+            //   }
+            // }}
             onChange={(e) => {
-              const value = e.target.value;
+              // --- FIX: SANITIZE INPUT ON EDIT ---
+              const rawValue = e.target.value;
+              const value = rawValue.replace(
+                /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+                ""
+              );
+              // -----------------------------------
+
               updateNewEntry(entryIndex, { id: value });
 
               // Auto-fill name if employee is selected from suggestions
               const selectedEmployee = (
                 pastedEntrySuggestions[entryIndex] || []
               ).find((emp) => emp.emplId === value);
+              
               if (selectedEmployee) {
                 updateNewEntry(entryIndex, {
                   id: value,
@@ -5461,7 +5690,7 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
         </td>
 
         {/* Name - Auto-filled or Editable for "Other" */}
-        <td className="tbody-td">
+        {/* <td className="tbody-td">
           <input
             type="text"
             value={
@@ -5488,6 +5717,45 @@ const fetchAllSuggestionsOptimizedForAmounts = async (processedEntries) => {
                 updateNewEntry(entryIndex, {
                   firstName,
                   lastName,
+                });
+              }
+            }}
+          />
+        </td> */}
+        {/* Name - Auto-filled or Editable for "Other" */}
+        <td className="tbody-td">
+          <input
+            type="text"
+            value={
+              entry.idType === "Other"
+                ? (entry.firstName || "") +
+                  (entry.lastName ? " " + entry.lastName : "")
+                : entry.lastName && entry.firstName
+                ? `${entry.lastName}, ${entry.firstName}`
+                : entry.lastName || entry.firstName || ""
+            }
+            readOnly={entry.idType !== "Other"}
+            className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+              entry.idType === "Other"
+                ? "bg-white cursor-text"
+                : "bg-gray-100 cursor-not-allowed"
+            }`}
+            placeholder="Name (auto-filled or editable for 'Other')"
+            onChange={(e) => {
+              if (entry.idType === "Other") {
+                const rawInput = e.target.value;
+
+                // 1. Remove Emojis
+                const noEmojiInput = rawInput.replace(
+                  /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+                  ""
+                );
+
+                // 2. Update State directly
+                // We store the whole string in firstName and clear lastName to allow spaces while typing
+                updateNewEntry(entryIndex, {
+                  firstName: noEmojiInput,
+                  lastName: "", 
                 });
               }
             }}

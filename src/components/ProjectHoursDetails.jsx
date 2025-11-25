@@ -1175,32 +1175,140 @@ const ProjectHoursDetails = ({
     }
   };
 
+  
+
+  // const handlePlcInputChangeForUpdate = (value, actualEmpIdx) => {
+  //   if (planType === "NBBUD") {
+  //     handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  //     setPlcSearch(value);
+  //     return;
+  //   }
+
+  //   // Only allow empty value or values that start with available PLC options
+  //   const isValidInput =
+  //     value === "" ||
+  //     plcOptions.some((option) =>
+  //       option.value.toLowerCase().startsWith(value.toLowerCase())
+  //     );
+
+  //   if (!isValidInput) {
+  //     // Don't update state if input doesn't match any PLC option
+  //     toast.warning("Only values from the PLC suggestions are allowed", {
+  //       autoClose: 2000,
+  //     });
+  //     return;
+  //   }
+
+  //   handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  //   setPlcSearch(value);
+
+  //   // Always filter from the original plcOptions
+  //   if (value.length >= 1) {
+  //     const filtered = plcOptions.filter(
+  //       (option) =>
+  //         option.value.toLowerCase().includes(value.toLowerCase()) ||
+  //         option.label.toLowerCase().includes(value.toLowerCase())
+  //     );
+  //     setUpdatePlcOptions(filtered);
+  //   } else {
+  //     // Reset to all available PLC options when input is empty
+  //     setUpdatePlcOptions(plcOptions);
+  //   }
+  // };
+  
+  // const handlePlcInputChangeForUpdate = (value, actualEmpIdx) => {
+  //   if (planType === "NBBUD") {
+  //     handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  //     setPlcSearch(value);
+  //     return;
+  //   }
+
+  //   // FIX: Removed the strict isValidInput check here.
+  //   // This allows backspacing and typing freely. 
+  //   // The existing onBlur logic on the input field handles the final validation.
+
+  //   handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  //   setPlcSearch(value);
+
+  //   // Always filter from the original plcOptions
+  //   if (value.length >= 1) {
+  //     const filtered = plcOptions.filter(
+  //       (option) =>
+  //         option.value.toLowerCase().includes(value.toLowerCase()) ||
+  //         option.label.toLowerCase().includes(value.toLowerCase())
+  //     );
+  //     setUpdatePlcOptions(filtered);
+  //   } else {
+  //     // Reset to all available PLC options when input is empty
+  //     setUpdatePlcOptions(plcOptions);
+  //   }
+  // };
+  
+  // const handlePlcInputChangeForUpdate = (value, actualEmpIdx) => {
+  //   // 1. Update the PLC code
+  //   handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
+  //   setPlcSearch(value);
+
+  //   // 2. Find the description (Label) for the new PLC
+  //   // Use updatePlcOptions if populated, otherwise fallback to main plcOptions
+  //   const currentOptions = updatePlcOptions.length > 0 ? updatePlcOptions : plcOptions;
+  //   const selectedOption = currentOptions.find(
+  //     (opt) => opt.value.toLowerCase() === value.toLowerCase()
+  //   );
+
+  //   // 3. Check if the employee is of type PLC and update the name (firstName)
+  //   const emp = localEmployees[actualEmpIdx];
+  //   // Check strictly if it is a PLC type row
+  //   if (emp && emp.emple && (emp.emple.type === "PLC" || emp.emple.idType === "PLC")) {
+  //       if (selectedOption) {
+  //           // Update the edited state for firstName with the PLC Description
+  //           handleEmployeeDataChange(actualEmpIdx, "firstName", selectedOption.label);
+  //       } else if (value === "") {
+  //           // Clear name if PLC is cleared
+  //           handleEmployeeDataChange(actualEmpIdx, "firstName", "");
+  //       }
+  //   }
+
+  //   // Filter logic for the datalist
+  //   if (value.length >= 1) {
+  //     const filtered = plcOptions.filter(
+  //       (option) =>
+  //         option.value.toLowerCase().includes(value.toLowerCase()) ||
+  //         option.label.toLowerCase().includes(value.toLowerCase())
+  //     );
+  //     setUpdatePlcOptions(filtered);
+  //   } else {
+  //     setUpdatePlcOptions(plcOptions);
+  //   }
+  // };
+  
   const handlePlcInputChangeForUpdate = (value, actualEmpIdx) => {
-    if (planType === "NBBUD") {
-      handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
-      setPlcSearch(value);
-      return;
-    }
-
-    // Only allow empty value or values that start with available PLC options
-    const isValidInput =
-      value === "" ||
-      plcOptions.some((option) =>
-        option.value.toLowerCase().startsWith(value.toLowerCase())
-      );
-
-    if (!isValidInput) {
-      // Don't update state if input doesn't match any PLC option
-      toast.warning("Only values from the PLC suggestions are allowed", {
-        autoClose: 2000,
-      });
-      return;
-    }
-
+    // 1. Update the PLC code in state
     handleEmployeeDataChange(actualEmpIdx, "glcPlc", value);
     setPlcSearch(value);
 
-    // Always filter from the original plcOptions
+    // 2. Find the matching PLC option to get the description
+    // Use the full list of options to ensure we find the match
+    const selectedOption = plcOptions.find(
+      (opt) => opt.value.toLowerCase() === value.toLowerCase()
+    );
+
+    // 3. Check if the row is a PLC type and update the name if a match is found
+    const emp = localEmployees[actualEmpIdx];
+    // Check strict type (API data might be "PLC" or "PLC Employee" depending on backend)
+    const isPlcType = emp && emp.emple && (emp.emple.type === "PLC" || emp.emple.idType === "PLC");
+
+    if (isPlcType) {
+      if (selectedOption) {
+        // Update the Name (stored in firstName for display) with the PLC Description
+        handleEmployeeDataChange(actualEmpIdx, "firstName", selectedOption.label);
+      } else if (value === "") {
+        // Clear name if PLC is cleared
+        handleEmployeeDataChange(actualEmpIdx, "firstName", "");
+      }
+    }
+
+    // 4. Update the datalist options based on search
     if (value.length >= 1) {
       const filtered = plcOptions.filter(
         (option) =>
@@ -1209,10 +1317,10 @@ const ProjectHoursDetails = ({
       );
       setUpdatePlcOptions(filtered);
     } else {
-      // Reset to all available PLC options when input is empty
       setUpdatePlcOptions(plcOptions);
     }
   };
+
 
   const handleOrgInputChange = (value) => {
     const numericValue = value.replace(/[^0-9.]/g, "");
@@ -1288,6 +1396,61 @@ const ProjectHoursDetails = ({
     setAutoPopulatedPLC(false);
   };
 
+  const handlePlcInputChange = (value) => {
+  // Search for the option regardless of plan type to get the name/label
+  const selectedOption = plcOptions.find(
+    (opt) => opt.value.toLowerCase() === value.toLowerCase()
+  );
+
+  if (planType === "NBBUD") {
+    setPlcSearch(value);
+    setNewEntry((prev) => ({ 
+      ...prev, 
+      plcGlcCode: value,
+      // FIX: Update name for PLC type in NBBUD
+      firstName: prev.idType === "PLC" && selectedOption ? selectedOption.label : prev.firstName
+    }));
+    return;
+  }
+
+  const isValidInput =
+    value === "" ||
+    plcOptions.some((option) =>
+      option.value.toLowerCase().startsWith(value.toLowerCase())
+    );
+
+  if (!isValidInput) {
+    toast.warning("Only values from the PLC suggestions are allowed", {
+      autoClose: 2000,
+    });
+    return;
+  }
+
+  setPlcSearch(value);
+
+  setNewEntry((prev) => ({
+    ...prev,
+    plcGlcCode: value,
+    firstName:
+      prev.idType === "PLC" && selectedOption
+        ? selectedOption.label
+        : prev.firstName,
+  }));
+
+  if (value.length >= 1) {
+    const filtered = plcOptions.filter((option) =>
+      option.value.toLowerCase().startsWith(value.toLowerCase())
+    );
+    setFilteredPlcOptions(filtered);
+  } else {
+    setFilteredPlcOptions(plcOptions);
+  }
+
+  if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+    setAutoPopulatedPLC(false);
+  }
+};
+
   // const handlePlcInputChange = (value) => {
   //   // Remove real-time validation - only validate on blur
   //   setPlcSearch(value);
@@ -1346,59 +1509,59 @@ const ProjectHoursDetails = ({
   //   }
   // };
 
-  const handlePlcInputChange = (value) => {
-  if (planType === "NBBUD") {
-    setPlcSearch(value);
-    setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
-    return;
-  }
+//   const handlePlcInputChange = (value) => {
+//   if (planType === "NBBUD") {
+//     setPlcSearch(value);
+//     setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+//     return;
+//   }
 
-  // Only allow empty value or values that start with available PLC options
-  const isValidInput =
-    value === "" ||
-    plcOptions.some((option) =>
-      option.value.toLowerCase().startsWith(value.toLowerCase())
-    );
+//   // Only allow empty value or values that start with available PLC options
+//   const isValidInput =
+//     value === "" ||
+//     plcOptions.some((option) =>
+//       option.value.toLowerCase().startsWith(value.toLowerCase())
+//     );
 
-  if (!isValidInput) {
-    toast.warning("Only values from the PLC suggestions are allowed", {
-      autoClose: 2000,
-    });
-    return;
-  }
+//   if (!isValidInput) {
+//     toast.warning("Only values from the PLC suggestions are allowed", {
+//       autoClose: 2000,
+//     });
+//     return;
+//   }
 
-  setPlcSearch(value);
+//   setPlcSearch(value);
 
-  // --- FIX START: Only update Name if ID Type is PLC ---
-  const selectedOption = plcOptions.find(
-    (opt) => opt.value.toLowerCase() === value.toLowerCase()
-  );
+//   // --- FIX START: Only update Name if ID Type is PLC ---
+//   const selectedOption = plcOptions.find(
+//     (opt) => opt.value.toLowerCase() === value.toLowerCase()
+//   );
 
-  setNewEntry((prev) => ({
-    ...prev,
-    plcGlcCode: value,
-    // Only overwrite firstName if the specific ID Type is PLC
-    firstName:
-      prev.idType === "PLC" && selectedOption
-        ? selectedOption.label
-        : prev.firstName,
-  }));
-  // --- FIX END ---
+//   setNewEntry((prev) => ({
+//     ...prev,
+//     plcGlcCode: value,
+//     // Only overwrite firstName if the specific ID Type is PLC
+//     firstName:
+//       prev.idType === "PLC" && selectedOption
+//         ? selectedOption.label
+//         : prev.firstName,
+//   }));
+//   // --- FIX END ---
 
-  // Filter PLC options
-  if (value.length >= 1) {
-    const filtered = plcOptions.filter((option) =>
-      option.value.toLowerCase().startsWith(value.toLowerCase())
-    );
-    setFilteredPlcOptions(filtered);
-  } else {
-    setFilteredPlcOptions(plcOptions);
-  }
+//   // Filter PLC options
+//   if (value.length >= 1) {
+//     const filtered = plcOptions.filter((option) =>
+//       option.value.toLowerCase().startsWith(value.toLowerCase())
+//     );
+//     setFilteredPlcOptions(filtered);
+//   } else {
+//     setFilteredPlcOptions(plcOptions);
+//   }
 
-  if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
-    setAutoPopulatedPLC(false);
-  }
-};
+//   if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+//     setAutoPopulatedPLC(false);
+//   }
+// };
 
   // const handlePlcInputChange = (value) => {
   //   if (planType === "NBBUD") {
@@ -1622,131 +1785,249 @@ const ProjectHoursDetails = ({
   // };
 
   // Function to handle row selection
-  
+
   const handleIdChange = (value) => {
-    // KEY CHANGE 1: Keep 'value' raw for the UI, create 'trimmedValue' for lookups
-    const trimmedValue = value.trim();
+  // FIX: Remove emojis immediately before processing
+  const valueWithoutEmojis = value.replace(
+    /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+    ""
+  );
 
-    if (planType === "NBBUD") {
-      // For NBBUD, still try to populate from suggestions if available
-      if (
-        (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
-        employeeSuggestions.length > 0 &&
-        trimmedValue
-      ) {
-        const selectedEmployee = employeeSuggestions.find(
-          (emp) => emp.emplId === trimmedValue
-        );
+  // Use the sanitized value
+  const trimmedValue = valueWithoutEmojis.trim();
 
-        if (selectedEmployee) {
-          setNewEntry((prev) => ({
-            ...prev,
-            id: value, // KEY CHANGE: Use raw value to allow spaces while typing
-            firstName: selectedEmployee.firstName || "",
-            lastName: selectedEmployee.lastName || "",
-            perHourRate: selectedEmployee.perHourRate || "",
-            orgId: selectedEmployee.orgId || prev.orgId,
-            plcGlcCode: selectedEmployee.plc || "",
-          }));
-          setPlcSearch(selectedEmployee.plc || "");
-          return; // Added return to prevent double state update
-        }
-      }
-      
-      // If no match found in NBBUD, just update the ID text
-      setNewEntry((prev) => ({ ...prev, id: value }));
-      return;
-    }
-
-    // 1. PLC type is always “PLC”
-    if (newEntry.idType === "PLC") {
-      setNewEntry((prev) => ({ ...prev, id: "PLC" }));
-      return;
-    }
-
-    // 2. Persist whatever the user typed (KEY CHANGE: Use 'value', not 'trimmedValue')
-    setNewEntry((prev) => ({ ...prev, id: value }));
-
-    // 3. If the field is cleared (checking trimmed is fine here), reset most fields and exit
-    if (!trimmedValue) {
-      setNewEntry((prev) => ({
-        ...prev,
-        id: "", // Explicitly clear
-        firstName: "",
-        lastName: "",
-        perHourRate: "",
-        orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
-        plcGlcCode: "",
-        acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
-      }));
-      setPlcSearch("");
-      setAutoPopulatedPLC(false);
-      return;
-    }
-
-    // 5. “Other” type needs no further validation
-    if (newEntry.idType === "Other") return;
-
-    // 6. For Employee / Vendor types, try to auto-populate from suggestions
+  if (planType === "NBBUD") {
     if (
       (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
-      employeeSuggestions.length > 0
+      employeeSuggestions.length > 0 &&
+      trimmedValue
     ) {
-      // Use trimmedValue for the LOOKUP
       const selectedEmployee = employeeSuggestions.find(
         (emp) => emp.emplId === trimmedValue
       );
 
       if (selectedEmployee) {
-        // Found a match – copy its details, *including PLC*
         setNewEntry((prev) => ({
           ...prev,
-          // id: trimmedValue, // Optional: You can snap to trimmed here if you want, or keep 'value'
+          id: valueWithoutEmojis, // Use sanitized value
           firstName: selectedEmployee.firstName || "",
           lastName: selectedEmployee.lastName || "",
           perHourRate: selectedEmployee.perHourRate || "",
           orgId: selectedEmployee.orgId || prev.orgId,
           plcGlcCode: selectedEmployee.plc || "",
-          acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
         }));
         setPlcSearch(selectedEmployee.plc || "");
-        // setAutoPopulatedPLC(!!selectedEmployee.plc);
-      } else {
-        // No exact match – warn only if the entry is clearly invalid
-        if (trimmedValue.length >= 3) {
-          const partialMatch = employeeSuggestions.some((emp) =>
-            emp.emplId.startsWith(trimmedValue)
-          );
-          if (!partialMatch) {
-            toast.error("Invalid ID, please select a valid one!", {
-              toastId: "invalid-id",
-              autoClose: 3000,
-            });
-          }
-        }
-
-        // Leave any previously auto-populated PLC untouched;
-        // only clear PLC when it wasn’t auto-filled.
-        setNewEntry((prev) => ({
-          ...prev,
-          firstName: "",
-          lastName: "",
-          perHourRate: "",
-          orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
-          plcGlcCode:
-            newEntry.idType === "Vendor" && autoPopulatedPLC
-              ? prev.plcGlcCode
-              : "",
-          acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
-        }));
-
-        if (!(newEntry.idType === "Vendor" && autoPopulatedPLC)) {
-          setPlcSearch("");
-          setAutoPopulatedPLC(false);
-        }
+        return;
       }
     }
-  };
+    
+    setNewEntry((prev) => ({ ...prev, id: valueWithoutEmojis }));
+    return;
+  }
+
+  if (newEntry.idType === "PLC") {
+    setNewEntry((prev) => ({ ...prev, id: "PLC" }));
+    return;
+  }
+
+  // Persist sanitized value
+  setNewEntry((prev) => ({ ...prev, id: valueWithoutEmojis }));
+
+  if (!trimmedValue) {
+    setNewEntry((prev) => ({
+      ...prev,
+      id: "",
+      firstName: "",
+      lastName: "",
+      perHourRate: "",
+      orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
+      plcGlcCode: "",
+      acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+    }));
+    setPlcSearch("");
+    setAutoPopulatedPLC(false);
+    return;
+  }
+
+  if (newEntry.idType === "Other") return;
+
+  if (
+    (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+    employeeSuggestions.length > 0
+  ) {
+    const selectedEmployee = employeeSuggestions.find(
+      (emp) => emp.emplId === trimmedValue
+    );
+
+    if (selectedEmployee) {
+      setNewEntry((prev) => ({
+        ...prev,
+        firstName: selectedEmployee.firstName || "",
+        lastName: selectedEmployee.lastName || "",
+        perHourRate: selectedEmployee.perHourRate || "",
+        orgId: selectedEmployee.orgId || prev.orgId,
+        plcGlcCode: selectedEmployee.plc || "",
+        acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+      }));
+      setPlcSearch(selectedEmployee.plc || "");
+    } else {
+      if (trimmedValue.length >= 3) {
+        const partialMatch = employeeSuggestions.some((emp) =>
+          emp.emplId.startsWith(trimmedValue)
+        );
+        if (!partialMatch) {
+          toast.error("Invalid ID, please select a valid one!", {
+            toastId: "invalid-id",
+            autoClose: 3000,
+          });
+        }
+      }
+
+      setNewEntry((prev) => ({
+        ...prev,
+        firstName: "",
+        lastName: "",
+        perHourRate: "",
+        orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
+        plcGlcCode:
+          newEntry.idType === "Vendor" && autoPopulatedPLC
+            ? prev.plcGlcCode
+            : "",
+        acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+      }));
+
+      if (!(newEntry.idType === "Vendor" && autoPopulatedPLC)) {
+        setPlcSearch("");
+        setAutoPopulatedPLC(false);
+      }
+    }
+  }
+};
+  
+  // const handleIdChange = (value) => {
+  //   // KEY CHANGE 1: Keep 'value' raw for the UI, create 'trimmedValue' for lookups
+  //   const trimmedValue = value.trim();
+
+  //   if (planType === "NBBUD") {
+  //     // For NBBUD, still try to populate from suggestions if available
+  //     if (
+  //       (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+  //       employeeSuggestions.length > 0 &&
+  //       trimmedValue
+  //     ) {
+  //       const selectedEmployee = employeeSuggestions.find(
+  //         (emp) => emp.emplId === trimmedValue
+  //       );
+
+  //       if (selectedEmployee) {
+  //         setNewEntry((prev) => ({
+  //           ...prev,
+  //           id: value, // KEY CHANGE: Use raw value to allow spaces while typing
+  //           firstName: selectedEmployee.firstName || "",
+  //           lastName: selectedEmployee.lastName || "",
+  //           perHourRate: selectedEmployee.perHourRate || "",
+  //           orgId: selectedEmployee.orgId || prev.orgId,
+  //           plcGlcCode: selectedEmployee.plc || "",
+  //         }));
+  //         setPlcSearch(selectedEmployee.plc || "");
+  //         return; // Added return to prevent double state update
+  //       }
+  //     }
+      
+  //     // If no match found in NBBUD, just update the ID text
+  //     setNewEntry((prev) => ({ ...prev, id: value }));
+  //     return;
+  //   }
+
+  //   // 1. PLC type is always “PLC”
+  //   if (newEntry.idType === "PLC") {
+  //     setNewEntry((prev) => ({ ...prev, id: "PLC" }));
+  //     return;
+  //   }
+
+  //   // 2. Persist whatever the user typed (KEY CHANGE: Use 'value', not 'trimmedValue')
+  //   setNewEntry((prev) => ({ ...prev, id: value }));
+
+  //   // 3. If the field is cleared (checking trimmed is fine here), reset most fields and exit
+  //   if (!trimmedValue) {
+  //     setNewEntry((prev) => ({
+  //       ...prev,
+  //       id: "", // Explicitly clear
+  //       firstName: "",
+  //       lastName: "",
+  //       perHourRate: "",
+  //       orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
+  //       plcGlcCode: "",
+  //       acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+  //     }));
+  //     setPlcSearch("");
+  //     setAutoPopulatedPLC(false);
+  //     return;
+  //   }
+
+  //   // 5. “Other” type needs no further validation
+  //   if (newEntry.idType === "Other") return;
+
+  //   // 6. For Employee / Vendor types, try to auto-populate from suggestions
+  //   if (
+  //     (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+  //     employeeSuggestions.length > 0
+  //   ) {
+  //     // Use trimmedValue for the LOOKUP
+  //     const selectedEmployee = employeeSuggestions.find(
+  //       (emp) => emp.emplId === trimmedValue
+  //     );
+
+  //     if (selectedEmployee) {
+  //       // Found a match – copy its details, *including PLC*
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         // id: trimmedValue, // Optional: You can snap to trimmed here if you want, or keep 'value'
+  //         firstName: selectedEmployee.firstName || "",
+  //         lastName: selectedEmployee.lastName || "",
+  //         perHourRate: selectedEmployee.perHourRate || "",
+  //         orgId: selectedEmployee.orgId || prev.orgId,
+  //         plcGlcCode: selectedEmployee.plc || "",
+  //         acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+  //       }));
+  //       setPlcSearch(selectedEmployee.plc || "");
+  //       // setAutoPopulatedPLC(!!selectedEmployee.plc);
+  //     } else {
+  //       // No exact match – warn only if the entry is clearly invalid
+  //       if (trimmedValue.length >= 3) {
+  //         const partialMatch = employeeSuggestions.some((emp) =>
+  //           emp.emplId.startsWith(trimmedValue)
+  //         );
+  //         if (!partialMatch) {
+  //           toast.error("Invalid ID, please select a valid one!", {
+  //             toastId: "invalid-id",
+  //             autoClose: 3000,
+  //           });
+  //         }
+  //       }
+
+  //       // Leave any previously auto-populated PLC untouched;
+  //       // only clear PLC when it wasn’t auto-filled.
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         firstName: "",
+  //         lastName: "",
+  //         perHourRate: "",
+  //         orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
+  //         plcGlcCode:
+  //           newEntry.idType === "Vendor" && autoPopulatedPLC
+  //             ? prev.plcGlcCode
+  //             : "",
+  //         acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+  //       }));
+
+  //       if (!(newEntry.idType === "Vendor" && autoPopulatedPLC)) {
+  //         setPlcSearch("");
+  //         setAutoPopulatedPLC(false);
+  //       }
+  //     }
+  //   }
+  // };
   
   const handleRowSelection = (rowIndex, isSelected) => {
     setSelectedRows((prev) => {
@@ -3719,7 +4000,8 @@ const ProjectHoursDetails = ({
     const payload = {
       id: emp.emple.id || 0,
       emplId: emp.emple.emplId,
-      firstName: emp.emple.firstName || "",
+      // firstName: emp.emple.firstName || "",
+      firstName: editedData.firstName !== undefined ? editedData.firstName : (emp.emple.firstName || ""),
       lastName: emp.emple.lastName || "",
       type: emp.emple.type || " ",
       isRev:
@@ -3798,7 +4080,8 @@ const ProjectHoursDetails = ({
           const payload = {
             id: emp.emple.id || 0,
             emplId: emp.emple.emplId,
-            firstName: emp.emple.firstName || "",
+            // firstName: emp.emple.firstName || "",
+            firstName: editedData.firstName !== undefined ? editedData.firstName : (emp.emple.firstName || ""),
             lastName: emp.emple.lastName || "",
             type: emp.emple.type || " ",
             isRev:
@@ -6106,14 +6389,30 @@ const ProjectHoursDetails = ({
       type="text"
       name="name"
       // FIX: Removed .trim() here so you can type spaces
-      value={
+      // value={
+      //   newEntry.idType === "Other" || planType === "NBBUD"
+      //     ? `${newEntry.firstName || ""} ${newEntry.lastName || ""}`
+      //     : newEntry.idType === "Vendor"
+      //     ? newEntry.lastName || newEntry.firstName || ""
+      //     : newEntry.lastName && newEntry.firstName
+      //     ? `${newEntry.lastName}, ${newEntry.firstName}`
+      //     : newEntry.lastName || newEntry.firstName || ""
+      // }
+//       value={
+//   newEntry.idType === "Other" || planType === "NBBUD"
+//     ? (newEntry.firstName || "") + (newEntry.firstName && newEntry.lastName ? " " : "") + (newEntry.lastName || "")
+//     : newEntry.idType === "Vendor"
+//     ? newEntry.lastName || newEntry.firstName || ""
+//     : newEntry.lastName && newEntry.firstName
+//     ? `${newEntry.lastName}, ${newEntry.firstName}`
+//     : newEntry.lastName || newEntry.firstName || ""
+// }
+value={
         newEntry.idType === "Other" || planType === "NBBUD"
-          ? `${newEntry.firstName || ""} ${newEntry.lastName || ""}`
+          ? newEntry.firstName || "" 
           : newEntry.idType === "Vendor"
           ? newEntry.lastName || newEntry.firstName || ""
-          : newEntry.lastName && newEntry.firstName
-          ? `${newEntry.lastName}, ${newEntry.firstName}`
-          : newEntry.lastName || newEntry.firstName || ""
+          : `${newEntry.lastName || ""} ${newEntry.firstName || ""}`.trim() // standard display for emp
       }
       readOnly={planType !== "NBBUD" && newEntry.idType !== "Other"}
       
@@ -6124,25 +6423,42 @@ const ProjectHoursDetails = ({
         }
       }}
 
+      // onChange={(e) => {
+      //   if (newEntry.idType === "Other" || planType === "NBBUD") {
+          
+      //     // 1. Remove emojis (Keep this existing logic)
+      //     const cleanValue = e.target.value.replace(
+      //       /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+      //       ""
+      //     );
+
+      //     // 2. Split by space to save into First/Last name buckets
+      //     // FIX: Do NOT trim 'cleanValue' here, or you can't type the separation space
+      //     const nameParts = cleanValue.split(" ");
+      //     const firstName = nameParts[0] || "";
+      //     const lastName = nameParts.slice(1).join(" ") || "";
+
+      //     setNewEntry((prev) => ({
+      //       ...prev,
+      //       firstName: firstName,
+      //       lastName: lastName,
+      //     }));
+      //   }
+      // }}
       onChange={(e) => {
         if (newEntry.idType === "Other" || planType === "NBBUD") {
-          
-          // 1. Remove emojis (Keep this existing logic)
           const cleanValue = e.target.value.replace(
             /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
             ""
           );
-
-          // 2. Split by space to save into First/Last name buckets
-          // FIX: Do NOT trim 'cleanValue' here, or you can't type the separation space
-          const nameParts = cleanValue.split(" ");
-          const firstName = nameParts[0] || "";
-          const lastName = nameParts.slice(1).join(" ") || "";
+          
+          // Remove leading space only (allow spaces in middle/end)
+          const valueToStore = cleanValue.startsWith(" ") ? cleanValue.trimStart() : cleanValue;
 
           setNewEntry((prev) => ({
             ...prev,
-            firstName: firstName,
-            lastName: lastName,
+            firstName: valueToStore, // Store full string here temporarily
+            lastName: "" // Clear last name, we split on save
           }));
         }
       }}
@@ -6153,7 +6469,7 @@ const ProjectHoursDetails = ({
       }`}
       placeholder={
         newEntry.idType === "Other" 
-          ? "Enter Name (No Emojis)" 
+          ? "Enter Name" 
           : "Name (auto-filled)"
       }
     />
@@ -6444,36 +6760,67 @@ const ProjectHoursDetails = ({
                         >
                           {/* ID Type */}
                           <td className="tbody-td">
-                            <select
+                            {/* <select
                               name="idType"
                               value={entry.idType}
+                              // onChange={(e) => {
+                              //   const value = e.target.value;
+                              //   setNewEntries((prev) =>
+                              //     prev.map((ent, idx) =>
+                              //       idx === entryIndex
+                              //         ? {
+                              //             id: "",
+                              //             firstName: "",
+                              //             lastName: "",
+                              //             isRev: false,
+                              //             isBrd: false,
+                              //             idType: value,
+                              //             acctId:
+                              //               laborAccounts.length > 0
+                              //                 ? laborAccounts[0].id
+                              //                 : "",
+                              //             orgId: "",
+                              //             plcGlcCode: "",
+                              //             perHourRate: "",
+                              //             status: "Act",
+                              //           }
+                              //         : ent
+                              //     )
+                              //   );
+                              //   setPlcSearch("");
+                              //   setAutoPopulatedPLC(false);
+                              // }}
                               onChange={(e) => {
-                                const value = e.target.value;
-                                setNewEntries((prev) =>
-                                  prev.map((ent, idx) =>
-                                    idx === entryIndex
-                                      ? {
-                                          id: "",
-                                          firstName: "",
-                                          lastName: "",
-                                          isRev: false,
-                                          isBrd: false,
-                                          idType: value,
-                                          acctId:
-                                            laborAccounts.length > 0
-                                              ? laborAccounts[0].id
-                                              : "",
-                                          orgId: "",
-                                          plcGlcCode: "",
-                                          perHourRate: "",
-                                          status: "Act",
-                                        }
-                                      : ent
-                                  )
-                                );
-                                setPlcSearch("");
-                                setAutoPopulatedPLC(false);
-                              }}
+  const value = e.target.value;
+  
+  // 1. Update State
+  setNewEntries((prev) =>
+    prev.map((ent, idx) =>
+      idx === entryIndex
+        ? {
+            id: "",
+            firstName: "",
+            lastName: "",
+            isRev: false,
+            isBrd: false,
+            idType: value,
+            acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+            orgId: "",
+            plcGlcCode: "",
+            perHourRate: "",
+            status: "Act",
+          }
+        : ent
+    )
+  );
+  setPlcSearch("");
+  setAutoPopulatedPLC(false);
+
+  // 2. FIX: Fetch suggestions immediately for the new ID Type
+  // Create a temporary entry object with the NEW idType to pass to the fetcher
+  const updatedEntryForFetch = { ...entry, idType: value };
+  fetchSuggestionsForPastedEntry(entryIndex, updatedEntryForFetch);
+}}
                               className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
                             >
                               {ID_TYPE_OPTIONS.map((opt) => (
@@ -6481,157 +6828,148 @@ const ProjectHoursDetails = ({
                                   {opt.label}
                                 </option>
                               ))}
-                            </select>
+                            </select> */}
+                            <select
+  name="idType"
+  value={entry.idType}
+  onChange={(e) => {
+    const value = e.target.value;
+
+    // FIX: Auto-populate ID if type is PLC
+    const newId = value === "PLC" ? "PLC" : "";
+
+    setNewEntries((prev) =>
+      prev.map((ent, idx) =>
+        idx === entryIndex
+          ? {
+              id: newId, // <--- Updated here to use newId
+              firstName: "",
+              lastName: "",
+              isRev: false,
+              isBrd: false,
+              idType: value,
+              acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+              orgId: "",
+              plcGlcCode: "",
+              perHourRate: "",
+              status: "Act",
+            }
+          : ent
+      )
+    );
+    setPlcSearch("");
+    setAutoPopulatedPLC(false);
+
+    // Fetch suggestions for the new ID Type
+    const updatedEntryForFetch = { ...entry, idType: value };
+    fetchSuggestionsForPastedEntry(entryIndex, updatedEntryForFetch);
+  }}
+  className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs"
+>
+  {ID_TYPE_OPTIONS.map((opt) => (
+    <option key={opt.value} value={opt.value}>
+      {opt.label}
+    </option>
+  ))}
+</select>
                           </td>
                           {/* ID */}
-                          <td className="tbody-td">
-                            {/* <input
-                              type="text"
-                              name="id"
-                              value={entry.id}
-                              onChange={(e) => {
-                                const trimmedValue = e.target.value.trim();
-                                setNewEntries((prev) =>
-                                  prev.map((ent, idx) =>
-                                    idx === entryIndex
-                                      ? { ...ent, id: trimmedValue }
-                                      : ent
-                                  )
-                                );
+                         {/* ID Input in Pasted Entry */}
+<td className="tbody-td">
+  <input
+    type="text"
+    name="id"
+    value={entry.id}
+    // FIX: Allow spaces by preventing row click propagation on space key
+    onKeyDown={(e) => {
+      if (e.key === ' ') {
+        e.stopPropagation();
+      }
+    }}
+    onChange={(e) => {
+      // FIX: Remove emojis for ALL types
+      const valueWithoutEmojis = e.target.value.replace(
+        /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+        ""
+      );
+      
+      const trimmedValue = valueWithoutEmojis.trim();
 
-                                // Auto-populate fields if employee found
-                                const suggestions =
-                                  pastedEntrySuggestions[entryIndex] || [];
-                                const selectedEmployee = suggestions.find(
-                                  (emp) => emp.emplId === trimmedValue
-                                );
-                                if (selectedEmployee) {
-                                  setNewEntries((prev) =>
-                                    prev.map((ent, idx) =>
-                                      idx === entryIndex
-                                        ? {
-                                            ...ent,
-                                            id: trimmedValue,
-                                            firstName:
-                                              selectedEmployee.firstName || "",
-                                            lastName:
-                                              selectedEmployee.lastName || "",
-                                            perHourRate:
-                                              selectedEmployee.perHourRate ||
-                                              "",
-                                            orgId:
-                                              selectedEmployee.orgId ||
-                                              ent.orgId,
-                                            plcGlcCode:
-                                              selectedEmployee.plc || "",
-                                          }
-                                        : ent
-                                    )
-                                  );
-                                }
-                              }}
-                              disabled={entry.idType === "PLC"}
-                              className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
-                                entry.idType === "PLC"
-                                  ? "bg-gray-100 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              list={
-                                planType === "NBBUD"
-                                  ? undefined
-                                  : `employee-id-list-${entryIndex}`
-                              }
-                              placeholder={
-                                entry.idType === "PLC"
-                                  ? "Not required for PLC"
-                                  : "Enter ID"
-                              }
-                            /> */}
-                            <input
-                              type="text"
-                              name="id"
-                              value={entry.id}
-                              onChange={(e) => {
-                                const trimmedValue = e.target.value.trim();
-                                setNewEntries((prev) =>
-                                  prev.map((ent, idx) =>
-                                    idx === entryIndex
-                                      ? { ...ent, id: trimmedValue }
-                                      : ent
-                                  )
-                                );
+      setNewEntries((prev) =>
+        prev.map((ent, idx) =>
+          idx === entryIndex
+            ? { ...ent, id: valueWithoutEmojis } // Store raw value to allow typing spaces
+            : ent
+        )
+      );
 
-                                // Auto-populate fields if employee found
-                                const suggestions =
-                                  pastedEntrySuggestions[entryIndex] || [];
-                                const selectedEmployee = suggestions.find(
-                                  (emp) => emp.emplId === trimmedValue
-                                );
-                                if (selectedEmployee) {
-                                  setNewEntries((prev) =>
-                                    prev.map((ent, idx) =>
-                                      idx === entryIndex
-                                        ? {
-                                            ...ent,
-                                            id: trimmedValue,
-                                            firstName:
-                                              selectedEmployee.firstName || "",
-                                            lastName:
-                                              selectedEmployee.lastName || "",
-                                            perHourRate:
-                                              selectedEmployee.perHourRate ||
-                                              "",
-                                            orgId:
-                                              selectedEmployee.orgId ||
-                                              ent.orgId,
-                                            plcGlcCode:
-                                              selectedEmployee.plc || "",
-                                          }
-                                        : ent
-                                    )
-                                  );
-                                }
-                              }}
-                              disabled={entry.idType === "PLC"}
-                              className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
-                                entry.idType === "PLC"
-                                  ? "bg-gray-100 cursor-not-allowed"
-                                  : ""
-                              }`}
-                              list={`employee-id-list-${entryIndex}`}
-                              placeholder={
-                                entry.idType === "PLC"
-                                  ? "Not required for PLC"
-                                  : "Enter ID"
-                              }
-                            />
-
-                            <datalist id={`employee-id-list-${entryIndex}`}>
-                              {(pastedEntrySuggestions[entryIndex] || [])
-                                .filter(
-                                  (emp) =>
-                                    emp.emplId && typeof emp.emplId === "string"
-                                )
-                                .map((emp, index) => (
-                                  <option
-                                    key={`${emp.emplId}-${index}`}
-                                    value={emp.emplId}
-                                  >
-                                    {emp.lastName && emp.firstName
-                                      ? `${emp.lastName}, ${emp.firstName}`
-                                      : emp.lastName ||
-                                        emp.firstName ||
-                                        emp.emplId}
-                                  </option>
-                                ))}
-                            </datalist>
-                          </td>
+      // Auto-populate fields if employee found (only if not "Other" type)
+      if (entry.idType !== "Other") {
+        const suggestions = pastedEntrySuggestions[entryIndex] || [];
+        const selectedEmployee = suggestions.find(
+          (emp) => emp.emplId === trimmedValue
+        );
+        if (selectedEmployee) {
+          setNewEntries((prev) =>
+            prev.map((ent, idx) =>
+              idx === entryIndex
+                ? {
+                    ...ent,
+                    id: trimmedValue, // Snap to trimmed ID on match
+                    firstName: selectedEmployee.firstName || "",
+                    lastName: selectedEmployee.lastName || "",
+                    perHourRate: selectedEmployee.perHourRate || "",
+                    orgId: selectedEmployee.orgId || ent.orgId,
+                    plcGlcCode: selectedEmployee.plc || "",
+                  }
+                : ent
+            )
+          );
+        }
+      }
+    }}
+    disabled={entry.idType === "PLC"}
+    className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
+      entry.idType === "PLC"
+        ? "bg-gray-100 cursor-not-allowed"
+        : ""
+    }`}
+    list={`employee-id-list-${entryIndex}`}
+    placeholder={
+      entry.idType === "PLC"
+        ? "Not required for PLC"
+        : "Enter ID"
+    }
+  />
+  {/* Datalist logic remains the same as previously fixed */}
+  <datalist id={`employee-id-list-${entryIndex}`}>
+    {entry.idType !== "Other" && 
+      (pastedEntrySuggestions[entryIndex] || [])
+        .filter(
+          (emp) =>
+            emp.emplId && typeof emp.emplId === "string"
+        )
+        .map((emp, index) => (
+          <option
+            key={`${emp.emplId}-${index}`}
+            value={emp.emplId}
+          >
+            {emp.lastName && emp.firstName
+              ? `${emp.lastName}, ${emp.firstName}`
+              : emp.lastName ||
+                emp.firstName ||
+                emp.emplId}
+          </option>
+        ))
+    }
+  </datalist>
+</td>
                           {/* Warning Column - Empty */}
                           <td className="tbody-td text-center">
                             <span className="text-gray-400 text-xs">-</span>
                           </td>
                           {/* Name */}
-                          <td className="tbody-td">
+                          {/* <td className="tbody-td">
                             <input
                               type="text"
                               name="name"
@@ -6648,7 +6986,68 @@ const ProjectHoursDetails = ({
                               className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
                               placeholder="Name auto-filled"
                             />
-                          </td>
+                          </td> */}
+                          {/* Name Input in Pasted Entry */}
+<td className="tbody-td">
+  <input
+    type="text"
+    name="name"
+    // Logic to display name based on type
+    value={
+      entry.idType === "Other" || planType === "NBBUD"
+        ? entry.firstName || "" 
+        : entry.idType === "PLC"
+        ? entry.firstName // PLC Description
+        : entry.idType === "Vendor"
+        ? entry.lastName || entry.firstName || ""
+        : `${entry.lastName || ""} ${entry.firstName || ""}`.trim()
+    }
+    readOnly={planType !== "NBBUD" && entry.idType !== "Other"}
+    
+    // FIX: Allow spaces for "Other" type
+    onKeyDown={(e) => {
+      if (e.key === " ") {
+        e.stopPropagation();
+      }
+    }}
+
+    onChange={(e) => {
+      // Only allow editing if type is "Other" or plan is NBBUD
+      if (entry.idType === "Other" || planType === "NBBUD") {
+        // FIX: Remove emojis immediately
+        const cleanValue = e.target.value.replace(
+          /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+          ""
+        );
+        
+        // Remove leading space only (allow spaces in middle/end)
+        const valueToStore = cleanValue.startsWith(" ") ? cleanValue.trimStart() : cleanValue;
+
+        setNewEntries((prev) => 
+          prev.map((ent, idx) => 
+            idx === entryIndex 
+            ? {
+                ...ent,
+                firstName: valueToStore, // Store full string here temporarily
+                lastName: "" // Clear last name, will be split on save if needed
+              }
+            : ent
+          )
+        );
+      }
+    }}
+    className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+      entry.idType === "Other" || planType === "NBBUD"
+        ? "bg-white"
+        : "bg-gray-100 cursor-not-allowed"
+    }`}
+    placeholder={
+      entry.idType === "Other" 
+        ? "Enter Name" 
+        : "Name (auto-filled)"
+    }
+  />
+</td>
                           {/* Account */}
                           <td className="tbody-td">
                             <input
@@ -6754,7 +7153,7 @@ const ProjectHoursDetails = ({
                             </datalist>
                           </td>
                           {/* PLC */}
-                          <td className="tbody-td">
+                          {/* <td className="tbody-td">
                             <input
                               type="text"
                               name="plcGlcCode"
@@ -6785,7 +7184,50 @@ const ProjectHoursDetails = ({
                                 )
                               )}
                             </datalist>
-                          </td>
+                          </td> */}
+                          {/* PLC Input in Pasted Entry */}
+<td className="tbody-td">
+  <input
+    type="text"
+    name="plcGlcCode"
+    value={entry.plcGlcCode}
+    onChange={(e) => {
+      const value = e.target.value;
+      
+      // 1. Find the matching PLC option to get the description
+      const currentPlcOptions = pastedEntryPlcs[entryIndex] || [];
+      const selectedOption = currentPlcOptions.find(
+        (opt) => opt.value.toLowerCase() === value.toLowerCase()
+      );
+
+      // 2. Update State
+      setNewEntries((prev) =>
+        prev.map((ent, idx) =>
+          idx === entryIndex
+            ? { 
+                ...ent, 
+                plcGlcCode: value,
+                // If type is PLC and we found a match, update the Name (firstName)
+                firstName: (ent.idType === "PLC" && selectedOption) 
+                  ? selectedOption.label 
+                  : ent.firstName
+              }
+            : ent
+        )
+      );
+    }}
+    className="w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border"
+    list={`plc-list-${entryIndex}`}
+    placeholder="Enter PLC"
+  />
+  <datalist id={`plc-list-${entryIndex}`}>
+    {(pastedEntryPlcs[entryIndex] || []).map((plc, index) => (
+      <option key={`${plc.value}-${index}`} value={plc.value}>
+        {plc.label}
+      </option>
+    ))}
+  </datalist>
+</td>
                           {/* Rev */}
                           <td className="tbody-td text-center">
                             <input
@@ -6934,7 +7376,13 @@ const ProjectHoursDetails = ({
                             )}
                           </td>
 
-                          <td className="tbody-td min-w-[70px]">{row.name}</td>
+                          {/* <td className="tbody-td min-w-[70px]">{row.name}</td> */}
+                          <td className="tbody-td min-w-[70px]">
+  {/* FIX: Check if we have an edited first name (PLC description) and display it, otherwise show original */}
+  {editedData.firstName !== undefined 
+    ? editedData.firstName 
+    : row.name}
+</td>
 
                           <td className="tbody-td min-w-[70px]">
                             {isBudPlan && isEditable ? (
@@ -7577,7 +8025,7 @@ const ProjectHoursDetails = ({
                             0.00
                           </td>
                         )}
-                        
+
                         {sortedDurations.map((duration) => {
                           const uniqueKey = `${duration.monthNo}_${duration.year}`;
                           const value =
