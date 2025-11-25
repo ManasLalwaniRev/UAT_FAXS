@@ -1347,45 +1347,110 @@ const ProjectHoursDetails = ({
   // };
 
   const handlePlcInputChange = (value) => {
-    if (planType === "NBBUD") {
-      setPlcSearch(value);
-      setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
-      return;
-    }
-
-    // Only allow empty value or values that start with available PLC options
-    const isValidInput =
-      value === "" ||
-      plcOptions.some((option) =>
-        option.value.toLowerCase().startsWith(value.toLowerCase())
-      );
-
-    if (!isValidInput) {
-      // Don't update state if input doesn't match any PLC option
-      toast.warning("Only values from the PLC suggestions are allowed", {
-        autoClose: 2000,
-      });
-      return;
-    }
-
+  if (planType === "NBBUD") {
     setPlcSearch(value);
     setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+    return;
+  }
 
-    // Filter PLC options
-    if (value.length >= 1) {
-      const filtered = plcOptions.filter((option) =>
-        option.value.toLowerCase().startsWith(value.toLowerCase())
-      );
-      setFilteredPlcOptions(filtered);
-    } else {
-      setFilteredPlcOptions(plcOptions);
-    }
+  // Only allow empty value or values that start with available PLC options
+  const isValidInput =
+    value === "" ||
+    plcOptions.some((option) =>
+      option.value.toLowerCase().startsWith(value.toLowerCase())
+    );
 
-    // Reset auto-populated flag when user manually types
-    if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
-      setAutoPopulatedPLC(false);
-    }
-  };
+  if (!isValidInput) {
+    toast.warning("Only values from the PLC suggestions are allowed", {
+      autoClose: 2000,
+    });
+    return;
+  }
+
+  setPlcSearch(value);
+
+  // --- FIX START: Only update Name if ID Type is PLC ---
+  const selectedOption = plcOptions.find(
+    (opt) => opt.value.toLowerCase() === value.toLowerCase()
+  );
+
+  setNewEntry((prev) => ({
+    ...prev,
+    plcGlcCode: value,
+    // Only overwrite firstName if the specific ID Type is PLC
+    firstName:
+      prev.idType === "PLC" && selectedOption
+        ? selectedOption.label
+        : prev.firstName,
+  }));
+  // --- FIX END ---
+
+  // Filter PLC options
+  if (value.length >= 1) {
+    const filtered = plcOptions.filter((option) =>
+      option.value.toLowerCase().startsWith(value.toLowerCase())
+    );
+    setFilteredPlcOptions(filtered);
+  } else {
+    setFilteredPlcOptions(plcOptions);
+  }
+
+  if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+    setAutoPopulatedPLC(false);
+  }
+};
+
+  // const handlePlcInputChange = (value) => {
+  //   if (planType === "NBBUD") {
+  //     setPlcSearch(value);
+  //     setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+  //     return;
+  //   }
+
+  //   // Only allow empty value or values that start with available PLC options
+  //   const isValidInput =
+  //     value === "" ||
+  //     plcOptions.some((option) =>
+  //       option.value.toLowerCase().startsWith(value.toLowerCase())
+  //     );
+
+  //   if (!isValidInput) {
+  //     // Don't update state if input doesn't match any PLC option
+  //     toast.warning("Only values from the PLC suggestions are allowed", {
+  //       autoClose: 2000,
+  //     });
+  //     return;
+  //   }
+
+  //   setPlcSearch(value);
+  //   const selectedOption = plcOptions.find(opt => opt.value.toLowerCase() === value.toLowerCase());
+
+  //   setNewEntry((prev) => ({ 
+  //     ...prev, 
+  //     plcGlcCode: value,
+  //     // If we found a match, update the name. If newEntry.idType is PLC, this field is read-only in UI
+  //     firstName: selectedOption ? selectedOption.label : prev.firstName
+  //   }));
+
+  //   // setNewEntry((prev) => ({ ...prev, plcGlcCode: value }));
+
+  //   // Filter PLC options
+  //   if (value.length >= 1) {
+  //     const filtered = plcOptions.filter((option) =>
+  //       option.value.toLowerCase().startsWith(value.toLowerCase())
+  //     );
+  //     setFilteredPlcOptions(filtered);
+  //   } else {
+  //     setFilteredPlcOptions(plcOptions);
+  //   }
+
+  //   // Reset auto-populated flag when user manually types
+  //   if (autoPopulatedPLC && value !== newEntry.plcGlcCode) {
+  //     setAutoPopulatedPLC(false);
+  //   }
+  // };
+
+
 
   const handleAccountBlur = (val) => {
     if (planType === "NBBUD") return; // Add this line
@@ -1431,7 +1496,135 @@ const ProjectHoursDetails = ({
     setOrgSearch(value); // Add this line to track search
   };
 
+  // const handleIdChange = (value) => {
+  //   const trimmedValue = value.trim();
+
+  //   if (planType === "NBBUD") {
+  //     // For NBBUD, still try to populate from suggestions if available
+  //     if (
+  //       (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+  //       employeeSuggestions.length > 0 &&
+  //       trimmedValue
+  //     ) {
+  //       const selectedEmployee = employeeSuggestions.find(
+  //         (emp) => emp.emplId === trimmedValue
+  //       );
+
+  //       if (selectedEmployee) {
+  //         setNewEntry((prev) => ({
+  //           ...prev,
+  //           id: trimmedValue,
+  //           firstName: selectedEmployee.firstName || "",
+  //           lastName: selectedEmployee.lastName || "",
+  //           perHourRate: selectedEmployee.perHourRate || "",
+  //           orgId: selectedEmployee.orgId || prev.orgId,
+  //           plcGlcCode: selectedEmployee.plc || "",
+  //         }));
+  //         setPlcSearch(selectedEmployee.plc || "");
+  //       }
+  //     }
+  //     return;
+  //   }
+
+  //   // Skip all validation and suggestions for NBBUD
+  //   // if (planType === "NBBUD") {
+  //   //   setNewEntry((prev) => ({ ...prev, id: trimmedValue }));
+  //   //   return;
+  //   // }
+
+  //   // 1. PLC type is always “PLC”
+  //   if (newEntry.idType === "PLC") {
+  //     setNewEntry((prev) => ({ ...prev, id: "PLC" }));
+  //     return;
+  //   }
+
+  //   // 2. Persist whatever the user typed
+  //   setNewEntry((prev) => ({ ...prev, id: trimmedValue }));
+
+  //   // 3. If the field is cleared, reset most fields and exit
+  //   if (!trimmedValue) {
+  //     setNewEntry((prev) => ({
+  //       ...prev,
+  //       id: "",
+  //       firstName: "",
+  //       lastName: "",
+  //       perHourRate: "",
+  //       orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
+  //       plcGlcCode: "",
+  //       acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+  //     }));
+  //     setPlcSearch("");
+  //     setAutoPopulatedPLC(false);
+  //     return;
+  //   }
+
+  //   // 5. “Other” type needs no further validation
+  //   if (newEntry.idType === "Other") return;
+
+  //   // 6. For Employee / Vendor types, try to auto-populate from suggestions
+  //   if (
+  //     (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
+  //     employeeSuggestions.length > 0
+  //   ) {
+  //     const selectedEmployee = employeeSuggestions.find(
+  //       (emp) => emp.emplId === trimmedValue
+  //     );
+
+  //     if (selectedEmployee) {
+  //       // Found a match – copy its details, *including PLC*
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         id: trimmedValue,
+  //         firstName: selectedEmployee.firstName || "",
+  //         lastName: selectedEmployee.lastName || "",
+  //         perHourRate: selectedEmployee.perHourRate || "",
+  //         orgId: selectedEmployee.orgId || prev.orgId,
+  //         plcGlcCode: selectedEmployee.plc || "",
+  //         acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+  //       }));
+  //       setPlcSearch(selectedEmployee.plc || "");
+  //       // setAutoPopulatedPLC(!!selectedEmployee.plc);
+  //     } else {
+  //       // No exact match – warn only if the entry is clearly invalid
+  //       if (trimmedValue.length >= 3) {
+  //         const partialMatch = employeeSuggestions.some((emp) =>
+  //           emp.emplId.startsWith(trimmedValue)
+  //         );
+  //         if (!partialMatch) {
+  //           toast.error("Invalid ID, please select a valid one!", {
+  //             toastId: "invalid-id",
+  //             autoClose: 3000,
+  //           });
+  //         }
+  //       }
+
+  //       // Leave any previously auto-populated PLC untouched;
+  //       // only clear PLC when it wasn’t auto-filled.
+  //       setNewEntry((prev) => ({
+  //         ...prev,
+  //         firstName: "",
+  //         lastName: "",
+  //         perHourRate: "",
+  //         orgId: newEntry.idType === "Vendor" ? prev.orgId : "",
+  //         plcGlcCode:
+  //           newEntry.idType === "Vendor" && autoPopulatedPLC
+  //             ? prev.plcGlcCode
+  //             : "",
+  //         acctId: laborAccounts.length > 0 ? laborAccounts[0].id : "",
+  //       }));
+
+  //       if (!(newEntry.idType === "Vendor" && autoPopulatedPLC)) {
+  //         setPlcSearch("");
+  //         setAutoPopulatedPLC(false);
+  //       }
+  //     }
+  //   }
+  // };
+
+  // Function to handle row selection
+  
   const handleIdChange = (value) => {
+    // KEY CHANGE 1: Keep 'value' raw for the UI, create 'trimmedValue' for lookups
     const trimmedValue = value.trim();
 
     if (planType === "NBBUD") {
@@ -1448,7 +1641,7 @@ const ProjectHoursDetails = ({
         if (selectedEmployee) {
           setNewEntry((prev) => ({
             ...prev,
-            id: trimmedValue,
+            id: value, // KEY CHANGE: Use raw value to allow spaces while typing
             firstName: selectedEmployee.firstName || "",
             lastName: selectedEmployee.lastName || "",
             perHourRate: selectedEmployee.perHourRate || "",
@@ -1456,16 +1649,14 @@ const ProjectHoursDetails = ({
             plcGlcCode: selectedEmployee.plc || "",
           }));
           setPlcSearch(selectedEmployee.plc || "");
+          return; // Added return to prevent double state update
         }
       }
+      
+      // If no match found in NBBUD, just update the ID text
+      setNewEntry((prev) => ({ ...prev, id: value }));
       return;
     }
-
-    // Skip all validation and suggestions for NBBUD
-    // if (planType === "NBBUD") {
-    //   setNewEntry((prev) => ({ ...prev, id: trimmedValue }));
-    //   return;
-    // }
 
     // 1. PLC type is always “PLC”
     if (newEntry.idType === "PLC") {
@@ -1473,14 +1664,14 @@ const ProjectHoursDetails = ({
       return;
     }
 
-    // 2. Persist whatever the user typed
-    setNewEntry((prev) => ({ ...prev, id: trimmedValue }));
+    // 2. Persist whatever the user typed (KEY CHANGE: Use 'value', not 'trimmedValue')
+    setNewEntry((prev) => ({ ...prev, id: value }));
 
-    // 3. If the field is cleared, reset most fields and exit
+    // 3. If the field is cleared (checking trimmed is fine here), reset most fields and exit
     if (!trimmedValue) {
       setNewEntry((prev) => ({
         ...prev,
-        id: "",
+        id: "", // Explicitly clear
         firstName: "",
         lastName: "",
         perHourRate: "",
@@ -1501,6 +1692,7 @@ const ProjectHoursDetails = ({
       (newEntry.idType === "Employee" || newEntry.idType === "Vendor") &&
       employeeSuggestions.length > 0
     ) {
+      // Use trimmedValue for the LOOKUP
       const selectedEmployee = employeeSuggestions.find(
         (emp) => emp.emplId === trimmedValue
       );
@@ -1509,7 +1701,7 @@ const ProjectHoursDetails = ({
         // Found a match – copy its details, *including PLC*
         setNewEntry((prev) => ({
           ...prev,
-          id: trimmedValue,
+          // id: trimmedValue, // Optional: You can snap to trimmed here if you want, or keep 'value'
           firstName: selectedEmployee.firstName || "",
           lastName: selectedEmployee.lastName || "",
           perHourRate: selectedEmployee.perHourRate || "",
@@ -1555,8 +1747,7 @@ const ProjectHoursDetails = ({
       }
     }
   };
-
-  // Function to handle row selection
+  
   const handleRowSelection = (rowIndex, isSelected) => {
     setSelectedRows((prev) => {
       const newSelection = new Set(prev);
@@ -2718,6 +2909,92 @@ const ProjectHoursDetails = ({
     }
   };
 
+  // const pasteRowData = (row) => {
+  //   if (row.length < 11) {
+  //     toast.error("Invalid data format. Please copy complete row data.", {
+  //       autoClose: 3000,
+  //     });
+  //     return;
+  //   }
+
+  //   const [
+  //     idTypeLabel,
+  //     id,
+  //     name,
+  //     acctId,
+  //     acctName,
+  //     orgId,
+  //     plc,
+  //     rev,
+  //     brd,
+  //     status,
+  //     hourRate,
+  //     ...monthValues
+  //   ] = row;
+
+  //   // const idType =
+  //   //   ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
+
+  //   const idType =
+  //     ID_TYPE_OPTIONS.find(
+  //       (opt) => opt.label.toLowerCase() === idTypeLabel.toLowerCase()
+  //     )?.value || "Employee";
+
+  //   let firstName = "";
+  //   let lastName = "";
+
+  //   if (idType === "PLC") {
+  //     firstName = name || "";
+  //   } else if (idType === "Vendor") {
+  //     lastName = name || "";
+  //   } else {
+  //     const nameParts = (name || "").split(" ");
+  //     firstName = nameParts[0] || "";
+  //     lastName = nameParts.slice(1).join(" ") || "";
+  //   }
+
+  //   const completeNewEntryData = {
+  //     id: id || "",
+  //     firstName,
+  //     lastName,
+  //     isRev: rev === "✓",
+  //     isBrd: brd === "✓",
+  //     idType,
+  //     acctId: acctId || "",
+  //     orgId: orgId || "",
+  //     plcGlcCode: plc || "",
+  //     perHourRate: hourRate || "",
+  //     status: status || "ACT",
+  //   };
+
+  //   setNewEntry(completeNewEntryData);
+  //   setPlcSearch(plc || "");
+  //   setOrgSearch(orgId || "");
+
+  //   if (monthValues.length > 0 && durations.length > 0) {
+  //     const newPeriodHours = {};
+  //     const sortedDurations = [...durations].sort((a, b) => {
+  //       if (a.year !== b.year) return a.year - b.year;
+  //       return a.monthNo - b.monthNo;
+  //     });
+
+  //     monthValues.forEach((value, index) => {
+  //       if (
+  //         index < sortedDurations.length &&
+  //         value &&
+  //         value !== "0.00" &&
+  //         value !== "0"
+  //       ) {
+  //         const duration = sortedDurations[index];
+  //         const uniqueKey = `${duration.monthNo}_${duration.year}`;
+  //         newPeriodHours[uniqueKey] = value;
+  //       }
+  //     });
+
+  //     setNewEntryPeriodHours(newPeriodHours);
+  //   }
+  // };
+  // Update this function to handle the Total column correctly
   const pasteRowData = (row) => {
     if (row.length < 11) {
       toast.error("Invalid data format. Please copy complete row data.", {
@@ -2738,11 +3015,9 @@ const ProjectHoursDetails = ({
       brd,
       status,
       hourRate,
+      total, // <--- ADD THIS: Capture 'Total' so it is excluded from ...monthValues
       ...monthValues
     ] = row;
-
-    // const idType =
-    //   ID_TYPE_OPTIONS.find((opt) => opt.label === idTypeLabel)?.value || "Employee";
 
     const idType =
       ID_TYPE_OPTIONS.find(
@@ -2803,6 +3078,7 @@ const ProjectHoursDetails = ({
       setNewEntryPeriodHours(newPeriodHours);
     }
   };
+
 
   useEffect(() => {
     const handleKeyDown = async (e) => {
@@ -2908,10 +3184,10 @@ const ProjectHoursDetails = ({
     return {
       idType:
         ID_TYPE_OPTIONS.find(
-          (opt) => opt.value === (emp.emple.type || "Employee")
+          (opt) => opt.value === (emp.emple.type || "-")
         )?.label ||
         emp.emple.type ||
-        "Employee",
+        "-",
       emplId: emp.emple.emplId,
       warning: Boolean(warningValue),
       name:
@@ -3445,7 +3721,7 @@ const ProjectHoursDetails = ({
       emplId: emp.emple.emplId,
       firstName: emp.emple.firstName || "",
       lastName: emp.emple.lastName || "",
-      type: emp.emple.type || "Employee",
+      type: emp.emple.type || " ",
       isRev:
         editedData.isRev !== undefined ? editedData.isRev : emp.emple.isRev,
       isBrd:
@@ -3524,7 +3800,7 @@ const ProjectHoursDetails = ({
             emplId: emp.emple.emplId,
             firstName: emp.emple.firstName || "",
             lastName: emp.emple.lastName || "",
-            type: emp.emple.type || "Employee",
+            type: emp.emple.type || " ",
             isRev:
               editedData.isRev !== undefined
                 ? editedData.isRev
@@ -4055,7 +4331,7 @@ const ProjectHoursDetails = ({
       isBrd: newEntry.isBrd,
       plcGlcCode: (newEntry.plcGlcCode || "").substring(0, 20),
       perHourRate: Number(newEntry.perHourRate) || 0,
-      status: newEntry.status || "Act",
+      status: newEntry.status || "-",
       accId: newEntry.acctId,
       orgId: newEntry.orgId || "",
       plId: planId,
@@ -5470,7 +5746,7 @@ const ProjectHoursDetails = ({
                   >
                     Delete
                   </button> */}
-                  <button
+                  {/* <button
                     className={`px-4 py-2 text-white rounded transition text-xs font-medium
     ${
       planType === "EAC"
@@ -5494,7 +5770,39 @@ const ProjectHoursDetails = ({
                     disabled={planType === "EAC"}
                   >
                     Delete
-                  </button>
+                  </button> */}
+                  <button
+  className={`px-4 py-2 text-white rounded transition text-xs font-medium
+    ${planType === "EAC" ? "bg-gray-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"}`}
+  onClick={() => {
+    // FIX: Check if any row is selected in the Set
+    if (selectedRows.size === 0) {
+      toast.error("Please select an employee to delete");
+      return;
+    }
+
+    // Get the first selected index (assuming single delete for now based on your UI)
+    const selectedIndex = Array.from(selectedRows)[0];
+    const empToDelete = localEmployees[selectedIndex];
+
+    if (!empToDelete || !empToDelete.emple_Id) {
+      toast.error("Invalid employee selection");
+      return;
+    }
+
+    if (
+      window.confirm(
+        "Are you sure you want to delete this employee?"
+      )
+    ) {
+      handleDeleteEmployee(empToDelete.emple_Id);
+      setSelectedRows(new Set()); // Clear selection after delete
+    }
+  }}
+  disabled={planType === "EAC"}
+>
+  Delete
+</button>
                 </>
               )}
               {showNewForm && (
@@ -5724,6 +6032,8 @@ const ProjectHoursDetails = ({
                         </select>
                       </td>
                       <td className="tbody-td">
+             
+
                         <input
                           type="text"
                           name="id"
@@ -5732,15 +6042,20 @@ const ProjectHoursDetails = ({
                           //   newEntry.idType === "Other" ? "KBD001" : newEntry.id
                           // }
                           onChange={(e) => handleIdChange(e.target.value)}
+                          onKeyDown={(e) => {
+    // Allow space key for all inputs - don't prevent default
+    if (e.key === ' ') {
+      e.stopPropagation(); // Stop parent handlers but allow typing
+    }
+  }}
+                        
                           disabled={newEntry.idType === "PLC"}
                           className={`w-full rounded px-1 py-0.5 text-xs outline-none focus:ring-0 no-datalist-border ${
                             newEntry.idType === "PLC"
                               ? "bg-gray-100 cursor-not-allowed"
                               : ""
                           }`}
-                          // list={
-                          //   planType === "NBBUD" ? undefined : "employee-id-list"
-                          // }
+                          
                           list="employee-id-list"
                           placeholder={
                             newEntry.idType === "PLC"
@@ -5748,23 +6063,6 @@ const ProjectHoursDetails = ({
                               : "Enter ID"
                           }
                         />
-                        {/* <datalist id="employee-id-list">
-                                        {employeeSuggestions
-                                          .filter(
-                                            (emp) =>
-                                              emp.emplId && typeof emp.emplId === "string"
-                                          )
-                                          .map((emp, index) => (
-                                            <option
-                                              key={`${emp.emplId}-${index}`}
-                                              value={emp.emplId}
-                                            >
-                                              {emp.lastName && emp.firstName
-                                                ? `${emp.lastName}, ${emp.firstName}`
-                                                : emp.lastName || emp.firstName || emp.emplId}
-                                            </option>
-                                          ))}
-                                      </datalist> */}
                         <datalist id="employee-id-list">
                           {newEntry.idType !== "Other" &&
                             employeeSuggestions
@@ -5792,70 +6090,75 @@ const ProjectHoursDetails = ({
                       </td>
 
                       <td className="tbody-td">
-                        {newEntry.idType === "PLC" ? (
-                          // PLC Name field - automatically show selected PLC description
-                          <input
-                            type="text"
-                            name="name"
-                            value={newEntry.firstName || ""} // This will contain the PLC description
-                            readOnly
-                            className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
-                            // placeholder="PLC description will appear here"
-                          />
-                        ) : (
-                          // Existing logic for other ID types
-                          <input
-                            type="text"
-                            name="name"
-                            value={
-                              newEntry.idType === "Other" ||
-                              planType === "NBBUD"
-                                ? `${newEntry.firstName || ""} ${
-                                    newEntry.lastName || ""
-                                  }`.trim()
-                                : newEntry.idType === "Vendor"
-                                ? newEntry.lastName || newEntry.firstName || ""
-                                : newEntry.lastName && newEntry.firstName
-                                ? `${newEntry.lastName}, ${newEntry.firstName}`
-                                : newEntry.lastName || newEntry.firstName || ""
-                            }
-                            readOnly={
-                              planType !== "NBBUD" &&
-                              newEntry.idType !== "Other"
-                            }
-                            onChange={(e) => {
-                              if (
-                                newEntry.idType === "Other" ||
-                                planType === "NBBUD"
-                              ) {
-                                const fullName = e.target.value.trim();
-                                const nameParts = fullName.split(" ");
-                                const firstName = nameParts[0] || "";
-                                const lastName =
-                                  nameParts.slice(1).join(" ") || "";
+  {newEntry.idType === "PLC" ? (
+    // 1. PLC Type: Read-only, shows PLC Description
+    <input
+      type="text"
+      name="name"
+      value={newEntry.firstName || ""} 
+      readOnly
+      className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+      placeholder="PLC Description"
+    />
+  ) : (
+    // 2. Other Types (Employee, Vendor, Other)
+    <input
+      type="text"
+      name="name"
+      // FIX: Removed .trim() here so you can type spaces
+      value={
+        newEntry.idType === "Other" || planType === "NBBUD"
+          ? `${newEntry.firstName || ""} ${newEntry.lastName || ""}`
+          : newEntry.idType === "Vendor"
+          ? newEntry.lastName || newEntry.firstName || ""
+          : newEntry.lastName && newEntry.firstName
+          ? `${newEntry.lastName}, ${newEntry.firstName}`
+          : newEntry.lastName || newEntry.firstName || ""
+      }
+      readOnly={planType !== "NBBUD" && newEntry.idType !== "Other"}
+      
+      onKeyDown={(e) => {
+        // FIX: Stop propagation so space doesn't trigger row clicks, but allow default typing
+        if (e.key === " ") {
+          e.stopPropagation();
+        }
+      }}
 
-                                setNewEntry((prev) => ({
-                                  ...prev,
-                                  firstName: firstName,
-                                  lastName: lastName,
-                                }));
-                              }
-                            }}
-                            className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
-                              newEntry.idType === "Other" ||
-                              planType === "NBBUD"
-                                ? "bg-white"
-                                : "bg-gray-100 cursor-not-allowed"
-                            }`}
-                            placeholder={
-                              newEntry.idType === "Other" ||
-                              planType === "NBBUD"
-                                ? "Enter name"
-                                : "Name (auto-filled)"
-                            }
-                          />
-                        )}
-                      </td>
+      onChange={(e) => {
+        if (newEntry.idType === "Other" || planType === "NBBUD") {
+          
+          // 1. Remove emojis (Keep this existing logic)
+          const cleanValue = e.target.value.replace(
+            /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g,
+            ""
+          );
+
+          // 2. Split by space to save into First/Last name buckets
+          // FIX: Do NOT trim 'cleanValue' here, or you can't type the separation space
+          const nameParts = cleanValue.split(" ");
+          const firstName = nameParts[0] || "";
+          const lastName = nameParts.slice(1).join(" ") || "";
+
+          setNewEntry((prev) => ({
+            ...prev,
+            firstName: firstName,
+            lastName: lastName,
+          }));
+        }
+      }}
+      className={`w-full border border-gray-300 rounded px-1 py-0.5 text-xs ${
+        newEntry.idType === "Other" || planType === "NBBUD"
+          ? "bg-white"
+          : "bg-gray-100 cursor-not-allowed"
+      }`}
+      placeholder={
+        newEntry.idType === "Other" 
+          ? "Enter Name (No Emojis)" 
+          : "Name (auto-filled)"
+      }
+    />
+  )}
+</td>
 
                       <td className="tbody-td">
                         <input
@@ -5886,7 +6189,7 @@ const ProjectHoursDetails = ({
                         </datalist>
                       </td>
                       {/* ADD THIS NEW TD FOR ACCOUNT NAME IN NEW ENTRY FORM */}
-                      <td className="tbody-td">
+                      {/* <td className="tbody-td">
                         <input
                           type="text"
                           value={(() => {
@@ -5900,7 +6203,22 @@ const ProjectHoursDetails = ({
                           className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
                           placeholder="Account Name (auto-filled)"
                         />
-                      </td>
+                      </td> */}
+                      <td className="tbody-td min-w-[70px]"> 
+  <input
+    type="text"
+    value={(() => {
+      const accountWithName =
+        accountOptionsWithNames.find(
+          (acc) => acc.id === newEntry.acctId
+        );
+      return accountWithName ? accountWithName.name : "";
+    })()}
+    readOnly
+    className="w-full border border-gray-300 rounded px-1 py-0.5 text-xs bg-gray-100 cursor-not-allowed"
+    placeholder="Account Name (auto-filled)"
+  />
+</td>
                       {/* <td className="tbody-td">
                                       <input
                                         type="text"
@@ -7154,7 +7472,7 @@ const ProjectHoursDetails = ({
                           isMonthEditable(duration, closedPeriod, planType);
 
                         return (
-                          <td key={`new-entry-${uniqueKey}`}>
+                          <td key={`new-entry-${uniqueKey}`} className="tbody-td text-center">
                             <input
                               type="text"
                               inputMode="numeric"
@@ -7163,6 +7481,7 @@ const ProjectHoursDetails = ({
                                   ? "cursor-not-allowed text-gray-400"
                                   : "text-gray-700"
                               }`}
+                              // style={{ minWidth: "80px" }}
                               value={value || ""} // Ensure empty string when undefined/null
                               onChange={(e) => {
                                 const inputValue = e.target.value;
@@ -7244,6 +7563,21 @@ const ProjectHoursDetails = ({
                           lineHeight: "normal",
                         }}
                       >
+
+                      {/* ADDED: Render CTD Cell for Pasted Row */}
+                        {shouldShowCTD() && (
+                          <td className="tbody-td text-center text-xs bg-gray-100">
+                            0.00
+                          </td>
+                        )}
+
+                        {/* ADDED: Render Prior Year Cell for Pasted Row */}
+                        {shouldShowPriorYear() && (
+                          <td className="tbody-td text-center text-xs bg-gray-100">
+                            0.00
+                          </td>
+                        )}
+                        
                         {sortedDurations.map((duration) => {
                           const uniqueKey = `${duration.monthNo}_${duration.year}`;
                           const value =

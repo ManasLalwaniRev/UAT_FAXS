@@ -665,134 +665,523 @@ const ProjectPlanTable = ({
     }
   };
 
+  // const handleActionSelect = async (idx, action) => {
+  //   const plan = plans[idx];
+
+  //   // console.log('Selected plan object:', plan);
+  //   // console.log('Full project ID from ref:', fullProjectId.current);
+
+  //   if (action === "None") return;
+  //   try {
+  //     setIsActionLoading(true);
+  //     if (action === "Delete") {
+  //       if (!plan.plId || Number(plan.plId) <= 0) {
+  //         toast.error("Cannot delete: Invalid plan ID.");
+  //         setIsActionLoading(false);
+  //         return;
+  //       }
+  //       const confirmed = window.confirm(
+  //         `Are you sure you want to delete this plan`
+  //       );
+  //       if (!confirmed) {
+  //         setIsActionLoading(false);
+  //         return;
+  //       }
+  //       toast.info("Deleting plan...");
+  //       try {
+  //         await axios.delete(
+  //           `${backendUrl}/Project/DeleteProjectPlan/${plan.plId}`
+  //         );
+  //         toast.success("Plan deleted successfully!");
+  //       } catch (err) {
+  //         if (err.response && err.response.status === 404) {
+  //           toast.error(
+  //             "Plan not found on server. It may have already been deleted."
+  //           );
+  //         } else {
+  //           toast.error(
+  //             "Error deleting plan: " +
+  //               (err.response?.data?.message || err.message)
+  //           );
+  //         }
+  //         setIsActionLoading(false);
+  //         return;
+  //       }
+  //       // await refreshPlans();
+  //       setPlans(plans.filter((p, i) => i !== idx));
+  //       if (selectedPlan?.plId === plan.plId) {
+  //         onPlanSelect(null); // Deselect if deleted plan selected
+  //       }
+  //     } 
+  //     else if (
+  //       action === "Create Budget" ||
+  //       action === "Create Blank Budget" ||
+  //       action === "Create EAC" ||
+  //       action === "Create NB BUD"
+  //     ) {
+  //       // Use the full project ID from the ref, fallback to plan.projId if not available
+  //       const actionProjId = fullProjectId.current || plan.projId;
+
+  //       const payloadTemplate = {
+  //         projId: selectedPlan.projId,
+  //         plId: plan.plId || 0,
+  //         plType:
+  //           action === "Create NB BUD"
+  //             ? "NBBUD"
+  //             : action === "Create Budget" || action === "Create Blank Budget"
+  //             ? "BUD"
+  //             : "EAC",
+
+  //         source: plan.source || "",
+  //         type: isChildProjectId(actionProjId) ? "SYSTEM" : plan.type || "",
+  //         version: plan.version,
+  //         versionCode: plan.versionCode || "",
+  //         finalVersion: false,
+  //         isCompleted: false,
+  //         isApproved: false,
+  //         status: "In Progress",
+  //         createdBy: plan.createdBy || "User",
+  //         modifiedBy: plan.modifiedBy || "User",
+  //         approvedBy: "",
+  //         templateId: plan.templateId || 1,
+  //         fiscalYear: fiscalYear,
+  //       };
+
+  //       // console.log('Payload for action:', payloadTemplate);
+
+  //       toast.info(
+  //         `Creating ${
+  //           action === "Create Budget"
+  //             ? "Budget"
+  //             : action === "Create Blank Budget"
+  //             ? "Blank Budget"
+  //             : "EAC"
+  //         }...`
+  //       );
+  //       // const response = await axios.post(
+  //       //   `${backendUrl}/Project/AddProjectPlan?type=${
+  //       //     action === "Create Blank Budget" ? "blank" : "actual"
+  //       //   }`,
+  //       //   payloadTemplate
+  //       // );
+  //       // const createdPlan = response.data;
+  //       // await refreshPlans(); // refresh
+  //       // setTimeout(() => {
+  //       //   onPlanSelect(createdPlan);
+          
+  //       // }, 100);
+  //       // setPlans([...plans, createdPlan]);
+        
+  //       const response = await axios.post(
+  //         `${backendUrl}/Project/AddProjectPlan?type=${
+  //           action === "Create Blank Budget" ? "blank" : "actual"
+  //         }`,
+  //         payloadTemplate
+  //       );
+  //       const rawCreatedPlan = response.data;
+
+  //       // FIX: Normalize the plan object to match the table structure to prevent crash
+  //       const normalizedPlan = {
+  //         ...rawCreatedPlan,
+  //         plId: rawCreatedPlan.plId || rawCreatedPlan.id || 0,
+  //         projId: rawCreatedPlan.projId || 
+  //                 rawCreatedPlan.fullProjectId || 
+  //                 rawCreatedPlan.project_id || 
+  //                 rawCreatedPlan.projectId || 
+  //                 projectId,
+  //         projName: rawCreatedPlan.projName || "",
+  //         plType:
+  //           rawCreatedPlan.plType === "Budget"
+  //             ? "BUD"
+  //             : rawCreatedPlan.plType === "EAC"
+  //             ? "EAC"
+  //             : rawCreatedPlan.plType || "",
+  //         source: rawCreatedPlan.source || "",
+  //         version: rawCreatedPlan.version || 0,
+  //         versionCode: rawCreatedPlan.versionCode || "",
+  //         finalVersion: !!rawCreatedPlan.finalVersion,
+  //         isCompleted: !!rawCreatedPlan.isCompleted,
+  //         isApproved: !!rawCreatedPlan.isApproved,
+  //         status:
+  //           rawCreatedPlan.plType && rawCreatedPlan.version
+  //             ? (rawCreatedPlan.status || "In Progress")
+  //                 .replace("Working", "In Progress")
+  //                 .replace("Completed", "Submitted")
+  //             : "",
+  //         closedPeriod: rawCreatedPlan.closedPeriod || "",
+  //         templateId: rawCreatedPlan.templateId || 0,
+  //       };
+
+  //       await refreshPlans(); // refresh
+        
+  //       setTimeout(() => {
+  //         // Pass the normalized plan instead of the raw API response
+  //         onPlanSelect(normalizedPlan);
+  //       }, 100);
+       
+       
+  //       toast.success(
+  //         `${
+  //           action === "Create Budget"
+  //             ? "Budget"
+  //             : action === "Create Blank Budget"
+  //             ? "Blank Budget"
+  //             : action === "Create NB BUD"
+  //             ? "NB BUD"
+  //             : "EAC"
+  //         } created successfully!`
+  //       );
+  //     } else {
+  //       toast.info(`Action "${action}" selected (API call not implemented)`);
+  //     }
+  //   } catch (err) {
+  //     toast.error(
+  //       "Error performing action: " +
+  //         (err.response?.data?.message || err.message)
+  //     );
+  //   } finally {
+  //     setIsActionLoading(false);
+  //   }
+  // };
+  
   const handleActionSelect = async (idx, action) => {
-    const plan = plans[idx];
+  const plan = plans[idx];
+  if (action === "None") return;
 
-    // console.log('Selected plan object:', plan);
-    // console.log('Full project ID from ref:', fullProjectId.current);
+  try {
+    setIsActionLoading(true);
+    if (action === "Delete") {
+      if (!plan.plId || Number(plan.plId) <= 0) {
+        toast.error("Cannot delete: Invalid plan ID.");
+        setIsActionLoading(false);
+        return;
+      }
+      const confirmed = window.confirm(`Are you sure you want to delete this plan`);
+      if (!confirmed) {
+        setIsActionLoading(false);
+        return;
+      }
+      toast.info("Deleting plan...");
+      try {
+        await axios.delete(`${backendUrl}/Project/DeleteProjectPlan/${plan.plId}`);
+        toast.success("Plan deleted successfully!");
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          toast.error("Plan not found on server. It may have already been deleted.");
+        } else {
+          toast.error("Error deleting plan: " + (err.response?.data?.message || err.message));
+        }
+        setIsActionLoading(false);
+        return;
+      }
+      setPlans(plans.filter((p, i) => i !== idx));
+      if (selectedPlan?.plId === plan.plId) {
+        onPlanSelect(null);
+      }
+    }
+    else if (
+      action === "Create Budget" ||
+      action === "Create Blank Budget" ||
+      action === "Create EAC" ||
+      action === "Create NB BUD"
+    ) {
+      // Defensive fallback for project ID
+      const actionProjId = fullProjectId.current || plan.projId || projectId || "";
 
-    if (action === "None") return;
-    try {
-      setIsActionLoading(true);
-      if (action === "Delete") {
-        if (!plan.plId || Number(plan.plId) <= 0) {
-          toast.error("Cannot delete: Invalid plan ID.");
-          setIsActionLoading(false);
-          return;
-        }
-        const confirmed = window.confirm(
-          `Are you sure you want to delete this plan`
-        );
-        if (!confirmed) {
-          setIsActionLoading(false);
-          return;
-        }
-        toast.info("Deleting plan...");
-        try {
-          await axios.delete(
-            `${backendUrl}/Project/DeleteProjectPlan/${plan.plId}`
-          );
-          toast.success("Plan deleted successfully!");
-        } catch (err) {
-          if (err.response && err.response.status === 404) {
-            toast.error(
-              "Plan not found on server. It may have already been deleted."
-            );
-          } else {
-            toast.error(
-              "Error deleting plan: " +
-                (err.response?.data?.message || err.message)
-            );
-          }
-          setIsActionLoading(false);
-          return;
-        }
-        // await refreshPlans();
-        setPlans(plans.filter((p, i) => i !== idx));
-        if (selectedPlan?.plId === plan.plId) {
-          onPlanSelect(null); // Deselect if deleted plan selected
-        }
-      } else if (
-        action === "Create Budget" ||
-        action === "Create Blank Budget" ||
-        action === "Create EAC" ||
-        action === "Create NB BUD"
-      ) {
-        // Use the full project ID from the ref, fallback to plan.projId if not available
-        const actionProjId = fullProjectId.current || plan.projId;
-
-        const payloadTemplate = {
-          projId: selectedPlan.projId,
-          plId: plan.plId || 0,
-          plType:
-            action === "Create NB BUD"
-              ? "NBBUD"
-              : action === "Create Budget" || action === "Create Blank Budget"
+      const payloadTemplate = {
+        projId: selectedPlan?.projId || plan.projId || actionProjId || "",
+        plId: plan.plId || 0,
+        plType:
+          action === "Create NB BUD"
+            ? "NBBUD"
+            : action === "Create Budget" || action === "Create Blank Budget"
               ? "BUD"
               : "EAC",
+        source: plan.source || "",
+        type: typeof isChildProjectId === "function" && isChildProjectId(actionProjId) ? "SYSTEM" : plan.type || "",
+        version: plan.version || 0,
+        versionCode: plan.versionCode || "",
+        finalVersion: false,
+        isCompleted: false,
+        isApproved: false,
+        status: "In Progress",
+        createdBy: plan.createdBy || "User",
+        modifiedBy: plan.modifiedBy || "User",
+        approvedBy: "",
+        templateId: plan.templateId || 1,
+        fiscalYear: fiscalYear,
+      };
 
-          source: plan.source || "",
-          type: isChildProjectId(actionProjId) ? "SYSTEM" : plan.type || "",
-          version: plan.version,
-          versionCode: plan.versionCode || "",
-          finalVersion: false,
-          isCompleted: false,
-          isApproved: false,
-          status: "In Progress",
-          createdBy: plan.createdBy || "User",
-          modifiedBy: plan.modifiedBy || "User",
-          approvedBy: "",
-          templateId: plan.templateId || 1,
-          fiscalYear: fiscalYear,
-        };
-
-        // console.log('Payload for action:', payloadTemplate);
-
-        toast.info(
-          `Creating ${
-            action === "Create Budget"
-              ? "Budget"
-              : action === "Create Blank Budget"
-              ? "Blank Budget"
-              : "EAC"
-          }...`
-        );
-        const response = await axios.post(
-          `${backendUrl}/Project/AddProjectPlan?type=${
-            action === "Create Blank Budget" ? "blank" : "actual"
-          }`,
-          payloadTemplate
-        );
-        const createdPlan = response.data;
-        await refreshPlans(); // refresh
-        setTimeout(() => {
-          onPlanSelect(createdPlan);
-          // Optionally, scroll table to this plan row by ID
-        }, 100);
-        // setPlans([...plans, createdPlan]);
-        toast.success(
-          `${
-            action === "Create Budget"
-              ? "Budget"
-              : action === "Create Blank Budget"
-              ? "Blank Budget"
-              : action === "Create NB BUD"
+      toast.info(
+        `Creating ${action === "Create Budget"
+          ? "Budget"
+          : action === "Create Blank Budget"
+            ? "Blank Budget"
+            : action === "Create NB BUD"
               ? "NB BUD"
-              : "EAC"
-          } created successfully!`
-        );
-      } else {
-        toast.info(`Action "${action}" selected (API call not implemented)`);
-      }
-    } catch (err) {
-      toast.error(
-        "Error performing action: " +
-          (err.response?.data?.message || err.message)
+              : "EAC"}...`
       );
-    } finally {
-      setIsActionLoading(false);
+
+      const response = await axios.post(
+        `${backendUrl}/Project/AddProjectPlan?type=${action === "Create Blank Budget" ? "blank" : "actual"}`,
+        payloadTemplate
+      );
+      const rawCreatedPlan = response.data;
+
+      // Improved normalization, covering all possible plan types and keys
+      // const normType = (() => {
+      //   const t = (rawCreatedPlan.plType || "").toString().toUpperCase();
+      //   if (t === "BUDGET" || t === "BUD") return "BUD";
+      //   if (t === "EAC") return "EAC";
+      //   if (t === "NB BUD" || t === "NBBUD") return "NBBUD";
+      //   return t || "";
+      // })();
+
+      // const normalizedPlan = {
+      //   // Basic and fallback fields
+      //   ...rawCreatedPlan,
+      //   plId: rawCreatedPlan.plId || rawCreatedPlan.id || 0,
+      //   projId: rawCreatedPlan.projId ||
+      //           rawCreatedPlan.fullProjectId ||
+      //           rawCreatedPlan.project_id ||
+      //           rawCreatedPlan.projectId ||
+      //           actionProjId ||
+      //           "",
+      //   projName: rawCreatedPlan.projName || "",
+      //   plType: normType,
+      //   source: rawCreatedPlan.source || "",
+      //   version: Number(rawCreatedPlan.version) || 0,
+      //   versionCode: rawCreatedPlan.versionCode || "",
+      //   finalVersion: !!rawCreatedPlan.finalVersion,
+      //   isCompleted: !!rawCreatedPlan.isCompleted,
+      //   isApproved: !!rawCreatedPlan.isApproved,
+      //   status: rawCreatedPlan.status
+      //     ? rawCreatedPlan.status.replace("Working", "In Progress").replace("Completed", "Submitted")
+      //     : "In Progress",
+      //   closedPeriod: rawCreatedPlan.closedPeriod || "",
+      //   templateId: rawCreatedPlan.templateId || 0,
+      // };
+
+      const normalizedPlan = {
+        ...plan, // Fallback to existing plan details
+        ...rawCreatedPlan, // Override with new details from API
+        plId: rawCreatedPlan.plId || rawCreatedPlan.id || 0,
+        projId: rawCreatedPlan.projId || plan.projId,
+        projName: rawCreatedPlan.projName || plan.projName || "",
+        plType: rawCreatedPlan.plType === "Budget" ? "BUD" : (rawCreatedPlan.plType || "BUD"),
+        version: Number(rawCreatedPlan.version) || 0,
+        status: "In Progress", 
+        finalVersion: false,
+        isCompleted: false,
+        isApproved: false,
+        // Ensure dates exist to prevent date parsing crashes in parent
+        projStartDt: rawCreatedPlan.projStartDt || plan.projStartDt || "",
+        projEndDt: rawCreatedPlan.projEndDt || plan.projEndDt || "",
+      };
+      
+      // Defensive: Ensure essential fields never blank or invalid
+      if (!normalizedPlan.projId || !normalizedPlan.plType) {
+        toast.error("Plan returned from backend is missing required fields. Please reload and try again.");
+        setIsActionLoading(false);
+        return;
+      }
+
+      await refreshPlans();
+
+      setTimeout(() => {
+        onPlanSelect(normalizedPlan);
+      }, 100);
+
+      toast.success(`${action === "Create Budget"
+        ? "Budget"
+        : action === "Create Blank Budget"
+          ? "Blank Budget"
+          : action === "Create NB BUD"
+            ? "NB BUD"
+            : "EAC"} created successfully!`);
+    } else {
+      toast.info(`Action "${action}" selected (API call not implemented)`);
     }
-  };
+  } catch (err) {
+    toast.error("Error performing action: " + (err.response?.data?.message || err.message));
+  } finally {
+    setIsActionLoading(false);
+  }
+};
+  
+  // const handleActionSelect = async (idx, action) => {
+  //   const plan = plans[idx];
+
+  //   if (action === "None") return;
+
+  //   try {
+  //     setIsActionLoading(true);
+
+  //     // --- DELETE LOGIC ---
+  //     if (action === "Delete") {
+  //       if (!plan.plId || Number(plan.plId) <= 0) {
+  //         toast.error("Cannot delete: Invalid plan ID.");
+  //         setIsActionLoading(false);
+  //         return;
+  //       }
+  //       const confirmed = window.confirm(
+  //         `Are you sure you want to delete this plan?`
+  //       );
+  //       if (!confirmed) {
+  //         setIsActionLoading(false);
+  //         return;
+  //       }
+  //       toast.info("Deleting plan...");
+  //       try {
+  //         await axios.delete(
+  //           `${backendUrl}/Project/DeleteProjectPlan/${plan.plId}`
+  //         );
+  //         toast.success("Plan deleted successfully!");
+  //       } catch (err) {
+  //         if (err.response && err.response.status === 404) {
+  //           toast.error(
+  //             "Plan not found on server. It may have already been deleted."
+  //           );
+  //         } else {
+  //           toast.error(
+  //             "Error deleting plan: " +
+  //               (err.response?.data?.message || err.message)
+  //           );
+  //         }
+  //         setIsActionLoading(false);
+  //         return;
+  //       }
+        
+  //       setPlans(plans.filter((p, i) => i !== idx));
+  //       if (selectedPlan?.plId === plan.plId) {
+  //         onPlanSelect(null); // Deselect if deleted plan selected
+  //       }
+  //     } 
+  //     // --- CREATE LOGIC (Budget, Blank, EAC, NB BUD) ---
+  //     else if (
+  //       action === "Create Budget" ||
+  //       action === "Create Blank Budget" ||
+  //       action === "Create EAC" ||
+  //       action === "Create NB BUD"
+  //     ) {
+  //       // Use the full project ID from the ref, fallback to plan.projId if not available
+  //       const actionProjId = fullProjectId.current || plan.projId;
+
+  //       const payloadTemplate = {
+  //         projId: selectedPlan.projId,
+  //         plId: plan.plId || 0,
+  //         plType:
+  //           action === "Create NB BUD"
+  //             ? "NBBUD"
+  //             : action === "Create Budget" || action === "Create Blank Budget"
+  //             ? "BUD"
+  //             : "EAC",
+
+  //         source: plan.source || "",
+  //         type: isChildProjectId(actionProjId) ? "SYSTEM" : plan.type || "",
+  //         version: plan.version,
+  //         versionCode: plan.versionCode || "",
+  //         finalVersion: false,
+  //         isCompleted: false,
+  //         isApproved: false,
+  //         status: "In Progress",
+  //         createdBy: plan.createdBy || "User",
+  //         modifiedBy: plan.modifiedBy || "User",
+  //         approvedBy: "",
+  //         templateId: plan.templateId || 1,
+  //         fiscalYear: fiscalYear,
+  //       };
+
+  //       toast.info(
+  //         `Creating ${
+  //           action === "Create Budget"
+  //             ? "Budget"
+  //             : action === "Create Blank Budget"
+  //             ? "Blank Budget"
+  //             : "EAC"
+  //         }...`
+  //       );
+
+  //       const response = await axios.post(
+  //         `${backendUrl}/Project/AddProjectPlan?type=${
+  //           action === "Create Blank Budget" ? "blank" : "actual"
+  //         }`,
+  //         payloadTemplate
+  //       );
+        
+  //       const rawCreatedPlan = response.data;
+
+  //       // --- CRITICAL FIX: Normalize Data to prevent Crash ---
+  //       // This matches the transformation logic in fetchPlans()
+  //       const normalizedPlan = {
+  //         ...rawCreatedPlan,
+  //         plId: rawCreatedPlan.plId || rawCreatedPlan.id || 0,
+  //         projId: rawCreatedPlan.projId || 
+  //                 rawCreatedPlan.fullProjectId || 
+  //                 rawCreatedPlan.project_id || 
+  //                 rawCreatedPlan.projectId || 
+  //                 projectId,
+  //         projName: rawCreatedPlan.projName || "",
+  //         // Transform API type to UI type (Budget -> BUD)
+  //         plType:
+  //           rawCreatedPlan.plType === "Budget"
+  //             ? "BUD"
+  //             : rawCreatedPlan.plType === "EAC"
+  //             ? "EAC"
+  //             : rawCreatedPlan.plType || "",
+  //         source: rawCreatedPlan.source || "",
+  //         version: rawCreatedPlan.version || 0,
+  //         versionCode: rawCreatedPlan.versionCode || "",
+  //         finalVersion: !!rawCreatedPlan.finalVersion,
+  //         isCompleted: !!rawCreatedPlan.isCompleted,
+  //         isApproved: !!rawCreatedPlan.isApproved,
+  //         // Transform Status string
+  //         status:
+  //           rawCreatedPlan.plType && rawCreatedPlan.version
+  //             ? (rawCreatedPlan.status || "In Progress")
+  //                 .replace("Working", "In Progress")
+  //                 .replace("Completed", "Submitted")
+  //             : "In Progress",
+  //         closedPeriod: rawCreatedPlan.closedPeriod || "",
+  //         templateId: rawCreatedPlan.templateId || 0,
+  //         createdAt: rawCreatedPlan.createdAt || "",
+  //         updatedAt: rawCreatedPlan.updatedAt || "",
+  //         // Ensure numeric fields are not undefined
+  //         fundedCost: rawCreatedPlan.proj_f_cst_amt || "",
+  //         fundedFee: rawCreatedPlan.proj_f_fee_amt || "",
+  //         fundedRev: rawCreatedPlan.proj_f_tot_amt || "",
+  //       };
+
+  //       await refreshPlans(); 
+        
+  //       // Use timeout to allow React state to settle before selecting
+  //       setTimeout(() => {
+  //         onPlanSelect(normalizedPlan);
+  //       }, 200);
+        
+  //       toast.success(
+  //         `${
+  //           action === "Create Budget"
+  //             ? "Budget"
+  //             : action === "Create Blank Budget"
+  //             ? "Blank Budget"
+  //             : action === "Create NB BUD"
+  //             ? "NB BUD"
+  //             : "EAC"
+  //         } created successfully!`
+  //       );
+  //     } else {
+  //       toast.info(`Action "${action}" selected (API call not implemented)`);
+  //     }
+  //   } catch (err) {
+  //     toast.error(
+  //       "Error performing action: " +
+  //         (err.response?.data?.message || err.message)
+  //     );
+  //   } finally {
+  //     setIsActionLoading(false);
+  //   }
+  // };
 
   const getActionOptions = (plan) => {
     let options = ["None"];
