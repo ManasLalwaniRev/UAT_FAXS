@@ -382,6 +382,9 @@ const ProjectHoursDetails = ({
     if (!val) return false;
     const trimmed = val.toString().trim();
     if (!/^[\d.]+$/.test(trimmed)) return false;
+
+    if (organizationOptions.length === 0) return true;
+
     return organizationOptions.some((opt) => opt.value.toString() === trimmed);
   };
 
@@ -767,7 +770,7 @@ const ProjectHoursDetails = ({
           ? response.data.map((emp) => {
               if (newEntry.idType === "Vendor") {
                 return {
-                  emplId: emp.vendId,
+                  emplId: String(emp.vendId),
                   firstName: "",
                   lastName: emp.employeeName || "",
                   perHourRate: emp.perHourRate || emp.hrRate || "",
@@ -2415,6 +2418,47 @@ const ProjectHoursDetails = ({
           console.error("Failed to fetch vendor suggestions:", err);
         }
       }
+
+      setNewEntries((prevEntries) =>
+        prevEntries.map((entry) => {
+          // 1. Handle Employee Type
+          if (entry.idType === "Employee") {
+            const match = employeeSuggestions.find(
+              (e) => e.emplId === entry.id
+            );
+            if (match) {
+              return {
+                ...entry,
+                firstName: match.firstName || "",
+                lastName: match.lastName || "",
+                // Optional: Auto-fill other fields if they are empty in the pasted data
+                perHourRate: entry.perHourRate || match.perHourRate || "",
+                orgId: entry.orgId || match.orgId || "",
+                plcGlcCode: entry.plcGlcCode || match.plc || "",
+              };
+            }
+          }
+          // 2. Handle Vendor Type
+          else if (entry.idType === "Vendor") {
+            const match = vendorSuggestions.find(
+              (v) => v.emplId === entry.id
+            );
+            if (match) {
+              return {
+                ...entry,
+                // Vendor names usually come as a single string in lastName or firstName based on your existing logic
+                lastName: match.lastName || match.employeeName || "", 
+                firstName: "", 
+                perHourRate: entry.perHourRate || match.perHourRate || "",
+                orgId: entry.orgId || match.orgId || "",
+                plcGlcCode: entry.plcGlcCode || match.plc || "",
+              };
+            }
+          }
+          // Return original entry if no match found
+          return entry;
+        })
+      );
 
       // **STEP 4: Apply cached data to all entries**
       processedEntries.forEach((entry, entryIndex) => {
@@ -4851,9 +4895,17 @@ const ProjectHoursDetails = ({
 
           // Validate Organization against pastedEntryOrgs
           const entryOrgs = pastedEntryOrgs[i] || [];
-          const isValidOrganization = entryOrgs.some(
-            (org) => org.value.toString() === entry.orgId.toString()
-          );
+
+          const hasOrgValue = entry.orgId && entry.orgId.toString().trim() !== "";
+          
+          const isValidOrganization = entryOrgs.length > 0 
+            ? entryOrgs.some((org) => org.value.toString() === entry.orgId.toString())
+            : hasOrgValue;
+
+
+          // const isValidOrganization = entryOrgs.some(
+          //   (org) => org.value.toString() === entry.orgId.toString()
+          // );
           if (!isValidOrganization) {
             toast.error("Organization is required.", { autoClose: 3000 });
             failCount++;
@@ -6407,13 +6459,23 @@ const ProjectHoursDetails = ({
 //     ? `${newEntry.lastName}, ${newEntry.firstName}`
 //     : newEntry.lastName || newEntry.firstName || ""
 // }
-value={
-        newEntry.idType === "Other" || planType === "NBBUD"
-          ? newEntry.firstName || "" 
-          : newEntry.idType === "Vendor"
-          ? newEntry.lastName || newEntry.firstName || ""
-          : `${newEntry.lastName || ""} ${newEntry.firstName || ""}`.trim() // standard display for emp
-      }
+// value={
+//         newEntry.idType === "Other" || planType === "NBBUD"
+//           ? newEntry.firstName || "" 
+//           : newEntry.idType === "Vendor"
+//           ? newEntry.lastName || newEntry.firstName || ""
+//           : `${newEntry.lastName || ""} ${newEntry.firstName || ""}`.trim() // standard display for emp
+//       }
+// --- FIX START: Check Vendor FIRST so it correctly displays lastName even in NBBUD ---
+    value={
+      newEntry.idType === "Vendor"
+        ? newEntry.lastName || newEntry.firstName || ""
+        : newEntry.idType === "Other" || planType === "NBBUD"
+        ? newEntry.firstName || ""
+        : newEntry.idType === "PLC"
+        ? newEntry.firstName
+        : `${newEntry.lastName || ""} ${newEntry.firstName || ""}`.trim()
+    }
       readOnly={planType !== "NBBUD" && newEntry.idType !== "Other"}
       
       onKeyDown={(e) => {

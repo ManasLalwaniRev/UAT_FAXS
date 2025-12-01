@@ -2041,10 +2041,22 @@ const ProjectAmountsTable = ({
     }
 
     // Check for duplicate ID
+    // const isDuplicateId = employees.some((emp) => {
+    //   const emple = emp.emple;
+    //   if (!emple) return false;
+    //   return emple.emplId === newEntry.id;
+    // });
+
+    // Check for duplicate ID (Combined ID + Account check)
     const isDuplicateId = employees.some((emp) => {
       const emple = emp.emple;
       if (!emple) return false;
-      return emple.emplId === newEntry.id;
+      
+      // Only consider it a duplicate if BOTH ID and Account match
+      return (
+        emple.emplId === newEntry.id && 
+        emple.accId === newEntry.acctId
+      ); 
     });
 
     if (isDuplicateId) {
@@ -2283,20 +2295,41 @@ const ProjectAmountsTable = ({
           }
         }
 
-        // 5. Check for duplicate ID
+    
+
+        // Check for duplicate ID (Combined ID + Account check)
         const isDuplicateId = employees.some((emp) => {
           const emple = emp.emple;
           if (!emple) return false;
-          return emple.emplId === entry.id;
+          
+          // Only consider it a duplicate if BOTH ID and Account match
+          return (
+            emple.emplId === entry.id && 
+            emple.accId === entry.acctId
+          );
         });
 
         if (isDuplicateId) {
           errors.push(
-            `Entry ${entryIndex + 1}: ID "${entry.id}" already exists in table`
+            `Entry ${entryIndex + 1}: ID "${entry.id}" with Account "${entry.acctId}" already exists in table`
           );
           errorCount++;
           continue;
         }
+
+        // const isDuplicateId = employees.some((emp) => {
+        //   const emple = emp.emple;
+        //   if (!emple) return false;
+        //   return emple.emplId === entry.id;
+        // });
+
+        // if (isDuplicateId) {
+        //   errors.push(
+        //     `Entry ${entryIndex + 1}: ID "${entry.id}" already exists in table`
+        //   );
+        //   errorCount++;
+        //   continue;
+        // }
 
         // SAME PAYLOAD STRUCTURE AS handleSaveNewEntry
         const payloadForecasts = durations.map((duration) => ({
