@@ -11,29 +11,44 @@ const years = Array.from({ length: 2035 - 2020 + 1 }, (_, i) => 2020 + i);
 const getCurrentYear = () => new Date().getFullYear();
 const API_BASE = `${backendUrl}/HolidayCalendar`;
 
+// const formatDate = (input) => {
+//   if (!input) return ""; // Safeguard against undefined or null
+//   const utcDate = new Date(input); // Assume input is UTC string or Date
+//   // Convert to browser local date by adding offset
+//   const localDate = new Date(
+//     utcDate.getTime() + new Date().getTimezoneOffset() * 60000 * -1
+//   );
+//   const mm = String(localDate.getMonth() + 1).padStart(2, "0");
+//   const dd = String(localDate.getDate()).padStart(2, "0");
+//   const yyyy = localDate.getFullYear();
+//   return `${mm}/${dd}/${yyyy}`; // Enforce MM/DD/YYYY
+// };
+
+// const toISODate = (dateStr) => {
+//   if (!dateStr) return new Date().toISOString(); // Fallback to current date if empty
+//   const [mm, dd, yyyy] = dateStr.split("/"); // Parse from MM/DD/YYYY
+//   const localDate = new Date(yyyy, mm - 1, dd);
+//   // Convert to UTC by subtracting browser offset
+//   const utcDate = new Date(
+//     localDate.getTime() - new Date().getTimezoneOffset() * 60000
+//   );
+//   return utcDate.toISOString();
+// };
+
 const formatDate = (input) => {
-  if (!input) return ""; // Safeguard against undefined or null
-  const utcDate = new Date(input); // Assume input is UTC string or Date
-  // Convert to browser local date by adding offset
-  const localDate = new Date(
-    utcDate.getTime() + new Date().getTimezoneOffset() * 60000 * -1
-  );
-  const mm = String(localDate.getMonth() + 1).padStart(2, "0");
-  const dd = String(localDate.getDate()).padStart(2, "0");
-  const yyyy = localDate.getFullYear();
-  return `${mm}/${dd}/${yyyy}`; // Enforce MM/DD/YYYY
+  if (!input) return "";
+  // Extract date part (YYYY-MM-DD) from ISO string without timezone math
+  const datePart = input.length >= 10 ? input.slice(0, 10) : input;
+  const [yyyy, mm, dd] = datePart.split("-");
+  return `${mm}/${dd}/${yyyy}`;
 };
 
 const toISODate = (dateStr) => {
-  if (!dateStr) return new Date().toISOString(); // Fallback to current date if empty
-  const [mm, dd, yyyy] = dateStr.split("/"); // Parse from MM/DD/YYYY
-  const localDate = new Date(yyyy, mm - 1, dd);
-  // Convert to UTC by subtracting browser offset
-  const utcDate = new Date(
-    localDate.getTime() - new Date().getTimezoneOffset() * 60000
-  );
-  return utcDate.toISOString();
+  if (!dateStr) return null;
+  const [mm, dd, yyyy] = dateStr.split("/");
+  return `${yyyy}-${mm.padStart(2, "0")}-${dd.padStart(2, "0")}`;
 };
+
 
 const emptyHoliday = (year) => ({
   id: null,
@@ -159,7 +174,7 @@ const AnnualHolidaysPage = () => {
                   ...currentHoliday,
                   ...saved,
                   holiday: saved.name || saved.holiday || holidayToSave.holiday,
-                  date: formatDate(saved.date || holidayToSave.date),
+                  date: saved.date || holidayToSave.date,
                   holidayType:
                     saved.type ||
                     (saved.ispublicholiday ? "Holiday" : "Optional"),
@@ -199,7 +214,7 @@ const AnnualHolidaysPage = () => {
   const handleHolidayChange = useCallback(
     (holiday, key, value) => {
       if (key === "date") {
-        const selectedDate = value;
+        const selectedDate = value; 
         const isDuplicate = holidays.some(
           (h) => h !== holiday && h.date === selectedDate
         );
@@ -217,11 +232,20 @@ const AnnualHolidaysPage = () => {
     [holidays]
   );
 
-  const parseDate = (dateStr) => {
-    if (!dateStr) return null;
-    const [mm, dd, yyyy] = dateStr.split("/"); // Parse from MM/DD/YYYY
-    return new Date(Date.UTC(yyyy, mm - 1, dd)); // Parse as UTC to avoid local offset
-  };
+  // const parseDate = (dateStr) => {
+  //   if (!dateStr) return null;
+  //   const [mm, dd, yyyy] = dateStr.split("/"); // Parse from MM/DD/YYYY
+  //   return new Date(Date.UTC(yyyy, mm - 1, dd)); // Parse as UTC to avoid local offset
+  // };
+
+const parseDate = (dateStr) => {
+  if (!dateStr) return null;
+  const [mm, dd, yyyy] = dateStr.split("/");
+  // Create JS Date as local midnight (avoiding UTC offset shift)
+  return new Date(yyyy, mm - 1, dd);
+};
+
+
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex items-center justify-center p-4">
@@ -307,13 +331,25 @@ const AnnualHolidaysPage = () => {
                           {holiday.isEditing ? (
                             <DatePicker
                               selected={parseDate(holiday.date)}
-                              onChange={(date) =>
-                                handleHolidayChange(
-                                  holiday,
-                                  "date",
-                                  formatDate(date)
-                                )
-                              }
+                              // onChange={(date) =>
+                              //   handleHolidayChange(
+                              //     holiday,
+                              //     "date",
+                              //     formatDate(date)
+                              //   )
+                              // }
+                              onChange={(date) => {
+  if (!date) {
+    handleHolidayChange(holiday, "date", "");
+    return;
+  }
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  handleHolidayChange(holiday, "date", `${mm}/${dd}/${yyyy}`);
+}}
+
+
                               dateFormat="MM/dd/yyyy"
                               placeholderText="MM/DD/YYYY"
                               className="w-full bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
