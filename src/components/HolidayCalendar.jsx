@@ -174,7 +174,8 @@ const AnnualHolidaysPage = () => {
                   ...currentHoliday,
                   ...saved,
                   holiday: saved.name || saved.holiday || holidayToSave.holiday,
-                  date: saved.date || holidayToSave.date,
+                  // date: saved.date || holidayToSave.date,
+                  date: formatDate(saved.date || holidayToSave.date),
                   holidayType:
                     saved.type ||
                     (saved.ispublicholiday ? "Holiday" : "Optional"),

@@ -4,14 +4,19 @@ import EmployeeHoursCeilings from "./EmployeeHoursCeilings";
 import DirectCostCeilings from "./DirectCostCeilings";
 import HoursCeilings from "./HoursCeilings";
 import CostFeeOverrideDetails from "./CostFeeOverrideDetails";
+import Select from "react-select";
 import { backendUrl } from "./config";
 
 const userName = "yourUserName"; // <-- Replace with actual user logic or prop
 
 const CeilingConfiguration = () => {
-  const [projectInput, setProjectInput] = useState("");
+  // projectInput (free-text) removed — selection should come only from API-provided dropdown
+  const [selectedProjectId, setSelectedProjectId] = useState("");
   const [activeTab, setActiveTab] = useState("Burden Cost Ceiling Details");
   const [isSearched, setIsSearched] = useState(false);
+  const [availableProjects, setAvailableProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const tabs = [
     "Burden Cost Ceiling Details",
@@ -21,23 +26,62 @@ const CeilingConfiguration = () => {
     "Cost Fee Override Details",
   ];
 
-  useEffect(() => {
-    setIsSearched(!!projectInput);
-  }, [projectInput]);
+   const projectOptions = availableProjects.map((project) => ({
+    value: project.projectId,
+    label: project.name
+      ? `${project.projectId} - ${project.name}`
+      : project.projectId,
+  }));
 
-  const handleSearch = () => {
-    if (projectInput) setIsSearched(true);
-  };
+    useEffect(() => {
+      const fetchAllProjects = async () => {
+        setLoading(true); // Set loading to true for initial project list fetch
+        setError(null);
+        try {
+          const apiUrl = `${backendUrl}/Project/GetAllProjects`; // Your API endpoint to get ALL projects
+  
+          const response = await fetch(apiUrl);
+  
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const projects = await response.json();
+          setAvailableProjects(projects);
+  
+          // Automatically select the first project if available
+          if (projects.length > 0) {
+            // prefer the API's provided logical project identifier (projectId) if present
+            // const initialId = projects[0].projectId ?? projects[0].id ?? "";
+            // setSelectedProjectId(initialId);
+            setLoading(false);
+          } else {
+            setLoading(false); // No projects to load config for
+          }
+        } catch (e) {
+          // console.error("Failed to fetch project list:", e);
+          setError(
+            "Failed to load project list. Please check your API connection."
+          );
+          setLoading(false);
+        }
+      };
+  
+      fetchAllProjects();
+    }, []); 
 
-  const handleKeyPress = (e) => {
-    if (e.key === "Enter") handleSearch();
-  };
+    useEffect(() => {
+      // mark searched when a user chooses a project from dropdown
+      setIsSearched(!!selectedProjectId);
+    }, [selectedProjectId]);
+
+  // search is handled by selecting a project from the dropdown — no free-text search
 
   const handleTabClick = (tab) => {
     if (activeTab === tab) {
+      // toggling the same tab off should clear selection so we don't keep a stale project
       setActiveTab("");
       setIsSearched(false);
-      setProjectInput("");
+      setSelectedProjectId("");
     } else {
       setActiveTab(tab);
     }
@@ -48,32 +92,29 @@ const CeilingConfiguration = () => {
       <h1 className="w-full  bg-blue-50 border-l-4 border-blue-400 p-3 rounded-lg shadow-sm mb-4 blue-text">
         Ceiling Configuration
       </h1>
-
-      <div className="mb-8">
-        <label
-          htmlFor="project"
-          className="block text-sm font-medium text-gray-700 mb-2"
-        >
-          Project
-        </label>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <input
-            type="text"
-            id="project"
-            value={projectInput}
-            onChange={(e) => setProjectInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full sm:w-80 px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 transition duration-200"
-            placeholder="Enter project name or ID"
-          />
-          <button
-            onClick={handleSearch}
-            className="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition duration-200"
-          >
-            Search
-          </button>
-        </div>
-      </div>
+      {/* project selector (API-sourced) — free-text entry removed on purpose */}
+    <div className="mb-2">
+  <label
+    htmlFor="projectId"
+    className="block text-sm font-medium"
+  >
+    Project ID <span className="text-red-500">*</span>
+  </label>
+  <Select
+    inputId="projectId"
+    options={projectOptions}
+    isLoading={loading}
+    value={
+      selectedProjectId
+        ? projectOptions.find((opt) => opt.value === selectedProjectId)
+        : null        
+    }
+    onChange={(opt) => setSelectedProjectId(opt ? opt.value : "")}
+    isSearchable
+    placeholder="Search & select a project" 
+    menuPlacement="auto"  
+  />
+</div>
 
       <div className="border-b border-gray-200 mb-6">
         <nav className="flex flex-wrap gap-2 sm:gap-3" aria-label="Tabs">
@@ -96,34 +137,34 @@ const CeilingConfiguration = () => {
       <div className="min-h-[400px]">
         {activeTab === "Burden Cost Ceiling Details" && (
           <BurdenCostCeilingDetails
-            projectId={projectInput}
+            projectId={selectedProjectId}
             isSearched={isSearched}
             updatedBy={userName}
           />
         )}
         {activeTab === "Employee Hours Ceilings" && (
           <EmployeeHoursCeilings
-            projectId={projectInput}
+            projectId={selectedProjectId}
             isSearched={isSearched}
           />
         )}
         {activeTab === "Direct Cost Ceilings" && (
           <DirectCostCeilings
-            projectId={projectInput}
+            projectId={selectedProjectId}
             isSearched={isSearched}
             updatedBy={userName}
           />
         )}
         {activeTab === "Hours Ceilings" && (
           <HoursCeilings
-            projectId={projectInput}
+            projectId={selectedProjectId}
             isSearched={isSearched}
             updatedBy={userName}
           />
         )}
         {activeTab === "Cost Fee Override Details" && (
           <CostFeeOverrideDetails
-            projectId={projectInput}
+            projectId={selectedProjectId}
             isSearched={isSearched}
             updatedBy={userName}
           />

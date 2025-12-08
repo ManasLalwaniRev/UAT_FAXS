@@ -125,7 +125,8 @@ const DisplaySettingsContent = () => {
 
     // Placeholder API endpoint for saving Display Settings
     // You will need to replace this with your actual API endpoint.
-    const updateApiUrl = `/api/save-display-settings`;
+    // api/Configuration/UpdateConfigValues
+    const updateApiUrl = `${backendUrl}/api/Configuration/bulk-upsert`;
 
     const dataToSave = {
       budgetHeaderDateFormat: budgetHeaderDateFormat,
